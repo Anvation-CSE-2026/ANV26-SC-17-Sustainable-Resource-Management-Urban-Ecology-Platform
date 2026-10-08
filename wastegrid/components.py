@@ -26,29 +26,17 @@ def header(logo_path="logo.png"):
 def section_title(text):
     st.markdown(f'<div class="sec-title">{text}</div>', unsafe_allow_html=True)
 
-
 def metrics_row(total_waste, total_capacity, total_overflow, data_mode, p):
-    overflow_cls = "red" if total_overflow > 0 else ""
-    st.markdown(f"""
-        <div class="metric-grid">
-            <div class="m-card">
-                <div class="m-label">Predicted Waste</div>
-                <div class="m-value">{total_waste/1000:.2f} T</div>
-            </div>
-            <div class="m-card">
-                <div class="m-label">Available Capacity</div>
-                <div class="m-value">{total_capacity/1000:.2f} T</div>
-            </div>
-            <div class="m-card hero">
-                <div class="m-label">Overflow</div>
-                <div class="m-value {overflow_cls}">{total_overflow/1000:.2f} T</div>
-            </div>
-            <div class="m-card">
-                <div class="m-label">Data Source</div>
-                <div class="m-value text">{data_mode}</div>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
+    overflow_cls = "red" if total_overflow > 0 else "green"
+    st.markdown(
+        f'<div class="metric-grid">'
+        f'<div class="m-card"><div class="m-label">Predicted Waste</div><div class="m-value">{total_waste/1000:.2f} T</div></div>'
+        f'<div class="m-card green"><div class="m-label">Available Capacity</div><div class="m-value">{total_capacity/1000:.2f} T</div></div>'
+        f'<div class="m-card hero"><div class="m-label">Overflow</div><div class="m-value {overflow_cls}">{total_overflow/1000:.2f} T</div></div>'
+        f'<div class="m-card purple"><div class="m-label">Data Source</div><div class="m-value text">{data_mode}</div></div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
 
 
 def status_banner(total_overflow, reoptimized, outage=None):
@@ -114,20 +102,16 @@ def facility_grid(facilities, allocations, p):
         unsafe_allow_html=True,
     )
 def comparison_cards(fixed_overflow, total_overflow, p):
-    f_cls = "red" if fixed_overflow > 0 else ""
-    w_cls = "red" if total_overflow > 0 else ""
-    st.markdown(f"""
-        <div class="cmp-grid">
-            <div class="cmp-card">
-                <div class="cmp-label">Fixed Allocation — Overflow</div>
-                <div class="cmp-value {f_cls}">{fixed_overflow/1000:.2f} T</div>
-            </div>
-            <div class="cmp-card">
-                <div class="cmp-label">WasteGrid — Overflow</div>
-                <div class="cmp-value {w_cls}">{total_overflow/1000:.2f} T</div>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
+    f_cls = "red" if fixed_overflow > 0 else "green"
+    w_cls = "red" if total_overflow > 0 else "green"
+    w_card = "" if total_overflow > 0 else "win"
+    st.markdown(
+        f'<div class="cmp-grid">'
+        f'<div class="cmp-card"><div class="cmp-label">Fixed Allocation — Overflow</div><div class="cmp-value {f_cls}">{fixed_overflow/1000:.2f} T</div></div>'
+        f'<div class="cmp-card {w_card}"><div class="cmp-label">WasteGrid — Overflow</div><div class="cmp-value {w_cls}">{total_overflow/1000:.2f} T</div></div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
 
 
 def success_banner(text):
