@@ -821,6 +821,410 @@ def inject_css(p):
             box-shadow: 0 8px 22px rgba(213,0,28,0.4) !important;
         }}
 
+        /* =================== AUTH & LOGIN SCREEN =================== */
+        .login-wrapper {{
+            max-width: 860px;
+            margin: 20px auto 30px auto;
+        }}
+        .login-card {{
+            background: {p['card_bg']};
+            border: 1px solid {p['border']};
+            border-radius: 12px;
+            padding: 28px 32px;
+            box-shadow: {p['shadow']};
+            margin-bottom: 24px;
+        }}
+        .login-header {{
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 12px;
+        }}
+        .login-title {{
+            font-size: 2rem;
+            font-weight: 800;
+            color: {p['text']};
+            letter-spacing: -0.03em;
+            line-height: 1;
+        }}
+        .login-sub {{
+            font-size: 0.72rem;
+            color: {p['muted']};
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-top: 6px;
+        }}
+        .login-notice {{
+            font-size: 0.85rem;
+            color: {p['text']};
+            opacity: 0.85;
+            line-height: 1.5;
+        }}
+        .login-box-header {{
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: {p['text']};
+            margin-bottom: 16px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid {p['accent']};
+        }}
+        .quick-role-row {{
+            background: {p['card_bg']};
+            border: 1px solid {p['border']};
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 10px;
+            transition: all 0.2s ease;
+        }}
+        .quick-role-row:hover {{
+            border-color: {p['accent']};
+            transform: translateX(4px);
+        }}
+        .quick-role-title {{
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: {p['text']};
+        }}
+        .quick-role-sub {{
+            font-size: 0.68rem;
+            color: {p['muted']};
+            margin-top: 2px;
+        }}
+        .creds-card {{
+            background: {p['card_bg']};
+            border: 1px solid {p['border']};
+            border-radius: 8px;
+            padding: 20px 24px;
+            box-shadow: {p['shadow']};
+        }}
+        .creds-title {{
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: {p['text']};
+            margin-bottom: 14px;
+        }}
+
+        /* =================== ROLE HEADER & LOGOUT =================== */
+        .user-pill {{
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 14px;
+            border-radius: 999px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            background: {p['card_bg']};
+            border: 1px solid {p['border']};
+            color: {p['text']};
+            box-shadow: {p['shadow']};
+        }}
+        .user-pill .badge {{
+            background: {p['accent_bg']};
+            color: {p['accent']};
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-size: 0.6rem;
+        }}
+
+        /* =================== ROLE HERO BANNER =================== */
+        .role-view-hero {{
+            background: {p['card_bg']};
+            border: 1px solid {p['border']};
+            border-left: 5px solid {p['blue']};
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            box-shadow: {p['shadow']};
+        }}
+        .role-hero-title {{
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: {p['text']};
+            letter-spacing: -0.01em;
+            margin-bottom: 6px;
+        }}
+        .role-hero-sub {{
+            font-size: 0.76rem;
+            color: {p['muted']};
+            line-height: 1.4;
+        }}
+
+        /* =================== PREDICTIVE CALENDAR =================== */
+        .cal-header-card {{
+            background: {p['card_bg']};
+            border: 1px solid {p['border']};
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 22px;
+            box-shadow: {p['shadow']};
+        }}
+        .cal-title-row {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }}
+        .cal-title {{
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: {p['text']};
+            letter-spacing: -0.01em;
+        }}
+        .cal-sub {{
+            font-size: 0.75rem;
+            color: {p['muted']};
+            margin-top: 4px;
+        }}
+        .cal-timeline-grid {{
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 10px;
+            margin-bottom: 24px;
+        }}
+        @media (max-width: 1200px) {{
+            .cal-timeline-grid {{ grid-template-columns: repeat(4, 1fr); }}
+        }}
+        .cal-date-card {{
+            background: {p['card_bg']};
+            border: 1px solid {p['border']};
+            border-radius: 8px;
+            padding: 12px 10px;
+            text-align: center;
+            box-shadow: {p['shadow']};
+            transition: all 0.25s ease;
+            position: relative;
+        }}
+        .cal-date-card:hover {{
+            transform: translateY(-3px);
+            border-color: {p['muted']};
+        }}
+        .cal-date-card.danger {{
+            border-color: {p['accent']};
+            background: {p['accent_bg']};
+        }}
+        .cal-date-card.warn {{
+            border-color: {p['warn']};
+        }}
+        .cal-date-top {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.7rem;
+            margin-bottom: 6px;
+        }}
+        .cal-day-num {{
+            font-weight: 800;
+            color: {p['text']};
+        }}
+        .cal-day-name {{
+            font-weight: 600;
+            color: {p['muted']};
+            text-transform: uppercase;
+        }}
+        .cal-event-name {{
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: {p['text']};
+            height: 28px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.2;
+            margin-bottom: 6px;
+        }}
+        .cal-badge {{
+            font-size: 0.55rem;
+            font-weight: 700;
+            padding: 2px 5px;
+            border-radius: 4px;
+            display: inline-block;
+            text-transform: uppercase;
+        }}
+        .cal-badge.normal {{ background: {p['bg_soft']}; color: {p['muted']}; }}
+        .cal-badge.weekend {{ background: rgba(59,130,246,0.15); color: {p['blue']}; }}
+        .cal-badge.festival {{ background: rgba(245,158,11,0.2); color: {p['warn']}; }}
+        .cal-demand-val {{
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: {p['text']};
+            margin-top: 6px;
+            font-variant-numeric: tabular-nums;
+        }}
+        .cal-status-text {{
+            font-size: 0.58rem;
+            font-weight: 700;
+            margin-top: 4px;
+            color: {p['muted']};
+        }}
+        .cal-date-card.danger .cal-status-text {{ color: {p['accent']}; }}
+        .cal-date-card.normal .cal-status-text {{ color: {p['success']}; }}
+
+        /* =================== TRUCK FLEET BRIDGE =================== */
+        .truck-header-card {{
+            background: {p['card_bg']};
+            border: 1px solid {p['border']};
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 22px;
+            box-shadow: {p['shadow']};
+        }}
+        .truck-title {{
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: {p['text']};
+            letter-spacing: -0.01em;
+        }}
+        .truck-sub {{
+            font-size: 0.75rem;
+            color: {p['muted']};
+            margin-top: 4px;
+        }}
+        .bridge-flow-wrap {{
+            display: grid;
+            grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr auto 1.2fr;
+            gap: 10px;
+            align-items: center;
+            background: {p['bg_soft']};
+            border: 1px solid {p['border']};
+            border-radius: 8px;
+            padding: 18px 20px;
+            margin: 12px 0 20px 0;
+        }}
+        @media (max-width: 1024px) {{
+            .bridge-flow-wrap {{ grid-template-columns: 1fr; }}
+            .bridge-arrow {{ display: none; }}
+        }}
+        .bridge-step {{
+            background: {p['card_bg']};
+            border: 1px solid {p['border']};
+            border-radius: 6px;
+            padding: 12px 14px;
+            text-align: left;
+            box-shadow: {p['shadow']};
+        }}
+        .bridge-step.highlight {{
+            border-color: {p['accent']};
+            background: {p['accent_bg']};
+        }}
+        .bridge-step-num {{
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: {p['blue']};
+            color: #ffffff;
+            font-size: 0.68rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+        }}
+        .bridge-step.highlight .bridge-step-num {{
+            background: {p['accent']};
+        }}
+        .bridge-step-title {{
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: {p['text']};
+            margin-bottom: 4px;
+        }}
+        .bridge-step-body {{
+            font-size: 0.65rem;
+            color: {p['muted']};
+            line-height: 1.35;
+        }}
+        .bridge-arrow {{
+            color: {p['muted']};
+            font-size: 1.2rem;
+            font-weight: 800;
+        }}
+
+        /* =================== CARBON SCORECARD =================== */
+        .carbon-card {{
+            background: {p['card_bg']};
+            border: 1px solid {p['border']};
+            border-top: 3px solid {p['success']};
+            border-radius: 8px;
+            padding: 22px 26px;
+            margin-bottom: 26px;
+            box-shadow: {p['shadow']};
+        }}
+        .carbon-title-row {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }}
+        .carbon-title {{
+            font-size: 1rem;
+            font-weight: 800;
+            color: {p['text']};
+            letter-spacing: -0.01em;
+        }}
+        .carbon-sub {{
+            font-size: 0.72rem;
+            color: {p['muted']};
+            margin-top: 3px;
+        }}
+        .carbon-badge {{
+            font-size: 0.64rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 5px 12px;
+            border-radius: 999px;
+            background: rgba(34,197,94,0.12);
+            color: {p['success']};
+            border: 1px solid rgba(34,197,94,0.3);
+        }}
+        .carbon-grid {{
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+        }}
+        .c-stat-box {{
+            background: {p['bg_soft']};
+            border: 1px solid {p['border_subtle']};
+            border-radius: 6px;
+            padding: 16px 14px;
+            text-align: left;
+        }}
+        .c-stat-label {{
+            font-size: 0.64rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: {p['muted']};
+            margin-bottom: 8px;
+        }}
+        .c-stat-val {{
+            font-size: 1.7rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: {p['text']};
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+        }}
+        .c-stat-val.green {{ color: {p['success']}; }}
+        .c-stat-val.blue {{ color: {p['blue']}; }}
+        .c-stat-val.purple {{ color: {p['purple']}; }}
+        .c-stat-val.warn {{ color: {p['warn']}; }}
+        .c-unit {{
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: {p['muted']};
+        }}
+        .c-stat-sub {{
+            font-size: 0.62rem;
+            color: {p['muted']};
+            margin-top: 6px;
+        }}
+
         /* Animations */
         @keyframes pulseBeacon {{
             0%, 100% {{ transform: scale(1); opacity: 1; }}

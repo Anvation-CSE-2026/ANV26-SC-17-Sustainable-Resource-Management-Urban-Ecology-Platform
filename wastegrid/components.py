@@ -5,7 +5,7 @@ import pandas as pd
 import altair as alt
 
 
-def header(theme="light", status="optimal", logo_path="logo.png", p=None):
+def header(theme="light", status="optimal", logo_path="logo.png", p=None, user=None):
     logo_html = ""
     if os.path.exists(logo_path):
         with open(logo_path, "rb") as f:
@@ -23,10 +23,20 @@ def header(theme="light", status="optimal", logo_path="logo.png", p=None):
     toggle_icon = "🌙" if theme == "light" else "☀️"
     toggle_label = "Dark" if theme == "light" else "Light"
 
+    user_html = ""
+    if user:
+        user_html = (
+            f'<div class="user-pill">{user["icon"]} <span><b>{user["title"]}</b></span>'
+            f'<span class="badge">{user["badge"]}</span></div>'
+            f'<a class="theme-toggle-link" href="?logout=1&theme={theme}" target="_self" style="border-color:rgba(255,56,86,0.3);">'
+            f'<span>🚪</span><span>Logout</span></a>'
+        )
+
     st.markdown(
         f'<div class="wg-header">'
         f'<div class="wg-brand">{logo_html}<div><div class="wg-title">WasteGrid</div><div class="wg-tagline">Predict. Detect. Reallocate.</div></div></div>'
         f'<div class="hdr-controls">'
+        f'{user_html}'
         f'<div class="hdr-badge {badge_cls}"><span class="pulse-dot {badge_dot}"></span>{badge_text}</div>'
         f'<a class="theme-toggle-link" href="?theme={next_theme}" target="_self"><span>{toggle_icon}</span><span>{toggle_label}</span></a>'
         f'</div>'
