@@ -45,23 +45,52 @@ def header(theme="light", status="optimal", logo_path="logo.png", p=None, user=N
     )
 
 
-def top_nav_bar(page_title="Dashboard", status="optimal", pending_alerts=0, user=None, theme="light", p=None):
-    next_theme = "dark" if theme == "light" else "light"
-    toggle_icon = "🌙" if theme == "light" else "☀️"
-    toggle_label = "Dark" if theme == "light" else "Light"
+def top_nav_bar(*args, **kwargs):
+    """
+    Renders top header bar matching wireframe layout:
+    Top-Left: Logo + WasteGrid + Predict. Detect. Allocate.
+    Top-Right: Profile/Login icon button + Theme toggle.
+    Accepts any combination of positional or keyword arguments safely.
+    """
+    user = kwargs.get("user")
+    if not user and len(args) > 3:
+        user = args[3]
 
-    user_label = f"👤 {user['full_name'].split()[0]} ({user['role'].upper()})" if user else "👤 Profile"
-    user_btn_style = f"border-color:{p['blue']}; background:{'rgba(59,130,246,0.12)' if user else 'transparent'};"
+    theme_val = kwargs.get("theme") or (args[4] if len(args) > 4 else "light")
+    p = kwargs.get("p") or (args[5] if len(args) > 5 else None)
+    if not p or not isinstance(p, dict):
+        from wastegrid import theme as theme_module
+        p = theme_module.get_palette(theme_val if isinstance(theme_val, str) else "light")
+
+    next_theme = "dark" if theme_val == "light" else "light"
+    toggle_icon = "🌙" if theme_val == "light" else "☀️"
+    toggle_label = "Dark" if theme_val == "light" else "Light"
+
+    user_label = "👤 Profile"
+    if user and isinstance(user, dict):
+        full_name = user.get("full_name") or user.get("username") or "User"
+        first_name = str(full_name).split()[0]
+        role_str = str(user.get("role", "admin")).upper()
+        user_label = f"👤 {first_name} ({role_str})"
+
+    blue_col = p.get("blue", "#0284c7")
+    user_btn_style = f"border-color:{blue_col}; background:{'rgba(59,130,246,0.12)' if user else 'transparent'};"
+
+    card_bg = p.get("card_bg", "#ffffff")
+    border_col = p.get("border", "#dbe3ec")
+    shadow_val = p.get("shadow", "none")
+    text_col = p.get("text", "#0f172a")
+    muted_col = p.get("muted", "#64748b")
 
     nav_html = (
-        f'<div style="display:flex; justify-content:space-between; align-items:center; background:{p["card_bg"]}; '
-        f'border:1px solid {p["border"]}; border-radius:12px; padding:12px 24px; margin-bottom:20px; margin-left:54px; box-shadow:{p["shadow"]}; flex-wrap:wrap; gap:12px;">'
+        f'<div style="display:flex; justify-content:space-between; align-items:center; background:{card_bg}; '
+        f'border:1px solid {border_col}; border-radius:12px; padding:12px 24px; margin-bottom:20px; margin-left:54px; box-shadow:{shadow_val}; flex-wrap:wrap; gap:12px;">'
         # 1. KEEP the WasteGrid logo in the top-left header with Tagline
         f'<div style="display:flex; align-items:center; gap:14px;">'
         f'<div style="width:38px; height:38px; border-radius:8px; background:linear-gradient(135deg, #10b981, #0284c7); display:flex; align-items:center; justify-content:center; font-size:1.35rem; box-shadow:0 2px 8px rgba(0,0,0,0.2);">♻️</div>'
         f'<div>'
-        f'<div style="font-size:1.3rem; font-weight:900; color:{p["text"]}; letter-spacing:-0.02em; line-height:1.1;">WasteGrid</div>'
-        f'<div style="font-size:0.68rem; color:{p["muted"]}; letter-spacing:0.18em; text-transform:uppercase; margin-top:2px; font-weight:700;">Predict. Detect. Allocate.</div>'
+        f'<div style="font-size:1.3rem; font-weight:900; color:{text_col}; letter-spacing:-0.02em; line-height:1.1;">WasteGrid</div>'
+        f'<div style="font-size:0.68rem; color:{muted_col}; letter-spacing:0.18em; text-transform:uppercase; margin-top:2px; font-weight:700;">Predict. Detect. Allocate.</div>'
         f'</div>'
         f'</div>'
         # 2. KEEP the Login/Profile icon in the top-right header (No Services, About, or Contact in top header)
