@@ -67,8 +67,18 @@ def inject_css(p):
 
         h1, h2, h3, h4, p, span, label {{ color: {p['text']}; }}
 
-        [data-testid="stHeader"] {{ display: none !important; height: 0 !important; }}
-        [data-testid="stSidebar"] {{ display: none !important; }}
+        [data-testid="stHeader"] {{ height: 2.5rem !important; background: transparent !important; }}
+        [data-testid="stSidebar"] {{
+            background-color: {p['bg_soft']} !important;
+            border-right: 1px solid {p['border']} !important;
+        }}
+        [data-testid="stSidebar"] * {{
+            color: {p['text']};
+        }}
+        [data-testid="stSidebarCollapsedControl"] {{
+            display: flex !important;
+            color: {p['text']} !important;
+        }}
         [data-testid="stToolbar"] {{ display: none !important; }}
         #MainMenu {{ visibility: hidden !important; }}
         footer {{ visibility: hidden !important; }}

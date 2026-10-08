@@ -60,6 +60,11 @@ st.query_params["theme"] = st.session_state.theme
 palette = theme.get_palette(st.session_state.theme)
 theme.inject_css(palette)
 
+
+def render_html(content):
+    clean = "\n".join(line.strip() for line in str(content).strip().splitlines())
+    st.markdown(clean, unsafe_allow_html=True)
+
 # 4. Check Logout Parameter Trigger
 if st.query_params.get("logout") == "1":
     if "logout" in st.query_params:
@@ -159,7 +164,7 @@ key_to_title = {key: title for title, key in NAV_ITEMS}
 # 7. Sidebar Construction
 with st.sidebar:
     # Sidebar Header Brand
-    st.markdown(
+    render_html(
         f"""
         <div style="display:flex; align-items:center; gap:12px; padding:6px 0 16px 0; border-bottom:1px solid {palette['border']}; margin-bottom:16px;">
             <div style="width:38px; height:38px; border-radius:8px; background:linear-gradient(135deg, {palette['accent']}, {palette['blue']}); 
@@ -171,8 +176,7 @@ with st.sidebar:
                 <div style="font-size:0.68rem; color:{palette['muted']}; letter-spacing:0.04em; text-transform:uppercase;">Smart Municipal Platform</div>
             </div>
         </div>
-        """,
-        unsafe_allow_html=True,
+        """
     )
 
     # Secure Sidebar Authentication Card
@@ -208,7 +212,7 @@ with st.sidebar:
 
     # Sidebar Grid Summary Footer Card
     active_trucks_count = len([v for v in db.get_all_vehicles() if v["status"] in ["available", "in_transit", "assigned"]])
-    st.markdown(
+    render_html(
         f"""
         <div style="margin-top:24px; padding:12px; background:rgba(255,255,255,0.03); border:1px solid {palette['border']}; 
                     border-radius:8px; font-size:0.72rem; color:{palette['muted']}; line-height:1.6;">
@@ -223,8 +227,7 @@ with st.sidebar:
                 Storage: SQLite · Architecture: PG-Ready
             </div>
         </div>
-        """,
-        unsafe_allow_html=True,
+        """
     )
 
 # 8. Authentication Check Gate
@@ -241,7 +244,7 @@ if not current_user:
         p=palette,
     )
 
-    st.markdown(
+    render_html(
         f"""
         <div style="max-width:850px; margin:20px auto; background:{palette['card_bg']}; border:1px solid {palette['border']}; 
                     border-radius:12px; padding:32px 36px; box-shadow:{palette['shadow']};">
@@ -275,8 +278,7 @@ if not current_user:
                 </div>
             </div>
         </div>
-        """,
-        unsafe_allow_html=True,
+        """
     )
 
     # Allow public submission of citizen reports even if not signed in as authority!
@@ -337,79 +339,71 @@ if current_nav_key == "overview":
     components.section_title("REAL-TIME GRID METRICS & OPERATIONAL TELEMETRY")
     col_m1, col_m2, col_m3, col_m4 = st.columns(4)
     with col_m1:
-        st.markdown(
+        render_html(
             f"""<div class="m-card hero">
                 <div class="m-label">📊 Predicted Demand</div>
                 <div class="m-value">{total_waste/1000:.2f} T</div>
                 <div style="font-size:0.68rem; color:{palette['muted']}; margin-top:4px;">{wet_total/1000:.1f}T Wet · {dry_total/1000:.1f}T Dry</div>
-            </div>""",
-            unsafe_allow_html=True,
+            </div>"""
         )
     with col_m2:
-        st.markdown(
+        render_html(
             f"""<div class="m-card green">
                 <div class="m-label">⚙️ Waste Processed</div>
                 <div class="m-value">{processed_kg/1000:.2f} T</div>
                 <div style="font-size:0.68rem; color:{palette['success']}; margin-top:4px;">{(processed_kg/max(total_waste,1))*100:.1f}% reallocated</div>
-            </div>""",
-            unsafe_allow_html=True,
+            </div>"""
         )
     with col_m3:
-        st.markdown(
+        render_html(
             f"""<div class="m-card purple">
                 <div class="m-label">🏭 Available Capacity</div>
                 <div class="m-value">{avail_capacity_kg/1000:.2f} T</div>
                 <div style="font-size:0.68rem; color:{palette['purple']}; margin-top:4px;">{online_facs_count} of {len(active_facilities)} Plants Online</div>
-            </div>""",
-            unsafe_allow_html=True,
+            </div>"""
         )
     with col_m4:
         ovf_cls = "red" if total_overflow > 0 else "green"
-        st.markdown(
+        render_html(
             f"""<div class="m-card {ovf_cls}">
                 <div class="m-label">⚠️ Overflow Risk</div>
                 <div class="m-value">{total_overflow/1000:.2f} T</div>
                 <div style="font-size:0.68rem; color:{palette['accent'] if total_overflow>0 else palette['success']}; margin-top:4px;">Risk Status: {overflow_risk_label}</div>
-            </div>""",
-            unsafe_allow_html=True,
+            </div>"""
         )
 
     col_m5, col_m6, col_m7, col_m8 = st.columns(4)
     with col_m5:
-        st.markdown(
+        render_html(
             f"""<div class="m-card">
                 <div class="m-label">🚚 Active Fleet Units</div>
                 <div class="m-value">{active_trucks_count} Trucks</div>
                 <div style="font-size:0.68rem; color:{palette['muted']}; margin-top:4px;">Real-time GPS monitored</div>
-            </div>""",
-            unsafe_allow_html=True,
+            </div>"""
         )
     with col_m6:
-        st.markdown(
+        render_html(
             f"""<div class="m-card">
                 <div class="m-label">🔔 Pending Alerts</div>
                 <div class="m-value">{pending_alert_count} Incidents</div>
                 <div style="font-size:0.68rem; color:{palette['accent'] if pending_alert_count>0 else palette['success']}; margin-top:4px;">Threshold & outages</div>
-            </div>""",
-            unsafe_allow_html=True,
+            </div>"""
         )
     with col_m7:
-        st.markdown(
+        render_html(
             f"""<div class="m-card green">
                 <div class="m-label">♻️ Recycling Ratio</div>
                 <div class="m-value">{recycling_pct}%</div>
                 <div style="font-size:0.68rem; color:{palette['success']}; margin-top:4px;">Diverted from Landfills</div>
-            </div>""",
-            unsafe_allow_html=True,
+            </div>"""
         )
     with col_m8:
-        st.markdown(
+        render_html(
             f"""<div class="m-card">
                 <div class="m-label">📁 Data Mode</div>
                 <div class="m-value" style="font-size:1.1rem; padding-top:6px;">{data_mode}</div>
                 <div style="font-size:0.68rem; color:{palette['muted']}; margin-top:4px;">{len(sources)} Active Waste Sources</div>
-            </div>""",
-            unsafe_allow_html=True,
+            </div>"""
         )
 
     # 2. Multi-Stream Compatibility Flow

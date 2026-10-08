@@ -149,24 +149,20 @@ def render_sidebar_auth_widget():
         }
         u_icon = role_icons.get(user["role"], "👤")
 
-        st.sidebar.markdown(
-            f"""
-            <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); 
-                        border-radius: 8px; padding: 12px; margin-bottom: 16px;">
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="font-size:1.4rem;">{u_icon}</span>
-                    <div style="overflow:hidden;">
-                        <div style="font-size:0.85rem; font-weight:700; text-overflow:ellipsis; white-space:nowrap;">{user['full_name']}</div>
-                        <div style="font-size:0.68rem; color:#8ba3c7; text-transform:uppercase; letter-spacing:0.08em;">{user['authority_title']}</div>
-                    </div>
-                </div>
-                <div style="margin-top:8px; font-size:0.68rem; color:#8ba3c7; border-top:1px solid rgba(255,255,255,0.06); padding-top:6px;">
-                    <b>Scope:</b> {user['jurisdiction']}
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
+        card_html = (
+            f'<div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); '
+            f'border-radius: 8px; padding: 12px; margin-bottom: 16px;">'
+            f'<div style="display:flex; align-items:center; gap:8px;">'
+            f'<span style="font-size:1.4rem;">{u_icon}</span>'
+            f'<div style="overflow:hidden;">'
+            f'<div style="font-size:0.85rem; font-weight:700; text-overflow:ellipsis; white-space:nowrap;">{user["full_name"]}</div>'
+            f'<div style="font-size:0.68rem; color:#8ba3c7; text-transform:uppercase; letter-spacing:0.08em;">{user["authority_title"]}</div>'
+            f'</div></div>'
+            f'<div style="margin-top:8px; font-size:0.68rem; color:#8ba3c7; border-top:1px solid rgba(255,255,255,0.06); padding-top:6px;">'
+            f'<b>Scope:</b> {user["jurisdiction"]}'
+            f'</div></div>'
         )
+        st.sidebar.markdown(card_html, unsafe_allow_html=True)
 
         col_out, col_pwd = st.sidebar.columns([1, 1])
         with col_out:
@@ -225,22 +221,16 @@ def render_access_restricted_view(page_name):
     user = get_current_user()
     role_title = user["authority_title"] if user else "Public User"
 
-    st.markdown(
-        f"""
-        <div style="max-width: 650px; margin: 40px auto; text-align: center; background: rgba(255,56,86,0.06); 
-                    border: 1px solid rgba(255,56,86,0.3); border-radius: 12px; padding: 36px 28px;">
-            <div style="font-size: 2.8rem; margin-bottom: 12px;">🛡️</div>
-            <div style="font-size: 1.3rem; font-weight: 800; color: #ff3856; margin-bottom: 8px;">
-                Jurisdictional Access Restricted
-            </div>
-            <div style="font-size: 0.85rem; color: #8ba3c7; margin-bottom: 20px; line-height: 1.6;">
-                Your logged-in role as <b>{role_title}</b> does not have administrative clearance to access the 
-                <b>{page_name}</b> view.
-            </div>
-            <div style="font-size: 0.75rem; color: #8ba3c7; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px;">
-                Please contact the Karnataka State Urban Development IT Administrator if you require elevated clearance.
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
+    msg_html = (
+        f'<div style="max-width: 650px; margin: 40px auto; text-align: center; background: rgba(255,56,86,0.06); '
+        f'border: 1px solid rgba(255,56,86,0.3); border-radius: 12px; padding: 36px 28px;">'
+        f'<div style="font-size: 2.8rem; margin-bottom: 12px;">🛡️</div>'
+        f'<div style="font-size: 1.3rem; font-weight: 800; color: #ff3856; margin-bottom: 8px;">Jurisdictional Access Restricted</div>'
+        f'<div style="font-size: 0.85rem; color: #8ba3c7; margin-bottom: 20px; line-height: 1.6;">'
+        f'Your logged-in role as <b>{role_title}</b> does not have administrative clearance to access the <b>{page_name}</b> view.'
+        f'</div>'
+        f'<div style="font-size: 0.75rem; color: #8ba3c7; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px;">'
+        f'Please contact the Karnataka State Urban Development IT Administrator if you require elevated clearance.'
+        f'</div></div>'
     )
+    st.markdown(msg_html, unsafe_allow_html=True)
