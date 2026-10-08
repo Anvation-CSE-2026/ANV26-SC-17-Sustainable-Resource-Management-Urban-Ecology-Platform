@@ -3,180 +3,288 @@ import streamlit as st
 
 def get_palette(theme):
     if theme == "light":
-        # Soft warm beige — not white
         return {
-            "bg": "#f0ece4",           # warm sand
-            "bg_soft": "#e8e3d9",
-            "card_bg": "#faf7f2",      # off-white card
-            "card_border": "#d8d2c6",
-            "text": "#1e293b",
-            "text_muted": "#6b7280",
-            "divider": "#d8d2c6",
-            "input_bg": "#e8e3d9",
+            "bg": "#f4f4f5",
+            "bg_soft": "#eaeaec",
+            "card_bg": "#ffffff",
+            "card_border": "#e4e4e7",
+            "card_shadow": "0 1px 2px rgba(0,0,0,0.03), 0 1px 3px rgba(0,0,0,0.04)",
+            "text": "#0a0a0a",
+            "text_muted": "#71717a",
+            "divider": "#e4e4e7",
+            "input_bg": "#f4f4f5",
+            "accent": "#d5001c",
+            "accent_2": "#0a0a0a",
+            "danger": "#d5001c",
+            "warn": "#b45309",
+            "map_bg": "#efeff1",
         }
-    # Warm charcoal — not black, not navy
     return {
-        "bg": "#2b2a28",               # warm dark gray
-        "bg_soft": "#35332f",
-        "card_bg": "#35332f",
-        "card_border": "#46433d",
-        "text": "#f0ece4",
-        "text_muted": "#a8a49c",
-        "divider": "#46433d",
-        "input_bg": "#3d3b36",
+        "bg": "#0c0c0d",
+        "bg_soft": "#18181b",
+        "card_bg": "#18181b",
+        "card_border": "#27272a",
+        "card_shadow": "0 1px 2px rgba(0,0,0,0.4), 0 1px 3px rgba(0,0,0,0.3)",
+        "text": "#fafafa",
+        "text_muted": "#a1a1aa",
+        "divider": "#27272a",
+        "input_bg": "#1f1f23",
+        "accent": "#ff2d3f",
+        "accent_2": "#fafafa",
+        "danger": "#ff2d3f",
+        "warn": "#fbbf24",
+        "map_bg": "#1a1a1d",
     }
+
 
 def inject_css(p):
     theme = st.session_state.get("theme", "light")
-    ok_color = "#15803d" if theme == "light" else "#86efac"
-    alert_color = "#b91c1c" if theme == "light" else "#fca5a5"
-    warn_color = "#b45309" if theme == "light" else "#fcd34d"
 
     st.markdown(f"""
     <style>
+        html, body, [class*="css"], .stApp, button, input, textarea {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif !important;
+            -webkit-font-smoothing: antialiased;
+        }}
+
         .stApp {{ background: {p['bg']}; }}
-        h1, h2, h3, h4, p, span, div, label {{ color: {p['text']} !important; }}
+
+        h1, h2, h3, h4, p, span, div, label {{
+            color: {p['text']} !important;
+        }}
+
         [data-testid="stSidebar"] {{ display: none; }}
         [data-testid="stHeader"] {{ background: {p['bg']}; }}
+        [data-testid="stToolbar"] {{ display: none; }}
+        #MainMenu {{ visibility: hidden; }}
+        footer {{ visibility: hidden; }}
 
+        .block-container {{
+            padding-top: 2.5rem;
+            padding-bottom: 4rem;
+            max-width: 1280px;
+        }}
+
+        /* ---------- Header ---------- */
         .logo-title {{
-            font-size: 2rem;
-            font-weight: 800;
-            background: linear-gradient(90deg, #16a34a 0%, #0891b2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-size: 1.65rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            color: {p['text']} !important;
             margin: 0;
-            line-height: 1.1;
+            line-height: 1;
         }}
         .logo-tagline {{
-            font-size: 0.9rem;
+            font-size: 0.68rem;
             color: {p['text_muted']};
-            margin-top: 4px;
-            letter-spacing: 0.3px;
+            margin-top: 8px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            font-weight: 500;
         }}
 
+        /* ---------- Panel wrapper (for grouped sections) ---------- */
+        .panel {{
+            background: {p['card_bg']};
+            border: 1px solid {p['card_border']};
+            border-radius: 6px;
+            padding: 24px 26px;
+            box-shadow: {p['card_shadow']};
+            animation: fadeIn 0.35s ease both;
+        }}
+
+        /* ---------- Metric cards ---------- */
         .metric-card {{
             background: {p['card_bg']};
             border: 1px solid {p['card_border']};
-            border-radius: 14px;
-            padding: 18px;
-            text-align: center;
-            transition: all 0.25s ease;
-            animation: fadeInUp 0.5s ease;
+            border-radius: 6px;
+            padding: 24px;
+            box-shadow: {p['card_shadow']};
+            transition: all 0.2s ease;
+            animation: fadeIn 0.35s ease both;
+            height: 100%;
         }}
         .metric-card:hover {{
-            border-color: #16a34a;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 18px rgba(22, 163, 74, 0.12);
+            border-color: {p['text_muted']};
+            transform: translateY(-1px);
         }}
         .metric-label {{
-            font-size: 0.75rem;
+            font-size: 0.62rem;
             color: {p['text_muted']};
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 6px;
-        }}
-        .metric-value {{ font-size: 1.9rem; font-weight: 700; }}
-
-        .status-ok {{
-            background: rgba(34,197,94,0.10);
-            border-left: 4px solid #22c55e;
-            padding: 14px 18px;
-            border-radius: 8px;
-            color: {ok_color};
+            letter-spacing: 0.22em;
             font-weight: 600;
-            animation: slideIn 0.4s ease;
+            margin-bottom: 16px;
+        }}
+        .metric-value {{
+            font-size: 2.6rem;
+            font-weight: 300;
+            letter-spacing: -0.045em;
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+        }}
+        .metric-card.emphasize {{
+            border: 1.5px solid {p['text']};
+            padding: 30px 26px;
+        }}
+        .metric-card.emphasize .metric-value {{
+            font-size: 3.2rem;
+            font-weight: 300;
+        }}
+        .metric-sub {{
+            font-size: 0.72rem;
+            color: {p['text_muted']};
+            margin-top: 10px;
+            font-weight: 400;
+        }}
+
+        /* ---------- Status banners ---------- */
+        .status-ok, .status-alert, .status-warn, .status-success {{
+            border-radius: 4px;
+            padding: 14px 20px;
+            font-weight: 500;
+            font-size: 0.82rem;
+            letter-spacing: 0.01em;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: fadeIn 0.35s ease both;
+            border: 1px solid;
+        }}
+        .status-ok {{
+            background: {p['card_bg']};
+            border-color: {p['card_border']};
+            color: {p['text']};
         }}
         .status-alert {{
-            background: rgba(239,68,68,0.10);
-            border-left: 4px solid #ef4444;
-            padding: 14px 18px;
-            border-radius: 8px;
-            color: {alert_color};
+            background: rgba(213,0,28,0.06);
+            border-color: {p['accent']};
+            color: {"#d5001c" if theme == "light" else "#ff2d3f"};
             font-weight: 600;
-            animation: slideIn 0.4s ease, pulse 2s infinite;
         }}
         .status-warn {{
-            background: rgba(245,158,11,0.10);
-            border-left: 4px solid #f59e0b;
-            padding: 12px 18px;
-            border-radius: 8px;
-            color: {warn_color};
+            background: {p['card_bg']};
+            border-color: {p['card_border']};
+            color: {"#92400e" if theme == "light" else "#fcd34d"};
             margin-top: 10px;
-            animation: slideIn 0.4s ease;
         }}
         .status-success {{
-            background: rgba(34,197,94,0.12);
-            border-left: 4px solid #22c55e;
-            padding: 12px 18px;
-            border-radius: 8px;
-            color: {ok_color};
+            background: {p['card_bg']};
+            border-color: {p['text']};
+            color: {p['text']};
+            margin-top: 12px;
             font-weight: 600;
-            margin-top: 10px;
-            animation: slideIn 0.4s ease;
         }}
 
+        /* ---------- Facility cards ---------- */
         .facility-card {{
             background: {p['card_bg']};
             border: 1px solid {p['card_border']};
-            border-radius: 12px;
-            padding: 16px;
-            transition: all 0.25s ease;
+            border-radius: 6px;
+            padding: 20px;
+            box-shadow: {p['card_shadow']};
+            transition: all 0.2s ease;
+            animation: fadeIn 0.35s ease both;
+            height: 100%;
         }}
-        .facility-card:hover {{ border-color: #0891b2; }}
-        .facility-name {{ font-weight: 700; font-size: 1rem; color: {p['text']}; }}
+        .facility-card:hover {{
+            border-color: {p['text_muted']};
+            transform: translateY(-1px);
+        }}
+        .facility-name {{
+            font-weight: 600;
+            font-size: 0.92rem;
+            letter-spacing: -0.01em;
+        }}
         .facility-type {{
-            font-size: 0.72rem;
+            font-size: 0.6rem;
             color: {p['text_muted']};
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.18em;
+            font-weight: 500;
+            margin-top: 4px;
         }}
         .util-bar {{
-            height: 8px;
-            background: {p['input_bg']};
-            border-radius: 4px;
+            height: 6px;
+            background: {p['divider']};
+            border-radius: 3px;
             overflow: hidden;
-            margin-top: 10px;
+            margin-top: 16px;
         }}
         .util-fill {{
             height: 100%;
-            border-radius: 4px;
-            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
-            animation: growBar 1s ease-out;
+            border-radius: 3px;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: growBar 0.8s ease-out;
         }}
 
-        @keyframes fadeInUp {{
-            from {{ opacity: 0; transform: translateY(10px); }}
-            to   {{ opacity: 1; transform: translateY(0); }}
-        }}
-        @keyframes slideIn {{
-            from {{ opacity: 0; transform: translateX(-10px); }}
-            to   {{ opacity: 1; transform: translateX(0); }}
-        }}
-        @keyframes pulse {{
-            0%, 100% {{ opacity: 1; }}
-            50%      {{ opacity: 0.75; }}
-        }}
-        @keyframes growBar {{ from {{ width: 0%; }} }}
-
+        /* ---------- Buttons ---------- */
         .stButton > button {{
-            background: linear-gradient(90deg, #16a34a 0%, #0891b2 100%);
-            color: #ffffff;
+            background: {p['card_bg']};
+            color: {p['text']};
             font-weight: 600;
-            border: none;
-            border-radius: 10px;
-            padding: 10px 18px;
-            transition: all 0.2s ease;
+            font-size: 0.7rem;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            border: 1px solid {p['card_border']};
+            border-radius: 4px;
+            padding: 14px 20px;
+            transition: all 0.15s ease;
+            box-shadow: {p['card_shadow']};
+            width: 100%;
         }}
         .stButton > button:hover {{
+            border-color: {p['accent']};
+            color: {p['accent']} !important;
+            background: {p['bg_soft']};
             transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(22, 163, 74, 0.25);
+        }}
+        .stButton > button:active {{
+            transform: translateY(0);
         }}
 
+        /* ---------- Expander ---------- */
         [data-testid="stExpander"] {{
             background: {p['card_bg']};
             border: 1px solid {p['card_border']};
-            border-radius: 10px;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: {p['card_shadow']};
+        }}
+        [data-testid="stExpander"] summary {{
+            font-weight: 600;
+            font-size: 0.72rem;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            padding: 18px 22px;
+            color: {p['text_muted']};
+        }}
+
+        /* ---------- Section titles ---------- */
+        .section-title {{
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: {p['text_muted']};
+            letter-spacing: 0.24em;
+            text-transform: uppercase;
+            margin: 4px 0 18px 0;
+            display: block;
+        }}
+
+        /* ---------- Dataframe ---------- */
+        [data-testid="stDataFrame"] {{
+            border: 1px solid {p['card_border']} !important;
+            border-radius: 6px !important;
+            box-shadow: {p['card_shadow']} !important;
+        }}
+
+        /* ---------- Animations ---------- */
+        @keyframes fadeIn {{
+            from {{ opacity: 0; transform: translateY(4px); }}
+            to   {{ opacity: 1; transform: translateY(0); }}
+        }}
+        @keyframes growBar {{
+            from {{ width: 0%; }}
         }}
     </style>
     """, unsafe_allow_html=True)
