@@ -67,15 +67,16 @@ def inject_css(p):
 
         h1, h2, h3, h4, p, span, label {{ color: {p['text']}; }}
 
-        [data-testid="stSidebar"] {{ display: none; }}
-        [data-testid="stToolbar"] {{ display: none; }}
-        #MainMenu {{ visibility: hidden; }}
-        footer {{ visibility: hidden; }}
+        [data-testid="stHeader"] {{ display: none !important; height: 0 !important; }}
+        [data-testid="stSidebar"] {{ display: none !important; }}
+        [data-testid="stToolbar"] {{ display: none !important; }}
+        #MainMenu {{ visibility: hidden !important; }}
+        footer {{ visibility: hidden !important; }}
 
         .block-container {{
-            padding-top: 1.8rem;
-            padding-bottom: 4rem;
-            max-width: 1280px;
+            padding-top: 2.8rem !important;
+            padding-bottom: 4rem !important;
+            max-width: 1280px !important;
         }}
 
         /* Header */
@@ -636,22 +637,46 @@ def inject_css(p):
         }}
 
         /* Streamlit overrides */
-        [data-testid="stExpander"] {{
+        [data-testid="stExpander"],
+        details[data-testid="stExpander"],
+        [data-testid="stExpander"] details {{
             background: {p['card_bg']} !important;
+            background-color: {p['card_bg']} !important;
             border: 1px solid {p['border']} !important;
             border-radius: 8px !important;
             overflow: hidden !important;
             box-shadow: {p['shadow']} !important;
             margin-bottom: 24px !important;
         }}
-        [data-testid="stExpander"] summary {{
+        [data-testid="stExpander"] summary,
+        details[data-testid="stExpander"] > summary,
+        [data-testid="stExpander"] > summary {{
+            background: {p['card_bg']} !important;
+            background-color: {p['card_bg']} !important;
             font-weight: 700 !important;
             font-size: 0.72rem !important;
             letter-spacing: 0.14em !important;
             text-transform: uppercase !important;
             padding: 16px 22px !important;
             color: {p['text']} !important;
+            border-bottom: 1px solid {p['border_subtle']} !important;
         }}
+        [data-testid="stExpander"] summary:hover,
+        details[data-testid="stExpander"] > summary:hover {{
+            background: {p['bg_soft']} !important;
+            background-color: {p['bg_soft']} !important;
+            color: {p['accent']} !important;
+        }}
+        [data-testid="stExpander"] summary *,
+        details[data-testid="stExpander"] > summary * {{
+            color: {p['text']} !important;
+        }}
+        [data-testid="stExpanderDetails"] {{
+            background: {p['card_bg']} !important;
+            background-color: {p['card_bg']} !important;
+            padding: 16px 22px !important;
+        }}
+
         /* File Uploader styling */
         [data-testid="stFileUploader"] {{
             background: transparent !important;
@@ -670,6 +695,83 @@ def inject_css(p):
         }}
         [data-testid="stFileUploaderDropzone"] * {{
             color: {p['text']} !important;
+        }}
+        [data-testid="stFileUploaderDropzone"] button {{
+            background: {p['card_bg']} !important;
+            border: 1px solid {p['border']} !important;
+            color: {p['text']} !important;
+            font-weight: 700 !important;
+            font-size: 0.72rem !important;
+            letter-spacing: 0.08em !important;
+            border-radius: 6px !important;
+            box-shadow: {p['shadow']} !important;
+            transition: all 0.2s ease !important;
+        }}
+        [data-testid="stFileUploaderDropzone"] button:hover {{
+            border-color: {p['accent']} !important;
+            color: {p['accent']} !important;
+            transform: translateY(-1px) !important;
+        }}
+        [data-testid="stFileUploaderDropzone"] button * {{
+            color: {p['text']} !important;
+        }}
+
+        /* Streamlit Native Buttons (Used for 4 Actions Grid) */
+        [data-testid="stBaseButton-secondary"] {{
+            background: {p['card_bg']} !important;
+            border: 1px solid {p['border']} !important;
+            border-radius: 6px !important;
+            padding: 14px 12px !important;
+            color: {p['text']} !important;
+            box-shadow: {p['shadow']} !important;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            width: 100% !important;
+        }}
+        [data-testid="stBaseButton-secondary"]:hover {{
+            border-color: {p['accent']} !important;
+            color: {p['accent']} !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 6px 16px rgba(213,0,28,0.2) !important;
+        }}
+        [data-testid="stBaseButton-secondary"] p,
+        [data-testid="stBaseButton-secondary"] span,
+        [data-testid="stBaseButton-secondary"] div {{
+            color: {p['text']} !important;
+            font-size: 0.72rem !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.12em !important;
+            text-transform: uppercase !important;
+        }}
+        [data-testid="stBaseButton-secondary"]:hover p,
+        [data-testid="stBaseButton-secondary"]:hover span,
+        [data-testid="stBaseButton-secondary"]:hover div {{
+            color: {p['accent']} !important;
+        }}
+
+        [data-testid="stBaseButton-primary"] {{
+            background: {p['accent']} !important;
+            border: 1px solid {p['accent']} !important;
+            border-radius: 6px !important;
+            padding: 14px 12px !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 14px rgba(213,0,28,0.3) !important;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            width: 100% !important;
+        }}
+        [data-testid="stBaseButton-primary"]:hover {{
+            background: #b00018 !important;
+            border-color: #b00018 !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 6px 20px rgba(213,0,28,0.5) !important;
+        }}
+        [data-testid="stBaseButton-primary"] p,
+        [data-testid="stBaseButton-primary"] span,
+        [data-testid="stBaseButton-primary"] div {{
+            color: #ffffff !important;
+            font-size: 0.72rem !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.12em !important;
+            text-transform: uppercase !important;
         }}
 
         /* Download Button Fix */

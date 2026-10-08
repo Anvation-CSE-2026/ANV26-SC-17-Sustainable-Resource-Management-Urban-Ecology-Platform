@@ -32,31 +32,6 @@ elif "theme" not in st.session_state or st.session_state.theme not in ["light", 
 # Sync URL query param to reflect active theme
 st.query_params["theme"] = st.session_state.theme
 
-# --- Handle query-param actions ---
-qp = st.query_params
-action = qp.get("action")
-if action:
-    if action == "event":
-        st.session_state.event_active = not st.session_state.event_active
-        st.session_state.reoptimized = False
-    elif action == "outage":
-        cycle = {None: "B", "B": "C", "C": None}
-        st.session_state.outage_facility = cycle[st.session_state.outage_facility]
-        st.session_state.reoptimized = False
-    elif action == "reopt":
-        st.session_state.reoptimized = True
-        st.session_state._force_reopt = True
-    elif action == "reset":
-        st.session_state.event_active = False
-        st.session_state.reoptimized = False
-        st.session_state.outage_facility = None
-        for k in ["allocations", "overflow", "demand_signature", "_force_reopt"]:
-            st.session_state.pop(k, None)
-    # Remove action from query params while keeping the theme param intact
-    if "action" in st.query_params:
-        del st.query_params["action"]
-    st.rerun()
-
 # --- Theme ---
 palette = theme.get_palette(st.session_state.theme)
 theme.inject_css(palette)
@@ -89,20 +64,33 @@ for f in data.FACILITIES:
 
 total_capacity = sum(f["capacity_kg"] for f in active_facilities)
 
-# --- Allocation logic ---
-demand_sig = (round(wet_total), round(dry_total), st.session_state.outage_facility)
-needs_init = "allocations" not in st.session_state
-force = st.session_state.pop("_force_reopt", False)
+# --- Allocation logic: Re-optimized vs Static baseline ---
+if st.session_state.reoptimized:
+    allocations, overflow = optimizer.optimize(active_facilities, wet_total, dry_total)
+else:
+    # Static allocation prior to running the optimizer:
+    # Baseline static plan is A: 2000, B: 1800, C: 1400.
+    # Offline facilities lose their allocation (stranded overflow),
+    # and unscheduled surges cannot be re-routed until user clicks Re-optimize.
+    allocations = {}
+    base_plan = {"A": 2000, "B": 1800, "C": 1400}
+    for f in active_facilities:
+        fid = f["id"]
+        if f["capacity_kg"] <= 0:
+            allocations[fid] = 0
+        else:
+            allocations[fid] = min(base_plan.get(fid, 0), f["capacity_kg"])
 
-if needs_init or force:
-    allocs, ovf = optimizer.optimize(active_facilities, wet_total, dry_total)
-    st.session_state.allocations = allocs
-    st.session_state.overflow = ovf
-    st.session_state.demand_signature = demand_sig
-    st.session_state.reoptimized = True
+    assigned_wet = allocations.get("A", 0) + allocations.get("B", 0)
+    assigned_dry = allocations.get("C", 0)
+    overflow = {}
+    if wet_total > assigned_wet:
+        overflow["wet"] = wet_total - assigned_wet
+    if dry_total > assigned_dry:
+        overflow["dry"] = dry_total - assigned_dry
 
-allocations = st.session_state.allocations
-overflow = st.session_state.overflow
+st.session_state.allocations = allocations
+st.session_state.overflow = overflow
 total_overflow = optimizer.total_overflow(overflow)
 
 # --- Header with live status badge & theme toggle ---
@@ -124,12 +112,32 @@ components.stream_breakdown(wet_total, dry_total, palette)
 # --- Status Banner ---
 components.status_banner(total_overflow, st.session_state.reoptimized, st.session_state.outage_facility)
 
-# --- Actions with active scenario indicators ---
-components.action_buttons(
+# --- Actions with active scenario indicators (Native Streamlit Buttons) ---
+btn_clicks = components.action_buttons(
     event_active=st.session_state.event_active,
     outage=st.session_state.outage_facility,
-    theme=st.session_state.theme,
 )
+
+if btn_clicks["event"]:
+    st.session_state.event_active = not st.session_state.event_active
+    st.session_state.reoptimized = False
+    st.rerun()
+
+if btn_clicks["outage"]:
+    cycle = {None: "B", "B": "C", "C": None}
+    st.session_state.outage_facility = cycle[st.session_state.outage_facility]
+    st.session_state.reoptimized = False
+    st.rerun()
+
+if btn_clicks["reopt"]:
+    st.session_state.reoptimized = True
+    st.rerun()
+
+if btn_clicks["reset"]:
+    st.session_state.event_active = False
+    st.session_state.outage_facility = None
+    st.session_state.reoptimized = True
+    st.rerun()
 
 # --- Data Ingestion Drawer (Positioned under Action Buttons) ---
 with st.expander("📁 DATA INGESTION — UPLOAD CSV OR DOWNLOAD TEMPLATE", expanded=False):

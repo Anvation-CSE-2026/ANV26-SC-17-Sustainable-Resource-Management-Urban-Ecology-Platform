@@ -100,19 +100,26 @@ def status_banner(total_overflow, reoptimized, outage=None):
             )
 
 
-def action_buttons(event_active=False, outage=None, theme="light"):
+def action_buttons(event_active=False, outage=None):
     event_label = "⚡ Dismiss Event" if event_active else "⚡ Add Event Spike"
     outage_label = f"🔌 Outage ({outage})" if outage else "🔌 Simulate Outage"
-    t_arg = f"&theme={theme}" if theme else ""
-    st.markdown(
-        f'<div class="action-grid">'
-        f'<a class="act-btn" href="?action=event{t_arg}" target="_self">{event_label}</a>'
-        f'<a class="act-btn" href="?action=outage{t_arg}" target="_self">{outage_label}</a>'
-        f'<a class="act-btn primary" href="?action=reopt{t_arg}" target="_self">⚙️ Re-optimize Grid</a>'
-        f'<a class="act-btn" href="?action=reset{t_arg}" target="_self">🔄 Reset System</a>'
-        f'</div>',
-        unsafe_allow_html=True,
-    )
+
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        click_event = st.button(event_label, key="btn_act_event", use_container_width=True)
+    with col2:
+        click_outage = st.button(outage_label, key="btn_act_outage", use_container_width=True)
+    with col3:
+        click_reopt = st.button("⚙️ Re-optimize Grid", key="btn_act_reopt", type="primary", use_container_width=True)
+    with col4:
+        click_reset = st.button("🔄 Reset System", key="btn_act_reset", use_container_width=True)
+
+    return {
+        "event": click_event,
+        "outage": click_outage,
+        "reopt": click_reopt,
+        "reset": click_reset,
+    }
 
 
 def facility_grid(facilities, allocations, p, outage=None):
