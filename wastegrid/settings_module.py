@@ -102,38 +102,51 @@ def render_settings_page(palette):
         st.selectbox("Default Linear Programming Solver", ["HiGHS (Dual Simplex)", "HiGHS (Interior Point)", "Greedy Heuristic Fallback"])
 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown(f'<div class="sec-title">🔑 EXTERNAL API KEYS & TELEMETRY INTEGRATIONS</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="sec-title">📡 INBUILT MUNICIPAL TELEMETRY & HARDWARE INTEGRATIONS</div>', unsafe_allow_html=True)
     st.markdown(
         f"""
-        <div style="font-size:0.75rem; color:{p['muted']}; margin-bottom:12px;">
-            Configure external microservice API credentials for live weather multipliers, GIS geocoding, and IoT sensor gateways.
+        <div style="font-size:0.78rem; color:{p['muted']}; margin-bottom:14px; line-height:1.6;">
+            All hardware telemetry, GIS geocoding, and IoT sensor microservices are <b>inbuilt and pre-configured</b> into the WasteGrid platform. 
+            No manual API key entry or external tokens are required.
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px;">
+            <div style="background:{p['bg_soft']}; border:1px solid {p['border']}; border-radius:10px; padding:14px; font-size:0.8rem; line-height:1.8;">
+                <div style="font-weight:800; color:{p['text']}; display:flex; justify-content:space-between;">
+                    <span>🛰️ GIS Geospatial Telemetry</span>
+                    <span style="color:#10b981; font-weight:700;">● Inbuilt Active</span>
+                </div>
+                <div style="color:{p['muted']}; font-size:0.72rem;">OpenStreetMap / CartoDB municipal tile cluster</div>
+                <div style="margin-top:4px;"><b>Status:</b> Pre-authenticated & Hardware-locked</div>
+            </div>
+            <div style="background:{p['bg_soft']}; border:1px solid {p['border']}; border-radius:10px; padding:14px; font-size:0.8rem; line-height:1.8;">
+                <div style="font-weight:800; color:{p['text']}; display:flex; justify-content:space-between;">
+                    <span>📶 Fleet In-Cab Telemetry</span>
+                    <span style="color:#10b981; font-weight:700;">● Inbuilt Active</span>
+                </div>
+                <div style="color:{p['muted']}; font-size:0.72rem;">Cellular 4G IoT MQTT gateway on compactor trucks</div>
+                <div style="margin-top:4px;"><b>Status:</b> Dual-SIM redundant auto-handshake</div>
+            </div>
+            <div style="background:{p['bg_soft']}; border:1px solid {p['border']}; border-radius:10px; padding:14px; font-size:0.8rem; line-height:1.8;">
+                <div style="font-weight:800; color:{p['text']}; display:flex; justify-content:space-between;">
+                    <span>☁️ Weather Surge Calibration</span>
+                    <span style="color:#10b981; font-weight:700;">● Inbuilt Active</span>
+                </div>
+                <div style="color:{p['muted']}; font-size:0.72rem;">Monsoon & rain precipitation generation feed</div>
+                <div style="margin-top:4px;"><b>Status:</b> Auto-refreshing every 15 minutes</div>
+            </div>
+            <div style="background:{p['bg_soft']}; border:1px solid {p['border']}; border-radius:10px; padding:14px; font-size:0.8rem; line-height:1.8;">
+                <div style="font-weight:800; color:{p['text']}; display:flex; justify-content:space-between;">
+                    <span>⚖️ Automated Weighbridge Bridge</span>
+                    <span style="color:#10b981; font-weight:700;">● Inbuilt Active</span>
+                </div>
+                <div style="color:{p['muted']}; font-size:0.72rem;">RFID / ANPR gate terminal at processing facilities</div>
+                <div style="margin-top:4px;"><b>Status:</b> Synchronized with Central Simplex LP Solver</div>
+            </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    api_col1, api_col2 = st.columns(2)
-    with api_col1:
-        st.text_input("OpenWeatherMap API Key (Rainfall Surges)", value="owm_live_9a8f4c2817e0b5", type="password")
-        st.text_input("GIS Geocoding API Key (Mapbox / Google Maps)", value="pk.eyJ1Ijoid2FzdGVncmlkIiwicmF3IjoiY2xqdWV2", type="password")
-        st.text_input("SMS Gateway Auth Token (Twilio / Gov SMS)", value="tw_auth_8829104018aa", type="password")
-
-    with api_col2:
-        st.text_input("Municipal IoT MQTT Broker Endpoint", value="mqtts://iot-telemetry.wastegrid.smartcity.gov.in:8883")
-        st.text_input("WasteGrid REST API Ingestion Token", value="wg_live_sec_7721a9f0e13b82c74d6e", type="password")
-        st.selectbox("Webhook Delivery Mode", ["Real-Time HTTPS Push", "Batch Polling (15 Min Interval)", "Manual Synchronize"])
-
-    st.markdown(
-        f"""
-        <div style="background:{p['bg_soft']}; border:1px solid {p['border']}; border-radius:8px; padding:12px 16px; margin-top:14px; font-size:0.75rem;">
-            <b>Sample REST Ingestion Curl:</b><br>
-            <code>curl -X POST https://api.wastegrid.smartcity.gov.in/v2/telemetry -H "Authorization: Bearer wg_live_sec_..." -d '{{"ward":"WARD-112","wet_kg":1420,"dry_kg":580}}'</code>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("Save System Configuration & API Keys", type="primary"):
-        st.toast("✅ Settings and API Keys updated successfully.")
+    if st.button("Save Alert Threshold Parameters", type="primary"):
+        st.toast("✅ Operational thresholds updated successfully.")
 

@@ -124,6 +124,7 @@ for f in db_facilities:
     active_facilities.append(fc)
 
 total_capacity = sum(f["capacity_kg"] for f in active_facilities if f.get("status") != "offline")
+active_trucks_count = len([v for v in db.get_all_vehicles() if v.get("status") in ["available", "in_transit", "assigned"]])
 
 # Optimization Calculation
 if st.session_state.reoptimized:
@@ -175,31 +176,36 @@ BASE_NAV = [
     ("🚨 Alerts", "alerts"),
 ]
 
-# Build Respective Sidebar for Each of the 5 Tenants
+# Build Respective Sidebar for Each of the 5 Tenants (Settings included in sidebar before logout)
 if user_role in ["state", "state_authority"]:
     TENANT_NAV = BASE_NAV + [
         ("🏛️ State Policy", "state_policy"),
         ("📊 Statewide Reports", "reports"),
+        ("⚙️ Settings", "settings"),
     ]
 elif user_role == "commissioner":
     TENANT_NAV = BASE_NAV + [
         ("⚖️ Reallocation LP", "allocation_exec"),
         ("📈 Executive KPIs", "kpis_exec"),
+        ("⚙️ Settings", "settings"),
     ]
 elif user_role in ["waste_officer", "municipality"]:
     TENANT_NAV = BASE_NAV + [
         ("🚛 Fleet Telematics", "fleet_ops"),
         ("🗳️ Citizen Grievances", "citizen_ops"),
+        ("⚙️ Settings", "settings"),
     ]
 elif user_role in ["zonal_officer", "district"]:
     TENANT_NAV = BASE_NAV + [
         ("📍 Ward Blackspots", "ward_spots"),
         ("👥 Citizen Reports", "citizen_zonal"),
+        ("⚙️ Settings", "settings"),
     ]
 elif user_role in ["processing_facility", "recycling_facility", "factory"]:
     TENANT_NAV = BASE_NAV + [
         ("🏭 Plant Inflow", "plant_inflow"),
         ("♻️ Material Recovery", "recycling_ops"),
+        ("⚙️ Settings", "settings"),
     ]
 elif user_role == "admin":
     TENANT_NAV = BASE_NAV + [
@@ -210,7 +216,9 @@ elif user_role == "admin":
     ]
 else:
     # Public / Guest Visitor Navigation
-    TENANT_NAV = BASE_NAV
+    TENANT_NAV = BASE_NAV + [
+        ("⚙️ Settings", "settings"),
+    ]
 
 # Map legacy nav keys if present
 legacy_map = {
@@ -514,47 +522,6 @@ if current_nav_key in ["home", "overview"]:
         """
     )
 
-    # 4. Quick Evaluator Access Cards (if public visitor)
-    if not current_user:
-        st.markdown(
-            f"""
-            <div style="background:rgba(59,130,246,0.06); border:1px solid rgba(59,130,246,0.3); border-radius:12px; padding:20px; margin-bottom:24px;">
-                <div style="font-size:0.95rem; font-weight:800; color:{palette['blue']}; margin-bottom:6px;">
-                    🛡️ Evaluator Role Portals (1-Click Instant Access)
-                </div>
-                <div style="font-size:0.8rem; color:{palette['muted']}; margin-bottom:14px;">
-                    Experience WasteGrid from any municipal stakeholder perspective with pre-configured authority accounts:
-                </div>
-            """,
-            unsafe_allow_html=True,
-        )
-        col_rp1, col_rp2, col_rp3, col_rp4, col_rp5 = st.columns(5)
-        with col_rp1:
-            if st.button("👑 Super Admin", use_container_width=True, key="btn_ev_admin"):
-                auth.login("admin", "Admin@123")
-                st.rerun()
-            st.caption("Full System Control")
-        with col_rp2:
-            if st.button("🏛️ State Authority", use_container_width=True, key="btn_ev_state"):
-                auth.login("state_admin", "Waste@123")
-                st.rerun()
-            st.caption("Macro Policy & ESG")
-        with col_rp3:
-            if st.button("🏢 District Magistrate", use_container_width=True, key="btn_ev_dist"):
-                auth.login("district_admin", "District@123")
-                st.rerun()
-            st.caption("Inter-Ward Transit")
-        with col_rp4:
-            if st.button("🏙️ Municipal Officer", use_container_width=True, key="btn_ev_muni"):
-                auth.login("municipality_admin", "Municipality@123")
-                st.rerun()
-            st.caption("Ward Trucks & Tickets")
-        with col_rp5:
-            if st.button("🏭 Plant Manager", use_container_width=True, key="btn_ev_fact"):
-                auth.login("factory_admin", "Factory@123")
-                st.rerun()
-            st.caption("Receiving Docks")
-        st.markdown("</div>", unsafe_allow_html=True)
 
     # 5. Real-Time Grid KPIs Row (8 Primary Overview Metrics)
     processed_kg = sum(allocations.values())

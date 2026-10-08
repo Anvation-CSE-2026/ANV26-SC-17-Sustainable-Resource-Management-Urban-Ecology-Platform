@@ -85,11 +85,14 @@ def top_nav_bar(*args, **kwargs):
         profile_title = "Click to Sign In or Sign Up"
 
     profile_btn_html = (
-        f'<a class="theme-toggle-link" href="?profile=1" target="_self" title="{profile_title}" style="{user_btn_style} font-weight:700;">'
-        f'<span style="width:26px; height:26px; border-radius:50%; background:{p_circle_bg}; color:#ffffff; '
-        f'display:inline-flex; align-items:center; justify-content:center; font-size:0.8rem; font-weight:900; margin-right:6px;">'
-        f'{user_initial}</span>'
-        f'<span>{user_display}</span>{role_badge}</a>'
+        f'<a class="theme-toggle-link" href="?profile=1" target="_self" title="{profile_title}" '
+        f'style="display:inline-flex; align-items:center; gap:8px; padding:4px 12px; border-radius:999px; '
+        f'border:1.5px solid {p_circle_bg}; background:{card_bg}; text-decoration:none; cursor:pointer; '
+        f'box-shadow:0 2px 6px rgba(0,0,0,0.06); transition:all 0.2s ease;">'
+        f'<span style="width:28px; height:28px; border-radius:50%; background:{p_circle_bg}; color:#ffffff; '
+        f'display:inline-flex; align-items:center; justify-content:center; font-size:0.95rem; box-shadow:0 2px 4px rgba(0,0,0,0.15);">'
+        f'👤</span>'
+        f'<span style="font-size:0.82rem; font-weight:700; color:{text_col};">{user_display}</span>{role_badge}</a>'
     )
 
     nav_html = (

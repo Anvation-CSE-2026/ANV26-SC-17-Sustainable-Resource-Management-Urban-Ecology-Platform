@@ -221,3 +221,119 @@ def render_vehicle_tracking_page(palette):
         </div>""",
         unsafe_allow_html=True,
     )
+
+    # 4. Tri-Party Medium: How Driver, Commissioner, and Plant Synchronize
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown(f'<div class="sec-title">📡 THE TRI-PARTY SYNCHRONIZATION MEDIUM (COMMISSIONER ➔ DRIVER ➔ PLANT)</div>', unsafe_allow_html=True)
+    st.markdown(
+        f"""
+        <div style="background:{p['card_bg']}; border:1.5px solid {p['blue']}; border-radius:12px; padding:20px 24px; margin-bottom:20px; box-shadow:{p['shadow']};">
+            <div style="font-size:1.1rem; font-weight:800; color:{p['text']}; margin-bottom:8px;">
+                🔄 How the Truck Driver Knows Which Destination to Go to: The Closed-Loop Medium
+            </div>
+            <div style="font-size:0.83rem; color:{p['muted']}; line-height:1.7; margin-bottom:14px;">
+                Municipal waste logistics requires instant, tamper-proof coordination across three distinct stakeholders. 
+                WasteGrid connects them through an automated closed-loop digital pipeline:
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-bottom:12px;">
+                <div style="background:{p['bg_soft']}; border:1px solid {p['border']}; border-radius:10px; padding:16px;">
+                    <div style="font-size:0.75rem; font-weight:800; color:{p['blue']}; text-transform:uppercase; margin-bottom:4px;">1. The Municipal Commissioner</div>
+                    <div style="font-size:0.95rem; font-weight:800; color:{p['text']}; margin-bottom:6px;">Central LP Allocation Engine</div>
+                    <div style="font-size:0.77rem; color:{p['muted']}; line-height:1.6;">
+                        Runs the Linear Programming solver to calculate citywide mass-balance, avoid facility overload, and issue real-time digital manifests.
+                    </div>
+                </div>
+                <div style="background:{p['bg_soft']}; border:1px solid {p['border']}; border-radius:10px; padding:16px;">
+                    <div style="font-size:0.75rem; font-weight:800; color:{p['success']}; text-transform:uppercase; margin-bottom:4px;">2. The Truck Driver</div>
+                    <div style="font-size:0.95rem; font-weight:800; color:{p['text']}; margin-bottom:6px;">In-Cab MDT / Driver App (PWA)</div>
+                    <div style="font-size:0.77rem; color:{p['muted']}; line-height:1.6;">
+                        Connected via 4G cellular IoT. Receives automated turn-by-turn GPS route manifests and instant audible diversion orders if a plant queues up.
+                    </div>
+                </div>
+                <div style="background:{p['bg_soft']}; border:1px solid {p['border']}; border-radius:10px; padding:16px;">
+                    <div style="font-size:0.75rem; font-weight:800; color:{p['purple']}; text-transform:uppercase; margin-bottom:4px;">3. The Processing Plant Manager</div>
+                    <div style="font-size:0.95rem; font-weight:800; color:{p['text']}; margin-bottom:6px;">Automated Weighbridge ERP</div>
+                    <div style="font-size:0.77rem; color:{p['muted']}; line-height:1.6;">
+                        Scans inbound RFID / ANPR windshield tags at the entry gate, validates waste stream, auto-logs tare/gross weights, and confirms delivery.
+                    </div>
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # 5. Interactive In-Cab Mobile Driver Terminal Simulator
+    st.markdown(f'<div class="sec-title">📱 IN-CAB TRUCK DRIVER TERMINAL (LIVE SIMULATOR)</div>', unsafe_allow_html=True)
+    driver_truck_options = [f"{v['id']} — {v['driver_name']} ({v['assigned_zone']})" for v in vehicles]
+    sel_driver_truck = st.selectbox("Select Truck to View In-Cab Driver Tablet Display:", driver_truck_options)
+    
+    selected_v_id = sel_driver_truck.split(" — ")[0]
+    matched_v = next((v for v in vehicles if v["id"] == selected_v_id), vehicles[0])
+    target_fac = fac_dict.get(matched_v.get("target_facility_id", "A"), {"name": "Facility A (Biocompost)", "status": "online"})
+
+    col_cab_left, col_cab_right = st.columns([1.3, 1], gap="large")
+    with col_cab_left:
+        st.markdown(
+            f"""
+            <div style="background:#090d16; border:3px solid #10b981; border-radius:16px; padding:20px; color:#ffffff; font-family:monospace; box-shadow:0 8px 30px rgba(0,0,0,0.6);">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:10px; margin-bottom:14px;">
+                    <span style="font-size:0.9rem; font-weight:800; color:#10b981;">📶 4G LTE CONNECTED · GPS LOCK</span>
+                    <span style="font-size:0.8rem; background:rgba(16,185,129,0.2); padding:3px 10px; border-radius:6px; color:#10b981;">IN-CAB MDT v2.4</span>
+                </div>
+                <div style="font-size:1.4rem; font-weight:900; margin-bottom:4px; letter-spacing:-0.02em;">
+                    {matched_v['id']} · {matched_v['driver_name']}
+                </div>
+                <div style="font-size:0.85rem; color:#94a3b8; margin-bottom:16px;">
+                    Assigned Collection Zone: <b>{matched_v['assigned_zone']}</b>
+                </div>
+
+                <div style="background:rgba(255,255,255,0.05); border-radius:10px; padding:14px; margin-bottom:14px;">
+                    <div style="font-size:0.75rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em;">CURRENT ROUTE DESTINATION</div>
+                    <div style="font-size:1.2rem; font-weight:800; color:#38bdf8; margin:4px 0;">
+                        ➔ {target_fac.get('name', 'Facility A')}
+                    </div>
+                    <div style="font-size:0.8rem; color:#cbd5e1;">
+                        Stream: <b style="text-transform:uppercase; color:#10b981;">{matched_v['waste_type']} WASTE</b> · Current Payload: <b>{matched_v['current_payload_kg']:,.0f} kg</b>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
+                    <div style="background:rgba(255,255,255,0.04); padding:10px; border-radius:8px; text-align:center;">
+                        <div style="font-size:0.7rem; color:#94a3b8;">TRANSIT SPEED</div>
+                        <div style="font-size:1.3rem; font-weight:800;">{matched_v.get('speed_kmh', 34)} km/h</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.04); padding:10px; border-radius:8px; text-align:center;">
+                        <div style="font-size:0.7rem; color:#94a3b8;">PLANT GATE ETA</div>
+                        <div style="font-size:1.3rem; font-weight:800; color:#f59e0b;">{matched_v.get('eta_mins', 12)} Mins</div>
+                    </div>
+                </div>
+
+                <div style="background:rgba(16,185,129,0.1); border:1px dashed #10b981; border-radius:8px; padding:10px; text-align:center; font-size:0.78rem;">
+                    <b>DIGITAL WEIGHBRIDGE GATE PASS:</b> <code>WG-PASS-2026-{matched_v['id'][-4:]}</code>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with col_cab_right:
+        st.markdown(
+            f"""
+            <div style="background:{p['card_bg']}; border:1px solid {p['border']}; border-radius:14px; padding:20px; box-shadow:{p['shadow']};">
+                <div style="font-size:1.05rem; font-weight:800; color:{p['text']}; margin-bottom:8px;">
+                    ⚡ Dynamic Turnaround & Rerouting
+                </div>
+                <div style="font-size:0.8rem; color:{p['muted']}; line-height:1.6; margin-bottom:16px;">
+                    When a facility queues beyond 85% or enters unexpected maintenance, Central Command pushes an instant audible diversion command to the driver's cab.
+                </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        if st.button("📢 Simulate Emergency In-Cab Reroute Alert", key="btn_sim_divert", use_container_width=True):
+            st.warning(
+                f"🚨 **IN-CAB DIVERSION NOTICE PUSHED TO {matched_v['id']}:**\n\n"
+                f"Facility {matched_v.get('target_facility_id', 'A')} experiencing intake congestion.\n"
+                f"**Rerouted to Facility B (Anaerobic Digester)** — Turn right at Outer Ring Road junction. ETA +4 mins."
+            )
+        st.markdown("</div>", unsafe_allow_html=True)
