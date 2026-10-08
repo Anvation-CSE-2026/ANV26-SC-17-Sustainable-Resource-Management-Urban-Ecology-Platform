@@ -230,7 +230,7 @@ def render_access_restricted_view(page_name):
         f'Your logged-in role as <b>{role_title}</b> does not have administrative clearance to access the <b>{page_name}</b> view.'
         f'</div>'
         f'<div style="font-size: 0.75rem; color: #8ba3c7; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px;">'
-        f'Please contact the Karnataka State Urban Development IT Administrator if you require elevated clearance.'
+        f'Please contact the State Urban Development IT Administrator if you require elevated clearance.'
         f'</div></div>'
     )
     st.markdown(msg_html, unsafe_allow_html=True)

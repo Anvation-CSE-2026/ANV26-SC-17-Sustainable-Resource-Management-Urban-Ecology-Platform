@@ -208,8 +208,8 @@ def render_user_management_page(palette):
                 new_title = st.text_input("Authority Title", placeholder="e.g. Mysuru City Corporation Administrator")
             with col_u2:
                 new_fname = st.text_input("Official Full Name", placeholder="e.g. Asha Ramesh")
-                new_email = st.text_input("Official Gov Email", placeholder="e.g. asha.ramesh@karnataka.gov.in")
-                new_juris = st.text_input("Jurisdiction", placeholder="e.g. Mysuru Urban Wards 1 to 65")
+                new_email = st.text_input("Official Gov Email", placeholder="e.g. asha.ramesh@smartcity.gov.in")
+                new_juris = st.text_input("Jurisdiction", placeholder="e.g. Urban Wards 1 to 65")
 
             submit_u = st.form_submit_button("Create Account ➔", use_container_width=True)
             if submit_u:

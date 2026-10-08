@@ -47,7 +47,7 @@ WasteGrid 2.0 eliminates all plaintext credentials and bypass buttons. Authentic
 | Role | Username | Initial Password | Scope / Jurisdiction | Clearance |
 | :--- | :--- | :--- | :--- | :--- |
 | **System Admin** | `admin` | `Admin@123` | Statewide & System Administration | Full access to all 17 dashboards & user governance |
-| **State Authority** | `karnataka_admin` | `Waste@123` | Karnataka Urban Development Hubs | Macro state grid, ESG scorecard, policy reports |
+| **State Authority** | `state_admin` | `Waste@123` | Statewide Urban Municipal Hubs | Macro state grid, ESG scorecard, policy reports |
 | **District Authority** | `district_admin` | `District@123` | Bengaluru Urban District | Inter-municipal allocations, fleet coordination |
 | **Municipal Authority** | `municipality_admin` | `Municipality@123` | BBMP Central Municipal Wards | Local ward telemetry, citizen grievance resolution, dispatch |
 | **Factory Authority** | `factory_admin` | `Factory@123` | Processing Plants A, B, C & D | Plant capacity, dock queue management, downtime logging |

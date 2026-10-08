@@ -204,6 +204,19 @@ def init_db():
     c.execute("SELECT COUNT(*) FROM users")
     if c.fetchone()[0] == 0:
         _seed_initial_data(conn)
+    else:
+        # Ensure state_admin exists in existing DB
+        c.execute("SELECT id FROM users WHERE username = 'state_admin'")
+        if not c.fetchone():
+            h, s = hash_password("Waste@123")
+            now_str = datetime.now(timezone.utc).isoformat()
+            c.execute("""
+                INSERT OR IGNORE INTO users (username, password_hash, salt, role, authority_title, jurisdiction, full_name, email, is_active, created_at)
+                VALUES (?, ?, ?, 'state', 'State Authority', 'Statewide Urban Municipal Hubs', 'E. Ramesh Rao', 'state.admin@smartcity.gov.in', 1, ?)
+            """, ("state_admin", h, s, now_str))
+        # Remove any residual regional text from existing records
+        c.execute("UPDATE users SET authority_title = 'State Authority', jurisdiction = 'Statewide Urban Municipal Hubs', email = 'state.admin@smartcity.gov.in' WHERE role = 'state'")
+        conn.commit()
 
     conn.close()
 
@@ -216,13 +229,13 @@ def _seed_initial_data(conn):
     # 1. Seed Users (State, District, Municipality, Factory, and Super Admin)
     seed_users = [
         (
-            "karnataka_admin",
+            "state_admin",
             "Waste@123",
             "state",
-            "State Authority – Karnataka",
-            "Statewide (All Karnataka Urban Hubs)",
-            "K. S. Eshwarappa",
-            "state.admin@karnataka.gov.in",
+            "State Authority",
+            "Statewide Urban Municipal Hubs",
+            "E. Ramesh Rao",
+            "state.admin@smartcity.gov.in",
         ),
         (
             "district_admin",
@@ -231,7 +244,7 @@ def _seed_initial_data(conn):
             "District Authority",
             "Bengaluru Urban District",
             "Dr. Rajendra Kumar IAS",
-            "district.admin@bengaluru.gov.in",
+            "district.admin@smartcity.gov.in",
         ),
         (
             "municipality_admin",

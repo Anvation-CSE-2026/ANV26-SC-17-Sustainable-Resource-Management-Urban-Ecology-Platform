@@ -62,7 +62,7 @@ def test_seeded_users_exist():
     assert len(users) >= 5
 
     usernames = {u["username"] for u in users}
-    expected = {"admin", "karnataka_admin", "district_admin", "municipality_admin", "factory_admin"}
+    expected = {"admin", "state_admin", "district_admin", "municipality_admin", "factory_admin"}
     assert expected.issubset(usernames)
 
 

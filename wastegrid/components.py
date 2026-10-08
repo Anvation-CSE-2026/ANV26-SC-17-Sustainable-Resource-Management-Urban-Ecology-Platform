@@ -68,7 +68,7 @@ def top_nav_bar(page_title, status="optimal", pending_alerts=0, user=None, theme
 
     nav_html = (
         f'<div style="display:flex; justify-content:space-between; align-items:center; background:{p["card_bg"]}; '
-        f'border:1px solid {p["border"]}; border-radius:10px; padding:12px 20px; margin-bottom:22px; box-shadow:{p["shadow"]}; flex-wrap:wrap; gap:12px;">'
+        f'border:1px solid {p["border"]}; border-radius:10px; padding:12px 20px; margin-bottom:22px; margin-left:54px; box-shadow:{p["shadow"]}; flex-wrap:wrap; gap:12px;">'
         f'<div style="display:flex; align-items:center; gap:14px; min-width:240px; flex:1;">'
         f'<div style="font-size:1.15rem; font-weight:800; color:{p["text"]}; letter-spacing:-0.02em;">{page_title}</div>'
         f'</div>'

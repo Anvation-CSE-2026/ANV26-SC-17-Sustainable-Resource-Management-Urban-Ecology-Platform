@@ -31,7 +31,7 @@ st.set_page_config(
     page_title="WasteGrid 2.0 — Smart Municipal Waste Management",
     page_icon="logo.png",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 # Initialize database schema and seed data
@@ -251,14 +251,14 @@ if not current_user:
             <div style="text-align:center; margin-bottom:24px;">
                 <div style="font-size:3rem; margin-bottom:10px;">🏛️</div>
                 <div style="font-size:1.6rem; font-weight:800; color:{palette['text']}; letter-spacing:-0.02em;">
-                    Karnataka Municipal Waste Grid Operations Center
+                    Smart Municipal Waste Grid Operations Center
                 </div>
                 <div style="font-size:0.85rem; color:{palette['muted']}; margin-top:6px;">
                     Department of Municipal Administration & Urban Development · Swachh Bharat Smart City Mission
                 </div>
             </div>
             <div style="font-size:0.9rem; color:{palette['text']}; line-height:1.7; margin-bottom:24px;">
-                Welcome to <b>WasteGrid 2.0</b>, the state-wide predictive municipal waste reallocation and fleet telemetry platform.
+                Welcome to <b>WasteGrid 2.0</b>, the predictive municipal waste reallocation and fleet telemetry platform.
                 In accordance with municipal cyber-governance guidelines and role-based data access controls (RBAC),
                 operational dashboards require authenticated sign-in.
             </div>
@@ -270,7 +270,7 @@ if not current_user:
                     Please enter any of the following official accounts in the <b>left sidebar sign-in form</b> to explore role-specific operations:
                     <ul style="margin:8px 0 4px 18px; padding:0;">
                         <li><b>System Administrator:</b> <code>admin</code> / <code>Admin@123</code> (Full access to all 17 dashboards)</li>
-                        <li><b>State Authority:</b> <code>karnataka_admin</code> / <code>Waste@123</code> (Statewide macro allocation & ESG)</li>
+                        <li><b>State Authority:</b> <code>state_admin</code> / <code>Waste@123</code> (Macro allocation & ESG analytics)</li>
                         <li><b>District Authority:</b> <code>district_admin</code> / <code>District@123</code> (District-level wards & transport)</li>
                         <li><b>Municipal Authority:</b> <code>municipality_admin</code> / <code>Municipality@123</code> (Local wards, citizen grievance & dispatch)</li>
                         <li><b>Factory Authority:</b> <code>factory_admin</code> / <code>Factory@123</code> (Plant capacity, receiving docks & maintenance)</li>

@@ -67,7 +67,11 @@ def inject_css(p):
 
         h1, h2, h3, h4, p, span, label {{ color: {p['text']}; }}
 
-        [data-testid="stHeader"] {{ height: 2.5rem !important; background: transparent !important; }}
+        [data-testid="stHeader"] {{
+            height: 3rem !important;
+            background: transparent !important;
+            z-index: 100 !important;
+        }}
         [data-testid="stSidebar"] {{
             background-color: {p['bg_soft']} !important;
             border-right: 1px solid {p['border']} !important;
@@ -75,13 +79,74 @@ def inject_css(p):
         [data-testid="stSidebar"] * {{
             color: {p['text']};
         }}
-        [data-testid="stSidebarCollapsedControl"] {{
+        /* Keep stToolbar visible for stExpandSidebarButton */
+        [data-testid="stToolbar"] {{
             display: flex !important;
-            color: {p['text']} !important;
+            visibility: visible !important;
+            background: transparent !important;
+            height: 3rem !important;
         }}
-        [data-testid="stToolbar"] {{ display: none !important; }}
-        #MainMenu {{ visibility: hidden !important; }}
-        footer {{ visibility: hidden !important; }}
+        [data-testid="stToolbarActions"],
+        #MainMenu,
+        footer {{
+            display: none !important;
+            visibility: hidden !important;
+        }}
+
+        /* Crisp 3-Bars Hamburger Button to Open Sidebar */
+        [data-testid="stExpandSidebarButton"],
+        [data-testid="stSidebarCollapsedControl"] {{
+            display: inline-flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: fixed !important;
+            top: 14px !important;
+            left: 18px !important;
+            z-index: 9999999 !important;
+            background: {p['card_bg']} !important;
+            border: 1.5px solid {p['border']} !important;
+            border-radius: 8px !important;
+            padding: 8px 12px !important;
+            box-shadow: {p['shadow']} !important;
+            cursor: pointer !important;
+            align-items: center !important;
+            justify-content: center !important;
+            transition: all 0.2s ease !important;
+        }}
+        [data-testid="stExpandSidebarButton"]:hover,
+        [data-testid="stSidebarCollapsedControl"]:hover {{
+            border-color: {p['blue']} !important;
+            background: {p['card_hover']} !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+        }}
+        [data-testid="stExpandSidebarButton"]::before,
+        [data-testid="stSidebarCollapsedControl"] button::before {{
+            content: "☰" !important;
+            font-size: 1.4rem !important;
+            font-weight: 900 !important;
+            color: {p['text']} !important;
+            display: inline-block !important;
+            line-height: 1 !important;
+        }}
+        [data-testid="stExpandSidebarButton"] svg,
+        [data-testid="stExpandSidebarButton"] span,
+        [data-testid="stSidebarCollapsedControl"] svg {{
+            display: none !important;
+        }}
+        [data-testid="stSidebarCollapseButton"] {{
+            display: flex !important;
+            visibility: visible !important;
+            color: {p['text']} !important;
+            background: {p['card_bg']} !important;
+            border: 1px solid {p['border']} !important;
+            border-radius: 6px !important;
+            padding: 4px 8px !important;
+        }}
+        [data-testid="stSidebarCollapseButton"]:hover {{
+            border-color: {p['accent']} !important;
+            color: {p['accent']} !important;
+        }}
 
         .block-container {{
             padding-top: 2.8rem !important;

@@ -86,11 +86,11 @@ def render_carbon_scorecard(wet_allocated, dry_allocated, total_overflow, total_
 
 
 def render_state_authority_view(palette):
-    """Render Statewide macro view for Karnataka Urban Development Authority."""
+    """Render Statewide macro view for State Urban Development Authority."""
     p = palette
     st.markdown(
         f'<div class="role-view-hero">'
-        f'<div class="role-hero-title">🏛️ Government of Karnataka — State Urban Development Command</div>'
+        f'<div class="role-hero-title">🏛️ State Urban Development Command & Municipal Operations</div>'
         f'<div class="role-hero-sub">Statewide Macro Waste Monitoring, Inter-District Allocation & Environmental Regulatory Oversight</div>'
         f'</div>',
         unsafe_allow_html=True,
@@ -109,7 +109,7 @@ def render_state_authority_view(palette):
 
     # District Cards Grid
     st.markdown(
-        f'<div class="sec-title">📍 KARNATAKA DISTRICT MUNICIPAL CORPORATIONS OVERVIEW</div>',
+        f'<div class="sec-title">📍 REGIONAL DISTRICT MUNICIPAL CORPORATIONS OVERVIEW</div>',
         unsafe_allow_html=True,
     )
 

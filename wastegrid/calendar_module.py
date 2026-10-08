@@ -1,6 +1,6 @@
 """
 Predictive Calendar and Event / Holiday Scheduler for WasteGrid.
-Tracks national holidays, Karnataka festivals, and scheduled civic notices to
+Tracks national holidays, regional festivals, and scheduled civic notices to
 forecast waste spikes in advance and trigger pre-allocation protocols.
 """
 
@@ -8,7 +8,7 @@ from datetime import datetime, date, timedelta
 import pandas as pd
 import streamlit as st
 
-# Pre-configured National Holidays and Karnataka Regional Festivals
+# Pre-configured National Holidays and Regional Festivals
 DEFAULT_HOLIDAYS = [
     {
         "date": "2026-10-02",
@@ -44,11 +44,11 @@ DEFAULT_HOLIDAYS = [
     },
     {
         "date": "2026-11-01",
-        "name": "Kannada Rajyotsava",
+        "name": "State Foundation Day",
         "type": "State Day",
         "surge_pct": 30,
         "primary_stream": "mixed",
-        "desc": "Karnataka State Foundation Day; state rallies and cultural gatherings.",
+        "desc": "State Foundation Day; city rallies and cultural gatherings.",
     },
     {
         "date": "2026-11-02",
@@ -178,7 +178,7 @@ def render_calendar_section(palette, total_capacity=7000):
         with st.form("new_event_notice_form"):
             col1, col2, col3 = st.columns(3)
             with col1:
-                f_name = st.text_input("Event Name", placeholder="e.g. Karnataka Rajyotsava Cultural Expo")
+                f_name = st.text_input("Event Name", placeholder="e.g. Annual Cultural Expo & Festival")
                 f_notice = st.text_input("Notice / Order Ref. No.", placeholder="e.g. BBMP/CL/2026/099")
             with col2:
                 f_date = st.date_input("Event Date", value=date(2026, 10, 20))
