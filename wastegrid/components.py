@@ -66,12 +66,17 @@ def top_nav_bar(*args, **kwargs):
     toggle_icon = "🌙" if theme_val == "light" else "☀️"
     toggle_label = "Dark" if theme_val == "light" else "Light"
 
-    user_label = "👤 Profile"
+    # Extract alert count if provided
+    alert_count = kwargs.get("alert_count", 0)
+
+    # Format user profile name and designated authority role
+    user_label = "👤 Authorized Officer"
+    role_badge = ""
     if user and isinstance(user, dict):
-        full_name = user.get("full_name") or user.get("username") or "User"
-        first_name = str(full_name).split()[0]
-        role_str = str(user.get("role", "admin")).upper()
-        user_label = f"👤 {first_name} ({role_str})"
+        full_name = user.get("full_name") or user.get("username") or "Authorized Officer"
+        role_title = user.get("authority_title") or str(user.get("role", "Authority")).title()
+        user_label = f"👤 {full_name}"
+        role_badge = f'<span style="font-size:0.68rem; color:#10b981; font-weight:700; background:rgba(16,185,129,0.15); padding:2px 7px; border-radius:4px; margin-left:6px; border:1px solid rgba(16,185,129,0.3);">{role_title}</span>'
 
     blue_col = p.get("blue", "#0284c7")
     user_btn_style = f"border-color:{blue_col}; background:{'rgba(59,130,246,0.12)' if user else 'transparent'};"
@@ -82,10 +87,26 @@ def top_nav_bar(*args, **kwargs):
     text_col = p.get("text", "#0f172a")
     muted_col = p.get("muted", "#64748b")
 
+    alert_badge_html = ""
+    if alert_count > 0:
+        alert_badge_html = (
+            f'<a class="theme-toggle-link" href="?nav=alerts" target="_self" title="{alert_count} Active WasteGrid Incident Alerts" '
+            f'style="border-color:#ef4444; background:rgba(239,68,68,0.1); color:#ef4444; font-weight:700;">'
+            f'<span>🔔 Alerts</span>'
+            f'<span style="background:#ef4444; color:#fff; font-size:0.65rem; padding:1px 6px; border-radius:999px; margin-left:4px;">{alert_count}</span>'
+            f'</a>'
+        )
+    else:
+        alert_badge_html = (
+            f'<a class="theme-toggle-link" href="?nav=alerts" target="_self" title="No critical alerts" style="color:{muted_col};">'
+            f'<span>🔔 Alerts</span>'
+            f'</a>'
+        )
+
     nav_html = (
         f'<div style="display:flex; justify-content:space-between; align-items:center; background:{card_bg}; '
         f'border:1px solid {border_col}; border-radius:12px; padding:12px 24px; margin-bottom:20px; margin-left:54px; box-shadow:{shadow_val}; flex-wrap:wrap; gap:12px;">'
-        # 1. KEEP the WasteGrid logo in the top-left header with Tagline
+        # 1. WasteGrid logo on the left with Tagline
         f'<div style="display:flex; align-items:center; gap:14px;">'
         f'<div style="width:38px; height:38px; border-radius:8px; background:linear-gradient(135deg, #10b981, #0284c7); display:flex; align-items:center; justify-content:center; font-size:1.35rem; box-shadow:0 2px 8px rgba(0,0,0,0.2);">♻️</div>'
         f'<div>'
@@ -93,10 +114,13 @@ def top_nav_bar(*args, **kwargs):
         f'<div style="font-size:0.68rem; color:{muted_col}; letter-spacing:0.18em; text-transform:uppercase; margin-top:2px; font-weight:700;">Predict. Detect. Allocate.</div>'
         f'</div>'
         f'</div>'
-        # 2. KEEP the Login/Profile icon in the top-right header (No Services, About, or Contact in top header)
-        f'<div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">'
+        # 2. Right Actions: Notification/Alert icon, User Profile (Name + Role), Logout, and Theme toggle
+        f'<div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; flex-shrink:0;">'
+        f'{alert_badge_html}'
         f'<a class="theme-toggle-link" href="?profile=1" target="_self" style="{user_btn_style}">'
-        f'<span>{user_label}</span></a>'
+        f'<span>{user_label}</span>{role_badge}</a>'
+        f'<a class="theme-toggle-link" href="?logout=1" target="_self" style="border-color:rgba(239,68,68,0.4); color:#ef4444;" title="Sign out of WasteGrid session">'
+        f'<span>🚪 Logout</span></a>'
         f'<a class="theme-toggle-link" href="?theme={next_theme}" target="_self"><span>{toggle_icon}</span><span>{toggle_label}</span></a>'
         f'</div>'
         f'</div>'

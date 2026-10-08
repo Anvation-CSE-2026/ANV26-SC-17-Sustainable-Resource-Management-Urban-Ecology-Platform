@@ -200,25 +200,48 @@ def init_db():
 
     conn.commit()
 
-    # Seed initial data if users table is empty
+    # Seed initial data if users table is empty or missing authority roles
     c.execute("SELECT COUNT(*) FROM users")
     if c.fetchone()[0] == 0:
         _seed_initial_data(conn)
     else:
-        # Ensure state_admin exists in existing DB
-        c.execute("SELECT id FROM users WHERE username = 'state_admin'")
-        if not c.fetchone():
-            h, s = hash_password("Waste@123")
-            now_str = datetime.now(timezone.utc).isoformat()
-            c.execute("""
-                INSERT OR IGNORE INTO users (username, password_hash, salt, role, authority_title, jurisdiction, full_name, email, is_active, created_at)
-                VALUES (?, ?, ?, 'state', 'State Authority', 'Statewide Urban Municipal Hubs', 'E. Ramesh Rao', 'state.admin@smartcity.gov.in', 1, ?)
-            """, ("state_admin", h, s, now_str))
-        # Remove any residual regional text from existing records
-        c.execute("UPDATE users SET authority_title = 'State Authority', jurisdiction = 'Statewide Urban Municipal Hubs', email = 'state.admin@smartcity.gov.in' WHERE role = 'state'")
-        conn.commit()
+        _ensure_authority_users(conn)
 
     conn.close()
+
+
+def _ensure_authority_users(conn):
+    """Ensure all 6 official authority accounts exist in the database."""
+    c = conn.cursor()
+    now_str = datetime.now(timezone.utc).isoformat()
+    official_accounts = [
+        ("state_authority", "Waste@123", "state_authority", "State Waste Management Authority", "Statewide Urban Municipal Solid-Waste Command", "E. Ramesh Rao, IAS", "state.authority@wastegrid.gov.in"),
+        ("commissioner", "Waste@123", "commissioner", "Municipal Commissioner", "Bruhat Bengaluru Mahanagara Palike (BBMP)", "Tushar Giri Nath, IAS", "commissioner@bbmp.gov.in"),
+        ("waste_officer", "Waste@123", "waste_officer", "Municipal Waste Officer", "Central Solid-Waste Operations Command", "K. Parameshwar, KAS", "waste.officer@bbmp.gov.in"),
+        ("zonal_officer", "Waste@123", "zonal_officer", "Zonal Officer", "East & South Urban Collection Zones", "Dr. Shailaja V.", "zonal.officer@smartcity.gov.in"),
+        ("processing_facility", "Waste@123", "processing_facility", "Waste Processing Facility", "Biocompost Plant A & Anaerobic Digester B", "S. Manjunath", "plant.head@wastegrid-consortium.org"),
+        ("recycling_facility", "Waste@123", "recycling_facility", "Recycling Facility", "Material Recovery Facility C (MRF)", "Anita Deshmukh", "recycling.director@wastegrid-consortium.org"),
+        ("admin", "Admin@123", "admin", "System Administrator", "Full System Administration & Governance", "WasteGrid Super Administrator", "admin@wastegrid.gov.in"),
+        ("state_admin", "Waste@123", "state", "State Waste Management Authority", "Statewide Urban Municipal Solid-Waste Command", "E. Ramesh Rao, IAS", "state.admin@smartcity.gov.in"),
+        ("district_admin", "District@123", "district", "Zonal Officer", "Bengaluru Urban District", "Dr. Rajendra Kumar IAS", "district.admin@smartcity.gov.in"),
+        ("municipality_admin", "Municipality@123", "municipality", "Municipal Commissioner", "BBMP Central Municipal Wards", "Tushar Giri Nath", "commissioner@bbmp.gov.in"),
+        ("factory_admin", "Factory@123", "factory", "Waste Processing Facility", "Processing Plants A, B, C & D", "S. Manjunath", "plant.head@wastegrid-consortium.org"),
+    ]
+
+    for uname, pw, role, auth_title, juris, fname, email in official_accounts:
+        c.execute("SELECT id FROM users WHERE username = ?", (uname,))
+        row = c.fetchone()
+        if not row:
+            h, s = hash_password(pw)
+            c.execute("""
+                INSERT OR IGNORE INTO users (username, password_hash, salt, role, authority_title, jurisdiction, full_name, email, is_active, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
+            """, (uname, h, s, role, auth_title, juris, fname, email, now_str))
+        else:
+            c.execute("""
+                UPDATE users SET authority_title = ?, jurisdiction = ? WHERE username = ?
+            """, (auth_title, juris, uname))
+    conn.commit()
 
 
 def _seed_initial_data(conn):
@@ -226,59 +249,25 @@ def _seed_initial_data(conn):
     c = conn.cursor()
     now_str = datetime.now(timezone.utc).isoformat()
 
-    # 1. Seed Users (State, District, Municipality, Factory, and Super Admin)
+    # 1. Seed Users (All 6 Official Authority Roles + Admin + Legacy)
     seed_users = [
-        (
-            "state_admin",
-            "Waste@123",
-            "state",
-            "State Authority",
-            "Statewide Urban Municipal Hubs",
-            "E. Ramesh Rao",
-            "state.admin@smartcity.gov.in",
-        ),
-        (
-            "district_admin",
-            "District@123",
-            "district",
-            "District Authority",
-            "Bengaluru Urban District",
-            "Dr. Rajendra Kumar IAS",
-            "district.admin@smartcity.gov.in",
-        ),
-        (
-            "municipality_admin",
-            "Municipality@123",
-            "municipality",
-            "Municipal Authority",
-            "BBMP Central Municipal Wards",
-            "Tushar Giri Nath",
-            "commissioner@bbmp.gov.in",
-        ),
-        (
-            "factory_admin",
-            "Factory@123",
-            "factory",
-            "Processing / Factory Authority",
-            "Processing Plants A, B, C & D",
-            "S. Manjunath",
-            "plant.head@wastegrid-consortium.org",
-        ),
-        (
-            "admin",
-            "Admin@123",
-            "admin",
-            "System Administrator",
-            "Full System Access & User Governance",
-            "WasteGrid Root Administrator",
-            "admin@wastegrid.gov.in",
-        ),
+        ("state_authority", "Waste@123", "state_authority", "State Waste Management Authority", "Statewide Urban Municipal Solid-Waste Command", "E. Ramesh Rao, IAS", "state.authority@wastegrid.gov.in"),
+        ("commissioner", "Waste@123", "commissioner", "Municipal Commissioner", "Bruhat Bengaluru Mahanagara Palike (BBMP)", "Tushar Giri Nath, IAS", "commissioner@bbmp.gov.in"),
+        ("waste_officer", "Waste@123", "waste_officer", "Municipal Waste Officer", "Central Solid-Waste Operations Command", "K. Parameshwar, KAS", "waste.officer@bbmp.gov.in"),
+        ("zonal_officer", "Waste@123", "zonal_officer", "Zonal Officer", "East & South Urban Collection Zones", "Dr. Shailaja V.", "zonal.officer@smartcity.gov.in"),
+        ("processing_facility", "Waste@123", "processing_facility", "Waste Processing Facility", "Biocompost Plant A & Anaerobic Digester B", "S. Manjunath", "plant.head@wastegrid-consortium.org"),
+        ("recycling_facility", "Waste@123", "recycling_facility", "Recycling Facility", "Material Recovery Facility C (MRF)", "Anita Deshmukh", "recycling.director@wastegrid-consortium.org"),
+        ("admin", "Admin@123", "admin", "System Administrator", "Full System Access & User Governance", "WasteGrid Root Administrator", "admin@wastegrid.gov.in"),
+        ("state_admin", "Waste@123", "state", "State Waste Management Authority", "Statewide Urban Municipal Solid-Waste Command", "E. Ramesh Rao, IAS", "state.admin@smartcity.gov.in"),
+        ("district_admin", "District@123", "district", "Zonal Officer", "Bengaluru Urban District", "Dr. Rajendra Kumar IAS", "district.admin@smartcity.gov.in"),
+        ("municipality_admin", "Municipality@123", "municipality", "Municipal Commissioner", "BBMP Central Municipal Wards", "Tushar Giri Nath", "commissioner@bbmp.gov.in"),
+        ("factory_admin", "Factory@123", "factory", "Waste Processing Facility", "Processing Plants A, B, C & D", "S. Manjunath", "plant.head@wastegrid-consortium.org"),
     ]
 
     for uname, pw, role, auth_title, juris, fname, email in seed_users:
         h, s = hash_password(pw)
         c.execute("""
-            INSERT INTO users (username, password_hash, salt, role, authority_title, jurisdiction, full_name, email, is_active, created_at)
+            INSERT OR IGNORE INTO users (username, password_hash, salt, role, authority_title, jurisdiction, full_name, email, is_active, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
         """, (uname, h, s, role, auth_title, juris, fname, email, now_str))
 

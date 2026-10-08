@@ -354,3 +354,111 @@ def render_municipal_office_view(palette, pending_alert_count):
         )
     st.markdown('<div class="fac-grid" style="grid-template-columns:repeat(2,1fr);">' + "".join(w_cards) + '</div>', unsafe_allow_html=True)
 
+
+def render_commissioner_view(palette, pending_alert_count):
+    """Render Municipal Commissioner Executive Directorate."""
+    p = palette
+    st.markdown(
+        f'<div class="role-view-hero" style="border-left:4px solid #0284c7;">'
+        f'<div class="role-hero-title">🏛️ Municipal Commissioner Executive Directorate</div>'
+        f'<div class="role-hero-sub">City-Wide Solid-Waste Governance, Financial Budgeting, SWM-2016 Compliance & Citizen Resolution SLA</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        f'<div class="metric-grid">'
+        f'<div class="m-card green"><div class="m-label">📊 City-Wide Diversion</div><div class="m-value">89.4% Diverted</div></div>'
+        f'<div class="m-card"><div class="m-label">💰 LP Logistics Savings</div><div class="m-value">₹14,280 / day</div></div>'
+        f'<div class="m-card hero"><div class="m-label">🎫 Citizen Grievance SLA</div><div class="m-value green">95.2% Resolved</div></div>'
+        f'<div class="m-card {"red" if pending_alert_count>0 else "purple"}"><div class="m-label">🔔 Active Alerts</div><div class="m-value">{pending_alert_count} Incidents</div></div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(f'<div class="sec-title">📈 STRATEGIC PERFORMANCE & REGULATORY BENCHMARKS</div>', unsafe_allow_html=True)
+    col_c1, col_c2 = st.columns(2)
+    with col_c1:
+        st.markdown(
+            f"""
+            <div style="background:{p['card_bg']}; border:1px solid {p['border']}; border-radius:10px; padding:16px; font-size:0.82rem; line-height:1.8;">
+                <div style="font-weight:800; color:{p['text']}; margin-bottom:8px;">🏛️ SWM Rules 2016 Statutory Mandates</div>
+                <div>✅ Source Segregation Rate: <b>88.5%</b> (Target: &gt;80%)</div>
+                <div>✅ Zero Untreated Landfilling in Eco-Zones: <b>Achieved (100%)</b></div>
+                <div>✅ Real-Time GPS Tracking on 100% Compactor Fleet: <b>Active</b></div>
+                <div>✅ Biogas Methane Flaring: <b>0% (100% Captured for Energy)</b></div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with col_c2:
+        st.markdown(
+            f"""
+            <div style="background:{p['card_bg']}; border:1px solid {p['border']}; border-radius:10px; padding:16px; font-size:0.82rem; line-height:1.8;">
+                <div style="font-weight:800; color:{p['text']}; margin-bottom:8px;">🚚 Fleet Cost & Carbon Efficiency</div>
+                <div>🌿 Daily Avoided Carbon: <b>~9.6 Tons CO₂e</b></div>
+                <div>⚡ Biogas Electricity Generated: <b>~1,450 kWh / day</b></div>
+                <div>⛽ Daily Diesel Fuel Reduction: <b>18.2% vs Static Routes</b></div>
+                <div>⏱️ Emergency Incident Dispatch SLA: <b>12.4 Minutes Avg</b></div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+
+def render_waste_officer_view(palette, pending_alert_count):
+    """Render Municipal Waste Officer Command Console."""
+    render_municipal_office_view(palette, pending_alert_count)
+
+
+def render_zonal_officer_view(palette):
+    """Render Zonal Officer Waste Logistics Center."""
+    render_district_authority_view(palette)
+
+
+def render_processing_facility_view(active_facilities, allocations, palette):
+    """Render Processing Facility Manager Console."""
+    render_factory_authority_view(active_facilities, allocations, palette)
+
+
+def render_recycling_facility_view(active_facilities, allocations, palette):
+    """Render Recycling Facility (MRF) Specialist Console."""
+    p = palette
+    st.markdown(
+        f'<div class="role-view-hero" style="border-left:4px solid #10b981;">'
+        f'<div class="role-hero-title">♻️ Material Recovery Facility (MRF) & Recycling Directorate</div>'
+        f'<div class="role-hero-sub">Dry Waste Inflow, Automated Optical Sorting, Baling Throughput & Circular Commodity Value</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        f'<div class="metric-grid">'
+        f'<div class="m-card green"><div class="m-label">📦 MRF Daily Intake</div><div class="m-value">2,500 kg Recyclables</div></div>'
+        f'<div class="m-card"><div class="m-label">🎯 Optical Sorter Precision</div><div class="m-value">98.4% Accuracy</div></div>'
+        f'<div class="m-card purple"><div class="m-label">🔄 Baled Output</div><div class="m-value">2.1 Tons Ready</div></div>'
+        f'<div class="m-card hero"><div class="m-label">💵 Recycled Commodity Value</div><div class="m-value green">₹38,500 / day</div></div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(f'<div class="sec-title">📦 BALED MATERIAL INVENTORY & COMMODITY DISPATCH</div>', unsafe_allow_html=True)
+    mrf_items = [
+        {"stream": "PET Clear Bottles", "qty": "840 kg", "bales": "14 Bales", "price": "₹34/kg", "dest": "Plastic Fiber Spinners"},
+        {"stream": "Corrugated Cardboard & Kraft", "qty": "1,220 kg", "bales": "18 Bales", "price": "₹12/kg", "dest": "Paper Mill Recyclers"},
+        {"stream": "High-Density Polyethylene (HDPE)", "qty": "450 kg", "bales": "8 Bales", "price": "₹28/kg", "dest": "Industrial Molding Plant"},
+        {"stream": "Aluminum Beverage Cans", "qty": "180 kg", "bales": "5 Bales", "price": "₹105/kg", "dest": "Metal Smelting Facility"},
+    ]
+    cards = []
+    for m in mrf_items:
+        cards.append(
+            f'<div class="fac-card">'
+            f'<div class="fac-name-row"><div class="fac-name">♻️ {m["stream"]}</div><span class="fac-badge active">● Ready for Dispatch</span></div>'
+            f'<div class="fac-type">{m["bales"]} · Total Weight: <b>{m["qty"]}</b></div>'
+            f'<div class="fac-stat" style="color:{p["success"]}; font-weight:800;">Market Value: {m["price"]}</div>'
+            f'<div style="font-size:0.75rem; color:{p["muted"]}; margin-top:6px;">Buyer: {m["dest"]}</div>'
+            f'</div>'
+        )
+    st.markdown('<div class="fac-grid" style="grid-template-columns:repeat(2,1fr);">' + "".join(cards) + '</div>', unsafe_allow_html=True)
+
+

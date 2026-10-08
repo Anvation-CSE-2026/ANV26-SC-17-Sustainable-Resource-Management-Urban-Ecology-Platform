@@ -82,6 +82,29 @@ def test_user_login_validation():
     assert success is False
 
 
+def test_six_authority_roles_login():
+    """Verify all 6 official municipal authority roles authenticate correctly."""
+    authorities = [
+        ("state_authority", "Waste@123", "State Waste Management Authority"),
+        ("commissioner", "Waste@123", "Municipal Commissioner"),
+        ("waste_officer", "Waste@123", "Municipal Waste Officer"),
+        ("zonal_officer", "Waste@123", "Zonal Officer"),
+        ("processing_facility", "Waste@123", "Waste Processing Facility"),
+        ("recycling_facility", "Waste@123", "Recycling Facility"),
+    ]
+    for uname, pw, role in authorities:
+        ok, msg = auth.login(uname, pw, selected_role=role)
+        assert ok is True, f"Login failed for {uname} with role {role}: {msg}"
+
+
+def test_role_mismatch_validation():
+    """Verify role mismatch is rejected with clean error message."""
+    # Attempting to log into Recycling Facility with State Authority credentials
+    ok, msg = auth.login("state_authority", "Waste@123", selected_role="Recycling Facility")
+    assert ok is False
+    assert "mismatch" in msg.lower()
+
+
 def test_rbac_permission_matrix():
     """Verify role-based access control restrictions."""
     admin_perms = auth.ROLE_PERMISSIONS.get("admin", [])

@@ -43,7 +43,7 @@ defaults = {
     "reoptimized": True,
     "theme": "light",
     "outage_facility": None,
-    "nav_selection": "overview",
+    "nav_selection": "home",
     "show_auth_modal": False,
     "show_help": False,
 }
@@ -60,7 +60,14 @@ if st.query_params.get("logout") == "1":
 if st.query_params.get("profile") == "1":
     if "profile" in st.query_params:
         del st.query_params["profile"]
-    st.session_state["show_auth_modal"] = True
+    st.session_state["nav_selection"] = "settings"
+
+if st.query_params.get("alert_nav") == "1" or st.query_params.get("nav") == "alerts":
+    st.session_state["nav_selection"] = "alerts"
+    if "alert_nav" in st.query_params:
+        del st.query_params["alert_nav"]
+    if "nav" in st.query_params:
+        del st.query_params["nav"]
 
 if st.query_params.get("footer_info"):
     st.session_state["footer_info_active"] = st.query_params.get("footer_info")
@@ -87,6 +94,14 @@ theme.inject_css(palette)
 def render_html(content):
     clean = "\n".join(line.strip() for line in str(content).strip().splitlines())
     st.markdown(clean, unsafe_allow_html=True)
+
+
+# =========================================================================
+# MANDATORY AUTHENTICATION GATE (LOGIN PAGE FIRST)
+# =========================================================================
+if not auth.is_authenticated():
+    auth.render_full_login_page(palette)
+    st.stop()
 
 
 # 5. Core Computational Grid Data
@@ -154,18 +169,32 @@ elif st.session_state.outage_facility or any(f.get("status") in ["offline", "mai
 else:
     system_status = "optimal"
 
-# 6. Streamlined 6 Core Primary Operations Navigation
+# 6. Exact 8 Sidebar Operations Navigation Menu Items
 NAV_ITEMS = [
-    ("🌐 Overview & Services", "overview"),
-    ("🗺️ Live Operations & Fleet", "operations"),
-    ("⚡ Smart Allocation & LP Solver", "allocation"),
-    ("📈 Analytics & 7-Day Forecast", "analytics"),
-    ("🚨 Alerts & Citizen Grievances", "alerts_citizen"),
-    ("📑 Audits, Reports & Admin", "admin_reports"),
+    ("🏠 Home", "home"),
+    ("🛠️ Services", "services"),
+    ("📅 Events", "events"),
+    ("🗺️ Live Map", "map"),
+    ("🚨 Alerts", "alerts"),
+    ("📑 Reports", "reports"),
+    ("⚙️ Settings", "settings"),
+    ("🚪 Logout", "logout"),
 ]
 
 title_to_key = {title: key for title, key in NAV_ITEMS}
 key_to_title = {key: title for title, key in NAV_ITEMS}
+
+# Map any legacy keys to new keys
+legacy_map = {
+    "overview": "home",
+    "operations": "map",
+    "allocation": "services",
+    "analytics": "reports",
+    "alerts_citizen": "alerts",
+    "admin_reports": "reports",
+}
+if st.session_state.nav_selection in legacy_map:
+    st.session_state.nav_selection = legacy_map[st.session_state.nav_selection]
 
 # 7. Left Sidebar Construction
 current_user = auth.get_current_user()
@@ -180,8 +209,8 @@ with st.sidebar:
                 ♻️
             </div>
             <div>
-                <div style="font-size:1.2rem; font-weight:800; color:{palette['text']}; letter-spacing:-0.02em;">WasteGrid <span style="font-size:0.65rem; background:#10b981; color:#fff; padding:2px 6px; border-radius:4px; vertical-align:middle;">2.0</span></div>
-                <div style="font-size:0.68rem; color:{palette['muted']}; letter-spacing:0.04em; text-transform:uppercase;">National Smart Grid</div>
+                <div style="font-size:1.22rem; font-weight:900; color:{palette['text']}; letter-spacing:-0.02em;">WasteGrid</div>
+                <div style="font-size:0.65rem; color:{palette['muted']}; letter-spacing:0.12em; text-transform:uppercase; font-weight:700;">Predict. Detect. Allocate.</div>
             </div>
         </div>
         """
@@ -198,7 +227,10 @@ with st.sidebar:
     )
 
     # Calculate default index in nav items
-    active_nav_key = st.session_state.get("nav_selection", "overview")
+    active_nav_key = st.session_state.get("nav_selection", "home")
+    if active_nav_key not in key_to_title:
+        active_nav_key = "home"
+
     active_index = 0
     for idx, (_, k) in enumerate(NAV_ITEMS):
         if k == active_nav_key:
@@ -213,6 +245,10 @@ with st.sidebar:
         key="main_sidebar_nav_radio",
     )
     selected_key = title_to_key[selected_nav_title]
+
+    if selected_key == "logout":
+        auth.logout()
+
     if selected_key != st.session_state.nav_selection:
         st.session_state.nav_selection = selected_key
         st.rerun()
@@ -221,8 +257,8 @@ with st.sidebar:
     st.markdown("<br>", unsafe_allow_html=True)
     col_sb_act1, col_sb_act2 = st.columns(2)
     with col_sb_act1:
-        if st.button("👤 Profile", use_container_width=True, key="btn_sb_open_prof"):
-            st.session_state["show_auth_modal"] = True
+        if st.button("⚙️ Settings", use_container_width=True, key="btn_sb_open_prof"):
+            st.session_state["nav_selection"] = "settings"
             st.rerun()
     with col_sb_act2:
         if st.button("❓ Help", use_container_width=True, key="btn_sb_open_help"):
@@ -243,7 +279,7 @@ with st.sidebar:
             <div>Fleet Units: <b>{active_trucks_count} Vehicles</b></div>
             <div>Active Incidents: <b>{pending_alert_count} Alerts</b></div>
             <div style="margin-top:6px; font-size:0.65rem; color:{palette['muted']}; border-top:1px solid {palette['border']}; padding-top:4px;">
-                Storage: SQLite · Architecture: PG-Ready
+                256-bit PBKDF2 · Authority RBAC
             </div>
         </div>
         """
@@ -264,15 +300,16 @@ components.top_nav_bar(
     user=current_user,
     theme=st.session_state.theme,
     p=palette,
+    alert_count=pending_alert_count,
 )
 
-current_nav_key = st.session_state.get("nav_selection", "overview")
+current_nav_key = st.session_state.get("nav_selection", "home")
 
 # =========================================================================
-# PAGE 1: OVERVIEW & SERVICES DASHBOARD
+# PAGE 1: HOME AUTHORITY DASHBOARD (INSPIRED BY WIREFRAME LAYOUT)
 # =========================================================================
-if current_nav_key == "overview":
-    # 1. Pilot Case Study Reference Banner & Region Switcher
+if current_nav_key in ["home", "overview"]:
+    # 1. Pilot Case Study Reference Banner
     render_html(
         f"""
         <div style="background:linear-gradient(135deg, rgba(2, 132, 199, 0.08) 0%, rgba(16, 185, 129, 0.08) 100%); 
@@ -282,34 +319,40 @@ if current_nav_key == "overview":
                 <span style="font-size:1.3rem;">📍</span>
                 <div>
                     <div style="font-size:0.85rem; font-weight:800; color:{palette['text']};">
-                        General Smart-City Architecture · Reference Pilot: Bengaluru Urban Pilot Model
+                        WasteGrid Municipal Authority Operations Command Center
                     </div>
                     <div style="font-size:0.74rem; color:{palette['muted']}; margin-top:2px;">
-                        WasteGrid is an open, universal platform deployed nationally. The active live demonstration utilizes calibrated empirical datasets 
-                        from the <b>Karnataka / Bengaluru Urban pilot</b> as a real-world case study.
+                        Logged in as <b>{current_user.get('full_name', 'Authorized Officer')}</b> ({current_user.get('authority_title', 'Municipal Authority')}) · 
+                        Scope: <b>{current_user.get('jurisdiction', 'City Operations')}</b>
                     </div>
                 </div>
             </div>
             <span style="font-size:0.68rem; font-weight:700; background:rgba(16,185,129,0.15); color:{palette['success']}; border:1px solid rgba(16,185,129,0.3); padding:4px 10px; border-radius:999px; text-transform:uppercase;">
-                ● Pilot Case Study Active
+                ● Live Grid Authenticated
             </span>
         </div>
         """
     )
 
-    # Dedicated Role-Specific Dashboard for Each of the 5 Logins
+    # Dedicated Role-Specific Dashboard for Each of the 6 Official Authority Logins
     if current_user:
         user_role = current_user.get("role", "municipality")
         if user_role == "admin":
             analytics_module.render_super_admin_view(palette, active_facilities, allocations, pending_alert_count)
-        elif user_role == "state":
+        elif user_role in ["state", "state_authority"]:
             analytics_module.render_state_authority_view(palette)
-        elif user_role == "district":
-            analytics_module.render_district_authority_view(palette)
-        elif user_role == "municipality":
+        elif user_role == "commissioner":
+            analytics_module.render_commissioner_view(palette, pending_alert_count)
+        elif user_role in ["waste_officer", "municipality"]:
+            analytics_module.render_waste_officer_view(palette, pending_alert_count)
+        elif user_role in ["zonal_officer", "district"]:
+            analytics_module.render_zonal_officer_view(palette)
+        elif user_role in ["processing_facility", "factory"]:
+            analytics_module.render_processing_facility_view(active_facilities, allocations, palette)
+        elif user_role == "recycling_facility":
+            analytics_module.render_recycling_facility_view(active_facilities, allocations, palette)
+        else:
             analytics_module.render_municipal_office_view(palette, pending_alert_count)
-        elif user_role == "factory":
-            analytics_module.render_factory_authority_view(active_facilities, allocations, palette)
 
     # 2. Hero Presentation Banner
     render_html(
@@ -615,7 +658,68 @@ if current_nav_key == "overview":
     forecast_df = pd.DataFrame(forecast_rows)
     components.forecast_section(forecast_df, palette)
 
-    # 11. Data Ingestion Drawer
+    # 11. Live Maps & Predictive Alerts Split Grid (Inspired by Hand-Drawn Layout)
+    st.markdown("<br>", unsafe_allow_html=True)
+    components.section_title("OPERATIONAL DISPATCH: GIS MAP NODES & PREDICTIVE ALERTS")
+    col_hm_map, col_hm_alert = st.columns(2)
+    with col_hm_map:
+        st.markdown(
+            f"""
+            <div style="background:{palette['card_bg']}; border:1px solid {palette['border']}; border-radius:12px; padding:18px; box-shadow:{palette['shadow']};">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <div style="font-size:1.05rem; font-weight:800; color:{palette['text']};">🗺️ Live GIS Facilities & Fleet</div>
+                    <span style="font-size:0.7rem; color:{palette['success']}; font-weight:700;">● {active_trucks_count} Fleet Online</span>
+                </div>
+                <div style="font-size:0.8rem; color:{palette['muted']}; margin-bottom:12px;">
+                    Real-time GPS telemetry from 5 processing nodes (A-E) and municipal compactor units with automated weighbridge logging.
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px;">
+                    <div style="background:{palette['bg_soft']}; padding:8px 12px; border-radius:6px; font-size:0.75rem;">
+                        <b>Biocompost A:</b> {allocations.get('A', 0):,.0f} kg
+                    </div>
+                    <div style="background:{palette['bg_soft']}; padding:8px 12px; border-radius:6px; font-size:0.75rem;">
+                        <b>Digester B:</b> {allocations.get('B', 0):,.0f} kg
+                    </div>
+                    <div style="background:{palette['bg_soft']}; padding:8px 12px; border-radius:6px; font-size:0.75rem;">
+                        <b>MRF C:</b> {allocations.get('C', 0):,.0f} kg
+                    </div>
+                    <div style="background:{palette['bg_soft']}; padding:8px 12px; border-radius:6px; font-size:0.75rem;">
+                        <b>Energy Plant D:</b> {allocations.get('D', 0):,.0f} kg
+                    </div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        if st.button("🗺️ Open Interactive Live Map ➔", key="btn_home_goto_map", use_container_width=True):
+            st.session_state["nav_selection"] = "map"
+            st.rerun()
+
+    with col_hm_alert:
+        st.markdown(
+            f"""
+            <div style="background:{palette['card_bg']}; border:1px solid {palette['border']}; border-radius:12px; padding:18px; box-shadow:{palette['shadow']};">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <div style="font-size:1.05rem; font-weight:800; color:{palette['text']};">🚨 Predictive Alerts & Incidents</div>
+                    <span style="font-size:0.7rem; color:{palette['accent'] if pending_alert_count>0 else palette['success']}; font-weight:700;">
+                        {pending_alert_count} Pending
+                    </span>
+                </div>
+                <div style="font-size:0.8rem; color:{palette['muted']}; margin-bottom:12px;">
+                    Active automated early-warning telemetry tracking capacity limits, offline plant contingencies, and citizen tickets.
+                </div>
+                <div style="background:{'rgba(239,68,68,0.08)' if pending_alert_count>0 else 'rgba(16,185,129,0.08)'}; border:1px solid {'rgba(239,68,68,0.25)' if pending_alert_count>0 else 'rgba(16,185,129,0.25)'}; border-radius:8px; padding:10px 14px; margin-bottom:16px; font-size:0.78rem;">
+                    <b>Status:</b> {'⚠️ Action Required: Pending load rebalance' if pending_alert_count>0 else '✅ Optimal Operations: Zero active emergency bottlenecks'}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        if st.button("🚨 Open Incident & Grievance Alerts ➔", key="btn_home_goto_alerts", use_container_width=True):
+            st.session_state["nav_selection"] = "alerts"
+            st.rerun()
+
+    # 12. Data Ingestion Drawer
     with st.expander("📁 DATA INGESTION — UPLOAD CSV DATASET OR DOWNLOAD TEMPLATE", expanded=False):
         col_u1, col_u2 = st.columns([3, 1])
         with col_u1:
@@ -628,9 +732,109 @@ if current_nav_key == "overview":
                 pass
 
 # =========================================================================
-# PAGE 2: LIVE OPERATIONS & FLEET
+# PAGE 2: SERVICES & SMART LP ALLOCATION
 # =========================================================================
-elif current_nav_key == "operations":
+elif current_nav_key in ["services", "allocation"]:
+    tab_opt, tab_esg, tab_sim, tab_facs = st.tabs([
+        "⚡ Multi-Objective LP Solver (Simplex)",
+        "🌱 Carbon & ESG Scorecard",
+        "🧪 Scenario Simulator Sandbox",
+        "🏭 Facility Processing Nodes",
+    ])
+
+    with tab_opt:
+        optimizer.render_smart_allocation_page(palette, wet_total, dry_total)
+
+    with tab_esg:
+        wet_alloc = allocations.get("A", 0) + allocations.get("B", 0) + allocations.get("E", 0)
+        dry_alloc = allocations.get("C", 0) + allocations.get("D", 0)
+        analytics_module.render_carbon_scorecard(wet_alloc, dry_alloc, total_overflow, total_waste, palette)
+
+    with tab_sim:
+        simulator_module.render_scenario_simulator_page(palette, wet_total, dry_total)
+
+    with tab_facs:
+        facility_module.render_facility_management_page(palette)
+
+# =========================================================================
+# PAGE 3: EVENTS & HOLIDAY SURGE CALENDAR
+# =========================================================================
+elif current_nav_key == "events":
+    tab_cal, tab_fc, tab_trends = st.tabs([
+        "📅 Municipal Event Calendar & Surge Register",
+        "🔮 7-Day ML Forecast & Trend Dynamics",
+        "📊 Ward-Level Generation Patterns",
+    ])
+
+    with tab_cal:
+        calendar_module.render_calendar_section(palette, total_capacity=total_capacity)
+
+    with tab_fc:
+        st.markdown(
+            f"""
+            <div style="background:{palette['card_bg']}; border:1px solid {palette['border']}; border-left:4px solid {palette['purple']};
+                        border-radius:8px; padding:18px 22px; margin-bottom:20px;">
+                <div style="font-size:1.15rem; font-weight:800; color:{palette['text']};">🔮 7-Day Predictive Waste Forecast & Capacity Ceilings</div>
+                <div style="font-size:0.75rem; color:{palette['muted']}; margin-top:4px;">
+                    Calibrated on day-of-week commercial activity, residential weekend multipliers, and holiday event surges.
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        col_fc1, col_fc2, col_fc3 = st.columns(3)
+        with col_fc1:
+            st.markdown(
+                f"""<div class="m-card hero"><div class="m-label">📅 7-Day Cumulative Volume</div><div class="m-value">{(total_waste * 7.15) / 1000:.1f} T</div></div>""",
+                unsafe_allow_html=True,
+            )
+        with col_fc2:
+            st.markdown(
+                f"""<div class="m-card"><div class="m-label">⚡ Peak Demand Surge Day</div><div class="m-value">Saturday (Weekend Peak)</div></div>""",
+                unsafe_allow_html=True,
+            )
+        with col_fc3:
+            st.markdown(
+                f"""<div class="m-card green"><div class="m-label">🛡️ Minimum Reserve Margin</div><div class="m-value">{max(0, total_capacity - total_waste)/1000:.2f} T Buffer</div></div>""",
+                unsafe_allow_html=True,
+            )
+
+        forecast_rows = forecast.forecast_week(sources, total_capacity)
+        forecast_df = pd.DataFrame(forecast_rows)
+        components.forecast_section(forecast_df, palette)
+
+    with tab_trends:
+        st.markdown(f'<div class="sec-title">📊 WARD-LEVEL PREDICTED GENERATION DYNAMICS</div>', unsafe_allow_html=True)
+        ward_fcs = []
+        days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+        for s in sources:
+            for d in days:
+                mult = 1.25 if d in ["Sat", "Sun"] and "house" in s["id"] else (0.4 if d in ["Sat", "Sun"] and "office" in s["id"] else 1.0)
+                ward_fcs.append({"Source": s["id"].upper(), "Day": d, "Waste (kg)": round(s["baseline_kg"] * mult)})
+        df_wf = pd.DataFrame(ward_fcs)
+
+        fig_w = px.bar(
+            df_wf,
+            x="Day",
+            y="Waste (kg)",
+            color="Source",
+            barmode="stack",
+            title="Projected Daily Generation by Municipal Source Stream",
+            color_discrete_sequence=px.colors.qualitative.Bold,
+        )
+        fig_w.update_layout(
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font_color=palette["text"],
+            height=320,
+            margin=dict(l=10, r=10, t=40, b=10),
+        )
+        st.plotly_chart(fig_w, use_container_width=True)
+
+# =========================================================================
+# PAGE 4: LIVE MAP & FLEET TELEMATICS
+# =========================================================================
+elif current_nav_key in ["map", "operations"]:
     tab_map, tab_fleet, tab_facs = st.tabs([
         "🗺️ Live GIS Waste Map & Heatmap",
         "🚚 Vehicle Tracking & Fleet Dispatch",
@@ -645,25 +849,6 @@ elif current_nav_key == "operations":
 
     with tab_facs:
         facility_module.render_facility_management_page(palette)
-
-# =========================================================================
-# PAGE 3: SMART ALLOCATION & SIMPLEX LP SOLVER
-# =========================================================================
-elif current_nav_key == "allocation":
-    tab_opt, tab_sim, tab_cal = st.tabs([
-        "⚡ Multi-Objective LP Solver (Simplex)",
-        "🧪 Scenario Simulator",
-        "📅 Event Surge Calendar",
-    ])
-
-    with tab_opt:
-        optimizer.render_smart_allocation_page(palette, wet_total, dry_total)
-
-    with tab_sim:
-        simulator_module.render_scenario_simulator_page(palette, wet_total, dry_total)
-
-    with tab_cal:
-        calendar_module.render_calendar_section(palette, total_capacity=total_capacity)
 
 # =========================================================================
 # PAGE 4: ANALYTICS & 7-DAY FORECAST
@@ -751,7 +936,7 @@ elif current_nav_key == "analytics":
 # =========================================================================
 # PAGE 5: ALERTS & CITIZEN GRIEVANCES
 # =========================================================================
-elif current_nav_key == "alerts_citizen":
+elif current_nav_key in ["alerts", "alerts_citizen"]:
     tab_alerts, tab_citizen = st.tabs([
         "🚨 Predictive Overflow Alerts",
         "📢 Citizen Grievance Portal & File Ticket",
@@ -764,30 +949,49 @@ elif current_nav_key == "alerts_citizen":
         citizen_module.render_citizen_reports_page(palette)
 
 # =========================================================================
-# PAGE 6: AUDITS, REPORTS & ADMIN
+# PAGE 6: AUDITS, REPORTS & PERFORMANCE
 # =========================================================================
-elif current_nav_key == "admin_reports":
-    tab_rep, tab_users, tab_settings, tab_prof = st.tabs([
-        "📑 Executive Reports & Data Export",
-        "👥 User Role Management (Admin)",
-        "⚙️ System Settings & API Keys",
-        "👤 Account Profile & Security",
+elif current_nav_key in ["reports", "admin_reports"]:
+    tab_rep, tab_trends, tab_perf = st.tabs([
+        "📑 Executive Reports & Excel Export",
+        "📈 Waste Generation Trends & Analytics",
+        "🏆 Municipal SLA Performance",
     ])
 
     with tab_rep:
         reports_module.render_reports_page(palette)
 
-    with tab_users:
-        if not current_user or current_user.get("role") != "admin":
-            st.warning("User Management is restricted to System Administrators. Please sign in as admin.")
-        else:
+    with tab_trends:
+        analytics_dashboards.render_waste_analytics_page(palette)
+
+    with tab_perf:
+        analytics_dashboards.render_performance_dashboard_page(palette)
+
+# =========================================================================
+# PAGE 7: SETTINGS & GOVERNANCE
+# =========================================================================
+elif current_nav_key == "settings":
+    tabs_list = [
+        "⚙️ System Settings & Telemetry API",
+        "👤 Account Profile & Security",
+    ]
+    if current_user and current_user.get("role") == "admin":
+        tabs_list.append("👥 User Role Management (Admin)")
+
+    st_tabs = st.tabs(tabs_list)
+    with st_tabs[0]:
+        settings_module.render_settings_page(palette)
+    with st_tabs[1]:
+        settings_module.render_profile_page(palette)
+    if current_user and current_user.get("role") == "admin":
+        with st_tabs[2]:
             analytics_dashboards.render_user_management_page(palette)
 
-    with tab_settings:
-        settings_module.render_settings_page(palette)
-
-    with tab_prof:
-        settings_module.render_profile_page(palette)
+# =========================================================================
+# PAGE 8: LOGOUT
+# =========================================================================
+elif current_nav_key == "logout":
+    auth.logout()
 
 # =========================================================================
 # PROFESSIONAL REAL WEBSITE FOOTER
