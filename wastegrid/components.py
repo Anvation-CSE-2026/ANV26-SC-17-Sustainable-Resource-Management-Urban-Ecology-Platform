@@ -1,11 +1,19 @@
+import base64
+import os
 import streamlit as st
 
 
 def header(logo_path="logo.png"):
+    logo_html = ""
+    if os.path.exists(logo_path):
+        with open(logo_path, "rb") as f:
+            b64 = base64.b64encode(f.read()).decode()
+        logo_html = f'<img src="data:image/png;base64,{b64}" alt="logo" />'
+
     st.markdown(f"""
         <div class="wg-header">
             <div class="wg-brand">
-                <img src="app/static/{logo_path}" alt="logo" onerror="this.style.display='none'" />
+                {logo_html}
                 <div>
                     <div class="wg-title">WasteGrid</div>
                     <div class="wg-tagline">Predict. Detect. Reallocate.</div>
@@ -21,7 +29,6 @@ def section_title(text):
 
 def metrics_row(total_waste, total_capacity, total_overflow, data_mode, p):
     overflow_cls = "red" if total_overflow > 0 else ""
-    source_cls = "text"
     st.markdown(f"""
         <div class="metric-grid">
             <div class="m-card">
@@ -38,7 +45,7 @@ def metrics_row(total_waste, total_capacity, total_overflow, data_mode, p):
             </div>
             <div class="m-card">
                 <div class="m-label">Data Source</div>
-                <div class="m-value {source_cls}">{data_mode}</div>
+                <div class="m-value text">{data_mode}</div>
             </div>
         </div>
     """, unsafe_allow_html=True)
@@ -68,7 +75,6 @@ def status_banner(total_overflow, reoptimized, outage=None):
 
 
 def action_buttons():
-    """Render 4 action buttons as query-param links. Returns clicked action or None."""
     st.markdown("""
         <div class="action-grid">
             <a class="act-btn" href="?action=event" target="_self">Add Event</a>
