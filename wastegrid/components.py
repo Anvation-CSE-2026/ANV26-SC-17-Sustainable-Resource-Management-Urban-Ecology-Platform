@@ -111,12 +111,15 @@ def top_nav_bar(*args, **kwargs):
         f'<span style="font-size:0.82rem; font-weight:700; color:{text_col};">{user_display}</span>{role_badge}</a>'
     )
 
+    from wastegrid import theme as theme_module
+    logo_uri = theme_module.get_logo_data_uri()
+
     nav_html = (
         f'<div style="display:flex; justify-content:space-between; align-items:center; background:{card_bg}; '
         f'border:1px solid {border_col}; border-radius:12px; padding:12px 24px; margin-bottom:20px; margin-left:54px; box-shadow:{shadow_val}; flex-wrap:wrap; gap:12px;">'
         # 1. WasteGrid logo on the left with Tagline
         f'<div style="display:flex; align-items:center; gap:14px;">'
-        f'<div style="width:38px; height:38px; border-radius:8px; background:linear-gradient(135deg, #10b981, #0284c7); display:flex; align-items:center; justify-content:center; font-size:1.35rem; box-shadow:0 2px 8px rgba(0,0,0,0.2);">♻️</div>'
+        f'<img src="{logo_uri}" alt="WasteGrid Logo" style="width:42px; height:42px; object-fit:contain; filter:drop-shadow(0 2px 6px rgba(0,0,0,0.18));" />'
         f'<div>'
         f'<div style="font-size:1.3rem; font-weight:900; color:{text_col}; letter-spacing:-0.02em; line-height:1.1;">WasteGrid</div>'
         f'<div style="font-size:0.68rem; color:{muted_col}; letter-spacing:0.18em; text-transform:uppercase; margin-top:2px; font-weight:700;">Predict. Detect. Allocate.</div>'

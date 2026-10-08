@@ -1,4 +1,17 @@
 import streamlit as st
+import base64
+from pathlib import Path
+
+
+@st.cache_data
+def get_logo_data_uri():
+    """Returns base64-encoded Data URI for logo.png to render crisp graphics in HTML."""
+    logo_path = Path(__file__).resolve().parent.parent / "logo.png"
+    if logo_path.exists():
+        with open(logo_path, "rb") as f:
+            encoded = base64.b64encode(f.read()).decode("utf-8")
+            return f"data:image/png;base64,{encoded}"
+    return ""
 
 
 def get_palette(theme="light"):

@@ -363,6 +363,21 @@ def show_auth_dialog(palette):
                 st.rerun()
 
     else:
+        from wastegrid import theme as theme_module
+        logo_uri = theme_module.get_logo_data_uri()
+        st.markdown(
+            f"""
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px; padding-bottom:8px; border-bottom:1px solid {p['border']};">
+                <img src="{logo_uri}" alt="WasteGrid Logo" style="width:36px; height:36px; object-fit:contain;" />
+                <div>
+                    <div style="font-size:1.05rem; font-weight:800; color:{p['text']};">WasteGrid Authority Portal</div>
+                    <div style="font-size:0.68rem; color:{p['muted']}; font-weight:600; text-transform:uppercase; letter-spacing:0.08em;">Predict. Detect. Allocate.</div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
         # User is NOT signed in: Sign In, Sign Up, or 1-Click Fast Presets across 5 Tenants
         tab_login, tab_register, tab_forgot = st.tabs([
             "🔑 Sign In (5 Tenants)",
@@ -605,11 +620,14 @@ def render_full_login_page(palette):
         unsafe_allow_html=True,
     )
 
+    from wastegrid import theme as theme_module
+    logo_uri = theme_module.get_logo_data_uri()
+
     # 1. Top Brand Header: WasteGrid Logo & Tagline
     st.markdown(
-        """
+        f"""
         <div class="wg-login-brand">
-            <div class="wg-login-logo">♻️</div>
+            <img src="{logo_uri}" alt="WasteGrid Logo" style="width:78px; height:78px; margin:0 auto 12px auto; display:block; object-fit:contain; filter:drop-shadow(0 4px 14px rgba(0,0,0,0.25));" />
             <div class="wg-login-title">WasteGrid</div>
             <div class="wg-login-tagline">Predict. Detect. Allocate.</div>
             <div class="wg-login-subtitle">Intelligent Municipal Solid-Waste Management System</div>

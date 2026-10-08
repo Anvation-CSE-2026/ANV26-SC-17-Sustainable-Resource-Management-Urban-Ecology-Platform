@@ -249,15 +249,13 @@ if st.session_state.nav_selection in legacy_map:
 # 7. Left Sidebar Construction matching user hand-drawn wireframe
 with st.sidebar:
     # Sidebar Header Brand
+    logo_uri = theme.get_logo_data_uri()
     render_html(
         f"""
         <div style="display:flex; align-items:center; gap:12px; padding:6px 0 16px 0; border-bottom:1px solid {palette['border']}; margin-bottom:16px;">
-            <div style="width:38px; height:38px; border-radius:10px; background:linear-gradient(135deg, #10b981, #0284c7); 
-                        display:flex; align-items:center; justify-content:center; font-size:1.35rem; box-shadow:0 2px 10px rgba(0,0,0,0.25);">
-                ♻️
-            </div>
+            <img src="{logo_uri}" alt="WasteGrid Logo" style="width:42px; height:42px; object-fit:contain; filter:drop-shadow(0 2px 6px rgba(0,0,0,0.18));" />
             <div>
-                <div style="font-size:1.22rem; font-weight:900; color:{palette['text']}; letter-spacing:-0.02em;">WasteGrid</div>
+                <div style="font-size:1.24rem; font-weight:900; color:{palette['text']}; letter-spacing:-0.02em;">WasteGrid</div>
                 <div style="font-size:0.65rem; color:{palette['muted']}; letter-spacing:0.12em; text-transform:uppercase; font-weight:700;">Predict. Detect. Allocate.</div>
             </div>
         </div>
