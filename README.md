@@ -11,7 +11,7 @@ Unlike collection-route optimization, WasteGrid addresses the **downstream alloc
 
 ## Live Demo
 
-🔗 [wastegrid.streamlit.app](https://wastegrid.streamlit.app) *(update after deploy)*
+🔗 [wastegrid.streamlit.app](https://wastegrid-v09cd65.streamlit.app/?theme=light) *(update after deploy)*
 
 ## Features
 
