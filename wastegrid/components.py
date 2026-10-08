@@ -45,8 +45,51 @@ def header(theme="light", status="optimal", logo_path="logo.png", p=None, user=N
     )
 
 
+def top_nav_bar(page_title, status="optimal", pending_alerts=0, user=None, theme="light", p=None):
+    if status == "alert":
+        badge_cls, badge_dot, badge_text = "alert", "red", "Overflow Alert"
+    elif status == "warn":
+        badge_cls, badge_dot, badge_text = "warn", "yellow", "Facility Offline"
+    else:
+        badge_cls, badge_dot, badge_text = "optimal", "green", "System Optimal"
+
+    next_theme = "dark" if theme == "light" else "light"
+    toggle_icon = "🌙" if theme == "light" else "☀️"
+    toggle_label = "Dark" if theme == "light" else "Light"
+
+    user_html = ""
+    if user:
+        user_html = (
+            f'<div class="user-pill">{user.get("authority_title", user.get("title", "User"))} '
+            f'<span class="badge">{user.get("role", "admin").upper()}</span></div>'
+        )
+
+    alert_badge = f'<span style="background:{p["accent"]}; color:#ffffff; padding:2px 7px; border-radius:999px; font-size:0.65rem; margin-left:4px;">{pending_alerts}</span>' if pending_alerts > 0 else ""
+
+    st.markdown(
+        f"""
+        <div style="display:flex; justify-content:space-between; align-items:center; background:{p['card_bg']};
+                    border:1px solid {p['border']}; border-radius:10px; padding:12px 20px; margin-bottom:22px; box-shadow:{p['shadow']};">
+            <div style="display:flex; align-items:center; gap:14px;">
+                <div style="font-size:1.2rem; font-weight:800; color:{p['text']}; letter-spacing:-0.02em;">
+                    {page_title}
+                </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <div class="hdr-badge {badge_cls}"><span class="pulse-dot {badge_dot}"></span>{badge_text}</div>
+                <div class="hdr-badge">🔔 Alerts {alert_badge}</div>
+                {user_html}
+                <a class="theme-toggle-link" href="?theme={next_theme}" target="_self"><span>{toggle_icon}</span><span>{toggle_label}</span></a>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 def section_title(text):
     st.markdown(f'<div class="sec-title">{text}</div>', unsafe_allow_html=True)
+
 
 
 def metrics_row(total_waste, total_capacity, total_overflow, data_mode, p):

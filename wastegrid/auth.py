@@ -1,176 +1,246 @@
 """
-Authentication and Role-Based Access Control (RBAC) for WasteGrid.
-Supports multi-authority login matching government and municipal hierarchy:
-1. State Authority – Karnataka (karnataka_admin / Waste@123)
-2. District Authority (district_admin / District@123)
-3. Municipal Authority (municipality_admin / Municipality@123)
-4. Processing/Factory Authority (factory_admin / Factory@123)
+Secure Database-Backed Authentication and Role-Based Access Control (RBAC) for WasteGrid 2.0.
+- PBKDF2-HMAC-SHA256 password verification with unique salts
+- Persistent user sessions in st.session_state
+- Role and jurisdiction-based permission enforcement
+- Change password & forgot password security workflows
+- Admin user management hooks
 """
 
 import streamlit as st
+from datetime import datetime, timezone
+from wastegrid import db
 
-USERS = {
-    "karnataka_admin": {
-        "password": "Waste@123",
-        "role": "state",
-        "title": "State Authority – Karnataka",
-        "org": "Karnataka Urban Development Department (UDD)",
-        "badge": "State Command",
-        "icon": "🏛️",
-        "jurisdiction": "Statewide (All Districts & Regional Hubs)",
-        "access_desc": "View all districts, inter-district waste flow, macro factory capacity, and statewide emergency alerts.",
-    },
-    "district_admin": {
-        "password": "District@123",
-        "role": "district",
-        "title": "District Authority",
-        "org": "Bengaluru Urban District Administration",
-        "badge": "District HQ",
-        "icon": "📍",
-        "jurisdiction": "Bengaluru Urban District (Central, North, South, East)",
-        "access_desc": "View and manage waste flow across district transfer stations and monitor regional plant quotas.",
-    },
-    "municipality_admin": {
-        "password": "Municipality@123",
-        "role": "municipality",
-        "title": "Municipal Authority",
-        "org": "BBMP Solid Waste Management Command",
-        "badge": "Municipal Operations",
-        "icon": "🏙️",
-        "jurisdiction": "Municipal Wards & Micro-Collection Routes",
-        "access_desc": "Manage ward collections, inject surge events, simulate facility outages, re-optimize allocations, and dispatch truck fleets.",
-    },
-    "factory_admin": {
-        "password": "Factory@123",
-        "role": "factory",
-        "title": "Processing / Factory Authority",
-        "org": "Regional Waste Processing & Recycling Consortium",
-        "badge": "Plant Operations",
-        "icon": "🏭",
-        "jurisdiction": "Processing Facilities A, B, and C",
-        "access_desc": "Inspect real-time incoming truck weighbridges, hopper capacity, digester pressure, and maintenance schedules.",
-    },
+# Page-level role permissions matrix
+ROLE_PERMISSIONS = {
+    "admin": [
+        "overview", "map", "analytics", "forecast", "facilities", "allocation",
+        "vehicles", "calendar", "simulator", "alerts", "citizen_reports",
+        "carbon", "performance", "reports", "users", "settings", "profile"
+    ],
+    "state": [
+        "overview", "map", "analytics", "forecast", "facilities", "allocation",
+        "calendar", "alerts", "carbon", "performance", "reports", "settings", "profile"
+    ],
+    "district": [
+        "overview", "map", "analytics", "forecast", "facilities", "vehicles",
+        "calendar", "alerts", "citizen_reports", "reports", "settings", "profile"
+    ],
+    "municipality": [
+        "overview", "map", "analytics", "forecast", "facilities", "allocation",
+        "vehicles", "calendar", "simulator", "alerts", "citizen_reports",
+        "carbon", "reports", "settings", "profile"
+    ],
+    "factory": [
+        "overview", "facilities", "allocation", "vehicles", "alerts",
+        "performance", "reports", "settings", "profile"
+    ],
 }
 
 
 def get_current_user():
-    """Return the authenticated user profile dict or None."""
-    username = st.session_state.get("auth_username")
-    if username and username in USERS:
-        return {**USERS[username], "username": username}
-    return None
+    """Retrieve the current authenticated user record from session state."""
+    return st.session_state.get("authenticated_user")
 
 
-def authenticate(username, password):
-    """Validate username and password."""
-    user = USERS.get(username.strip().lower())
-    if user and user["password"] == password:
-        st.session_state["auth_username"] = username.strip().lower()
-        st.session_state["auth_role"] = user["role"]
-        return True
-    return False
+def is_authenticated():
+    """Check if a valid active session exists."""
+    user = get_current_user()
+    return bool(user and user.get("is_active"))
 
 
-def quick_login(username):
-    """1-Click login for evaluator convenience."""
-    if username in USERS:
-        st.session_state["auth_username"] = username
-        st.session_state["auth_role"] = USERS[username]["role"]
-        st.rerun()
+def login(username, password):
+    """Authenticate against SQLite database with hashed password verification."""
+    user = db.get_user_by_username(username)
+    if not user:
+        return False, "Invalid username or password."
+
+    if not user.get("is_active"):
+        return False, "This account has been deactivated by the system administrator."
+
+    if db.verify_password(password, user["password_hash"], user["salt"]):
+        st.session_state["authenticated_user"] = user
+        # Update last login timestamp in DB
+        now_str = datetime.now(timezone.utc).isoformat()
+        conn = db.get_connection()
+        c = conn.cursor()
+        c.execute("UPDATE users SET last_login = ? WHERE id = ?", (now_str, user["id"]))
+        conn.commit()
+        conn.close()
+        db.add_audit_log(user["username"], "LOGIN_SUCCESS", f"User logged in from role {user['role']}")
+        return True, "Login successful."
+
+    db.add_audit_log(username, "LOGIN_FAILED", "Incorrect password attempt")
+    return False, "Invalid username or password."
 
 
 def logout():
-    """Clear authentication session state."""
-    st.session_state.pop("auth_username", None)
-    st.session_state.pop("auth_role", None)
+    """Terminate the authenticated session."""
+    user = get_current_user()
+    if user:
+        db.add_audit_log(user["username"], "LOGOUT", "User logged out")
+    st.session_state.pop("authenticated_user", None)
     st.rerun()
 
 
-def render_login_page(palette):
-    """Render a modern, glassmorphic login interface with quick-login buttons."""
-    p = palette
+def change_password(username, current_password, new_password, confirm_password):
+    """Handle secure self-service password update."""
+    if new_password != confirm_password:
+        return False, "New passwords do not match."
 
-    st.markdown(
-        f'<div class="login-wrapper">'
-        f'<div class="login-card">'
-        f'<div class="login-header">'
-        f'<div class="login-brand">'
-        f'<div class="login-title">WasteGrid</div>'
-        f'<div class="login-sub">Next-Generation Dynamic Waste Reallocation System</div>'
-        f'</div>'
-        f'</div>'
-        f'<div class="login-notice">'
-        f'Select your administrative authority level to enter the WasteGrid command dashboard.'
-        f'</div>'
-        f'</div>'
-        f'</div>',
-        unsafe_allow_html=True,
-    )
+    if len(new_password) < 8:
+        return False, "Password must be at least 8 characters long."
 
-    col_left, col_right = st.columns([1, 1], gap="large")
+    user = db.get_user_by_username(username)
+    if not user:
+        return False, "User not found."
 
-    with col_left:
-        st.markdown(
-            f'<div class="login-box-header">🔑 Standard Credential Login</div>',
+    if not db.verify_password(current_password, user["password_hash"], user["salt"]):
+        return False, "Current password verification failed."
+
+    db.update_user_password(username, new_password)
+    db.add_audit_log(username, "PASSWORD_CHANGED", "User successfully changed password")
+    return True, "Password updated successfully. Please use your new password next time."
+
+
+def forgot_password_reset(username, verified_email, new_password, confirm_password):
+    """Reset password if verified official email matches account record."""
+    if new_password != confirm_password:
+        return False, "New passwords do not match."
+
+    if len(new_password) < 8:
+        return False, "Password must be at least 8 characters long."
+
+    user = db.get_user_by_username(username)
+    if not user:
+        return False, "No account found matching this username."
+
+    if user["email"].strip().lower() != verified_email.strip().lower():
+        return False, "Provided email address does not match official records on file."
+
+    db.update_user_password(username, new_password)
+    db.add_audit_log(username, "PASSWORD_RESET", "Password reset via verified email match")
+    return True, "Password reset successfully! You can now log in."
+
+
+def has_permission(page_key):
+    """Check if the current authenticated user has access to the specified page."""
+    user = get_current_user()
+    if not user:
+        return False
+    allowed_pages = ROLE_PERMISSIONS.get(user.get("role"), [])
+    return page_key in allowed_pages
+
+
+def render_sidebar_auth_widget():
+    """
+    Renders login form or current user profile in Streamlit's sidebar.
+    """
+    user = get_current_user()
+
+    if user:
+        # User is authenticated: Render user profile card in sidebar
+        role_icons = {
+            "state": "🏛️",
+            "district": "📍",
+            "municipality": "🏙️",
+            "factory": "🏭",
+            "admin": "🛡️",
+        }
+        u_icon = role_icons.get(user["role"], "👤")
+
+        st.sidebar.markdown(
+            f"""
+            <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); 
+                        border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:1.4rem;">{u_icon}</span>
+                    <div style="overflow:hidden;">
+                        <div style="font-size:0.85rem; font-weight:700; text-overflow:ellipsis; white-space:nowrap;">{user['full_name']}</div>
+                        <div style="font-size:0.68rem; color:#8ba3c7; text-transform:uppercase; letter-spacing:0.08em;">{user['authority_title']}</div>
+                    </div>
+                </div>
+                <div style="margin-top:8px; font-size:0.68rem; color:#8ba3c7; border-top:1px solid rgba(255,255,255,0.06); padding-top:6px;">
+                    <b>Scope:</b> {user['jurisdiction']}
+                </div>
+            </div>
+            """,
             unsafe_allow_html=True,
         )
-        with st.form("login_form", clear_on_submit=False):
-            username_input = st.text_input("Username", placeholder="e.g. municipality_admin")
-            password_input = st.text_input("Password", type="password", placeholder="Enter password")
-            submit = st.form_submit_button("Sign In to WasteGrid", use_container_width=True)
+
+        col_out, col_pwd = st.sidebar.columns([1, 1])
+        with col_out:
+            if st.button("🚪 Logout", key="btn_sb_logout", use_container_width=True):
+                logout()
+        with col_pwd:
+            if st.button("🔑 Profile", key="btn_sb_profile", use_container_width=True):
+                st.session_state["nav_selection"] = "profile"
+                st.rerun()
+
+    else:
+        # User is NOT authenticated: Render secure login card in sidebar
+        st.sidebar.markdown(
+            """
+            <div style="margin-bottom:12px; font-size:0.8rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:#8ba3c7;">
+                🔐 Secure Authority Sign-In
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        with st.sidebar.form("sb_login_form"):
+            uname = st.text_input("Username", placeholder="e.g. municipality_admin")
+            pword = st.text_input("Password", type="password", placeholder="••••••••")
+            submit = st.form_submit_button("Sign In ➔", use_container_width=True)
 
             if submit:
-                if authenticate(username_input, password_input):
-                    st.success("Authentication successful! Loading dashboard...")
-                    st.rerun()
+                if uname and pword:
+                    success, msg = login(uname, pword)
+                    if success:
+                        st.toast("✅ Signed in successfully!")
+                        st.rerun()
+                    else:
+                        st.error(msg)
                 else:
-                    st.error("Invalid credentials. Please check your username and password.")
+                    st.warning("Please enter both username and password.")
 
-    with col_right:
-        st.markdown(
-            f'<div class="login-box-header">⚡ 1-Click Role Switcher (Hackathon MVP Access)</div>',
-            unsafe_allow_html=True,
-        )
-        st.markdown(
-            f'<div style="font-size:0.75rem; color:{p["muted"]}; margin-bottom:12px;">'
-            'Click any role below to instantly demo the corresponding dashboard with pre-configured authority:'
-            '</div>',
-            unsafe_allow_html=True,
-        )
+        with st.sidebar.expander("❓ Forgot Password", expanded=False):
+            st.markdown("<small style='color:#8ba3c7;'>Official account recovery via verified email:</small>", unsafe_allow_html=True)
+            with st.form("sb_forgot_form"):
+                f_user = st.text_input("Account Username")
+                f_mail = st.text_input("Registered Official Email")
+                f_p1 = st.text_input("New Password", type="password")
+                f_p2 = st.text_input("Confirm New Password", type="password")
+                f_sub = st.form_submit_button("Reset Password", use_container_width=True)
+                if f_sub:
+                    s, m = forgot_password_reset(f_user, f_mail, f_p1, f_p2)
+                    if s:
+                        st.success(m)
+                    else:
+                        st.error(m)
 
-        for uname, udata in USERS.items():
-            col_b1, col_b2 = st.columns([3, 1])
-            with col_b1:
-                st.markdown(
-                    f'<div class="quick-role-row">'
-                    f'<div class="quick-role-title">{udata["icon"]} {udata["title"]}</div>'
-                    f'<div class="quick-role-sub">User: <code>{uname}</code> · {udata["badge"]}</div>'
-                    f'</div>',
-                    unsafe_allow_html=True,
-                )
-            with col_b2:
-                if st.button("Enter ➔", key=f"quick_{uname}", use_container_width=True):
-                    quick_login(uname)
 
-    # Reference credentials table card
-    st.markdown("<br>", unsafe_allow_html=True)
+def render_access_restricted_view(page_name):
+    """Renders a clean notice when a user tries to access a page outside their role authority."""
+    user = get_current_user()
+    role_title = user["authority_title"] if user else "Public User"
+
     st.markdown(
-        f'<div class="creds-card">'
-        f'<div class="creds-title">📋 Official Authority Credentials Matrix</div>'
-        f'<table class="fc-table">'
-        f'<thead><tr>'
-        f'<th>Authority Level</th>'
-        f'<th>Username</th>'
-        f'<th>Password</th>'
-        f'<th>Jurisdiction & Access Scope</th>'
-        f'</tr></thead>'
-        f'<tbody>'
-        f'<tr><td>🏛️ State Authority – Karnataka</td><td><code>karnataka_admin</code></td><td><code>Waste@123</code></td><td>Statewide overview, multi-district flow & factory capacity</td></tr>'
-        f'<tr><td>📍 District Authority</td><td><code>district_admin</code></td><td><code>District@123</code></td><td>District-level waste flow, transfer stations & quotas</td></tr>'
-        f'<tr><td>🏙️ Municipal Authority</td><td><code>municipality_admin</code></td><td><code>Municipality@123</code></td><td>Wards, live collection, event/outage solver & truck dispatch</td></tr>'
-        f'<tr><td>🏭 Processing/Factory Authority</td><td><code>factory_admin</code></td><td><code>Factory@123</code></td><td>Facility hoppers, weighbridge queue & plant maintenance</td></tr>'
-        f'</tbody>'
-        f'</table>'
-        f'</div>',
+        f"""
+        <div style="max-width: 650px; margin: 40px auto; text-align: center; background: rgba(255,56,86,0.06); 
+                    border: 1px solid rgba(255,56,86,0.3); border-radius: 12px; padding: 36px 28px;">
+            <div style="font-size: 2.8rem; margin-bottom: 12px;">🛡️</div>
+            <div style="font-size: 1.3rem; font-weight: 800; color: #ff3856; margin-bottom: 8px;">
+                Jurisdictional Access Restricted
+            </div>
+            <div style="font-size: 0.85rem; color: #8ba3c7; margin-bottom: 20px; line-height: 1.6;">
+                Your logged-in role as <b>{role_title}</b> does not have administrative clearance to access the 
+                <b>{page_name}</b> view.
+            </div>
+            <div style="font-size: 0.75rem; color: #8ba3c7; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px;">
+                Please contact the Karnataka State Urban Development IT Administrator if you require elevated clearance.
+            </div>
+        </div>
+        """,
         unsafe_allow_html=True,
     )

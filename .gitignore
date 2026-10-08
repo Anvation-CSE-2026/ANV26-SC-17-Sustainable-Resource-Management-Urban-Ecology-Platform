@@ -3,3 +3,5 @@ __pycache__/
 *.pyo
 .streamlit/secrets.toml
 .DS_Store
+.pytest_cache/
+*.db
