@@ -97,21 +97,22 @@ def facility_grid(facilities, allocations, p):
         else:
             color = p["accent"]
 
-        cards.append(f"""
-            <div class="fac-card">
-                <div class="fac-name">Facility {f['id']}</div>
-                <div class="fac-type">Accepts {f['accepts']} · {f['distance_km']} km</div>
-                <div class="fac-stat">{round(alloc):,} / {f['capacity_kg']:,} kg</div>
-                <div class="fac-bar-wrap">
-                    <div class="fac-bar" style="width:{min(util,100)}%; background:{color};"></div>
-                </div>
-                <div class="fac-util" style="color:{color};">{util:.0f}% utilized</div>
-            </div>
-        """)
+        cards.append(
+            f'<div class="fac-card">'
+            f'<div class="fac-name">Facility {f["id"]}</div>'
+            f'<div class="fac-type">Accepts {f["accepts"]} · {f["distance_km"]} km</div>'
+            f'<div class="fac-stat">{round(alloc):,} / {f["capacity_kg"]:,} kg</div>'
+            f'<div class="fac-bar-wrap">'
+            f'<div class="fac-bar" style="width:{min(util,100)}%; background:{color};"></div>'
+            f'</div>'
+            f'<div class="fac-util" style="color:{color};">{util:.0f}% utilized</div>'
+            f'</div>'
+        )
 
-    st.markdown(f'<div class="fac-grid">{"".join(cards)}</div>', unsafe_allow_html=True)
-
-
+    st.markdown(
+        '<div class="fac-grid">' + "".join(cards) + '</div>',
+        unsafe_allow_html=True,
+    )
 def comparison_cards(fixed_overflow, total_overflow, p):
     f_cls = "red" if fixed_overflow > 0 else ""
     w_cls = "red" if total_overflow > 0 else ""
