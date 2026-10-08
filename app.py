@@ -60,14 +60,28 @@ if st.query_params.get("logout") == "1":
 if st.query_params.get("profile") == "1":
     if "profile" in st.query_params:
         del st.query_params["profile"]
-    st.session_state["nav_selection"] = "settings"
+    st.session_state["show_auth_modal"] = True
 
-if st.query_params.get("alert_nav") == "1" or st.query_params.get("nav") == "alerts":
+# Handle navigation via query params (e.g. ?nav=maps, ?nav=services, ?nav=settings)
+req_nav = st.query_params.get("nav")
+if req_nav:
+    if "nav" in st.query_params:
+        del st.query_params["nav"]
+    nav_map_aliases = {
+        "maps": "map",
+        "gis": "map",
+        "live_maps": "map",
+        "overview": "home",
+        "dashboard": "home",
+        "fleet": "fleet_ops",
+        "citizen": "citizen_ops",
+    }
+    st.session_state["nav_selection"] = nav_map_aliases.get(req_nav, req_nav)
+
+if st.query_params.get("alert_nav") == "1":
     st.session_state["nav_selection"] = "alerts"
     if "alert_nav" in st.query_params:
         del st.query_params["alert_nav"]
-    if "nav" in st.query_params:
-        del st.query_params["nav"]
 
 if st.query_params.get("footer_info"):
     st.session_state["footer_info_active"] = st.query_params.get("footer_info")

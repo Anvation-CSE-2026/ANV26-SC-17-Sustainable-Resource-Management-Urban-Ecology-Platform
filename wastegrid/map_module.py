@@ -60,14 +60,22 @@ def render_map_page(palette):
     elif sel_stream == "Dry / Recyclable":
         filtered_sources = [s for s in filtered_sources if s.get("waste_type") == "dry"]
 
-    # Base Folium Map centered on Bengaluru
+    # Base Folium Map centered on Bengaluru (Using OpenStreetMap & Esri - 100% Free, No Watermark, No API Key Required)
     center_lat, center_lon = 12.9650, 77.6050
     m = folium.Map(
         location=[center_lat, center_lon],
         zoom_start=12,
-        tiles="CartoDB dark_matter" if palette["bg"] == "#0d131d" else "CartoDB positron",
+        tiles="OpenStreetMap",
         prefer_canvas=True,
     )
+
+    # Add Esri World Street Map Layer as an alternate clean basemap
+    folium.TileLayer(
+        tiles="https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
+        attr="Tiles &copy; Esri &mdash; National Geographic, DeLorme, NAVTEQ",
+        name="Esri World Streets",
+        control=True,
+    ).add_to(m)
 
     # 2. Add Heatmap Layer
     if show_heatmap and filtered_sources:
@@ -174,8 +182,11 @@ def render_map_page(palette):
                     tooltip=f"Transfer Vector: {s['name']} ➔ Plant {target_fid}",
                 ).add_to(m)
 
-    # 6. Render Map in Streamlit
-    st_folium(m, width="100%", height=520)
+    # Layer control for toggling base maps
+    folium.LayerControl(position="topright").add_to(m)
+
+    # 6. Render Map in Streamlit with native container width
+    st_folium(m, use_container_width=True, height=540, returned_objects=[])
 
     # 7. Map Legend Card
     st.markdown(

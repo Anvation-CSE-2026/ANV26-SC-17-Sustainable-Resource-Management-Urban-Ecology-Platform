@@ -70,9 +70,15 @@ def render_vehicle_tracking_page(palette):
     m = folium.Map(
         location=[12.9650, 77.6050],
         zoom_start=12,
-        tiles="CartoDB dark_matter" if palette["bg"] == "#0d131d" else "CartoDB positron",
+        tiles="OpenStreetMap",
         prefer_canvas=True,
     )
+    folium.TileLayer(
+        tiles="https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
+        attr="Tiles &copy; Esri",
+        name="Esri World Streets",
+        control=True,
+    ).add_to(m)
 
     # Add Facilities
     for f in facilities:
@@ -132,7 +138,8 @@ def render_vehicle_tracking_page(palette):
                 tooltip=f"Route: {vid} ➔ Plant {tfid} (ETA {v.get('eta_mins', 10)}m)",
             ).add_to(m)
 
-    st_folium(m, width="100%", height=460)
+    folium.LayerControl(position="topright").add_to(m)
+    st_folium(m, use_container_width=True, height=480, returned_objects=[])
 
     # 3. Dynamic Reroute Dispatch Advisor
     st.markdown(f'<div class="sec-title">⚡ REAL-TIME DYNAMIC TURNAROUND DISPATCH ADVISOR</div>', unsafe_allow_html=True)

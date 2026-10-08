@@ -84,6 +84,22 @@ def top_nav_bar(*args, **kwargs):
         role_title = ""
         profile_title = "Click to Sign In or Sign Up"
 
+    card_bg = p.get("card_bg", "#ffffff")
+    text_col = p.get("text", "#1e293b")
+    border_col = p.get("border", "#e2e8f0")
+    muted_col = p.get("muted", "#64748b")
+    shadow_val = p.get("shadow", "0 2px 8px rgba(0,0,0,0.06)")
+
+    alert_badge_html = (
+        f'<a class="theme-toggle-link" href="?alert_nav=1" target="_self" title="{alert_count} Active System Alerts" '
+        f'style="background:rgba(239, 68, 68, 0.12); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.3); font-weight:700;">'
+        f'🚨 {alert_count} Alerts</a>'
+    ) if alert_count > 0 else ""
+
+    role_badge = (
+        f'<span style="font-size:0.68rem; background:rgba(2,132,199,0.1); color:{p.get("blue", "#0284c7")}; padding:2px 6px; border-radius:4px; font-weight:700; text-transform:uppercase;">{role_title}</span>'
+    ) if role_title else ""
+
     profile_btn_html = (
         f'<a class="theme-toggle-link" href="?profile=1" target="_self" title="{profile_title}" '
         f'style="display:inline-flex; align-items:center; gap:8px; padding:4px 12px; border-radius:999px; '
