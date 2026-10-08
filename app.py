@@ -30,12 +30,12 @@ with h1:
     logo_col, title_col = st.columns([1, 12])
     with logo_col:
         try:
-            st.image("logo.png", width=64)
+            st.image("logo.png", width=56)
         except Exception:
             pass
     with title_col:
         st.markdown("""
-            <div style="margin-left:-10px; padding-top: 6px;">
+            <div style="margin-left:-10px; padding-top: 4px;">
                 <div class="logo-title">WasteGrid</div>
                 <div class="logo-tagline">Predict. Detect. Reallocate.</div>
             </div>
@@ -48,11 +48,7 @@ with h2:
         st.rerun()
 
 st.markdown(f"""
-    <div style="
-        height: 1px;
-        background: {palette['divider']};
-        margin: 20px 0 32px 0;
-    "></div>
+    <div style="height: 1px; background: {palette['divider']}; margin: 18px 0 24px 0;"></div>
 """, unsafe_allow_html=True)
 
 # --- Data source (expander) ---
@@ -118,7 +114,7 @@ neutral = palette["text"]
 accent_red = palette["accent"]
 muted = palette["text_muted"]
 
-m1, m2, m3, m4 = st.columns([1, 1, 1.4, 1])
+m1, m2, m3, m4 = st.columns([1, 1, 1.2, 1])
 components.metric_card(m1, "PREDICTED WASTE", f"{total_waste/1000:.2f} T", neutral)
 components.metric_card(m2, "AVAILABLE CAPACITY", f"{total_capacity/1000:.2f} T", neutral)
 components.metric_card(
@@ -133,7 +129,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 # Outage indicator
 if st.session_state.outage_facility:
     st.markdown(
-        f'<div class="status-warn">&nbsp;Facility <b>{st.session_state.outage_facility}</b> is offline. '
+        f'<div class="status-warn">Facility <b>{st.session_state.outage_facility}</b> is offline. '
         'Capacity reduced. Re-optimize to redistribute.</div>',
         unsafe_allow_html=True,
     )
@@ -144,12 +140,12 @@ st.markdown("<br>", unsafe_allow_html=True)
 # --- Controls ---
 b1, b2, b3, b4 = st.columns(4)
 with b1:
-    if st.button("ADD LARGE EVENT", use_container_width=True):
+    if st.button("ADD EVENT", use_container_width=True):
         st.session_state.event_active = True
         st.session_state.reoptimized = False
         st.rerun()
 with b2:
-    if st.button("FACILITY OUTAGE", use_container_width=True):
+    if st.button("OUTAGE", use_container_width=True):
         cycle = {None: "B", "B": "C", "C": None}
         st.session_state.outage_facility = cycle[st.session_state.outage_facility]
         st.session_state.reoptimized = False
@@ -253,7 +249,7 @@ st.download_button(
 
 st.markdown("<br>", unsafe_allow_html=True)
 st.markdown(
-    f'<div style="text-align:center; color:{palette["text_muted"]}; font-size:0.72rem; '
+    f'<div style="text-align:center; color:{palette["text_muted"]}; font-size:0.7rem; '
     'letter-spacing:0.15em; text-transform:uppercase;">'
     "WasteGrid — Predict. Detect. Reallocate."
     "</div>",

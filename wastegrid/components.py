@@ -1,70 +1,127 @@
 import streamlit as st
 
 
-def section_title(icon, text):
-    icon_html = f"{icon}&nbsp;&nbsp;" if icon else ""
-    st.markdown(f'<div class="section-title">{icon_html}{text}</div>', unsafe_allow_html=True)
-
-
-def metric_card(col, label, value, accent, sub=None, emphasize=False):
-    sub_html = f'<div class="metric-sub">{sub}</div>' if sub else ""
-    card_cls = "metric-card emphasize" if emphasize else "metric-card"
-    col.markdown(f"""
-        <div class="{card_cls}">
-            <div class="metric-label">{label}</div>
-            <div class="metric-value" style="color:{accent};">{value}</div>
-            {sub_html}
+def header(logo_path="logo.png"):
+    st.markdown(f"""
+        <div class="wg-header">
+            <div class="wg-brand">
+                <img src="app/static/{logo_path}" alt="logo" onerror="this.style.display='none'" />
+                <div>
+                    <div class="wg-title">WasteGrid</div>
+                    <div class="wg-tagline">Predict. Detect. Reallocate.</div>
+                </div>
+            </div>
         </div>
     """, unsafe_allow_html=True)
 
 
-def status_banner(total_overflow, reoptimized):
+def section_title(text):
+    st.markdown(f'<div class="sec-title">{text}</div>', unsafe_allow_html=True)
+
+
+def metrics_row(total_waste, total_capacity, total_overflow, data_mode, p):
+    overflow_cls = "red" if total_overflow > 0 else ""
+    source_cls = "text"
+    st.markdown(f"""
+        <div class="metric-grid">
+            <div class="m-card">
+                <div class="m-label">Predicted Waste</div>
+                <div class="m-value">{total_waste/1000:.2f} T</div>
+            </div>
+            <div class="m-card">
+                <div class="m-label">Available Capacity</div>
+                <div class="m-value">{total_capacity/1000:.2f} T</div>
+            </div>
+            <div class="m-card hero">
+                <div class="m-label">Overflow</div>
+                <div class="m-value {overflow_cls}">{total_overflow/1000:.2f} T</div>
+            </div>
+            <div class="m-card">
+                <div class="m-label">Data Source</div>
+                <div class="m-value {source_cls}">{data_mode}</div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+
+def status_banner(total_overflow, reoptimized, outage=None):
+    if outage:
+        st.markdown(
+            f'<div class="wg-status warn">Facility <b>{outage}</b> is offline. Capacity reduced. Re-optimize to redistribute.</div>',
+            unsafe_allow_html=True,
+        )
     if total_overflow == 0:
         st.markdown(
-            '<div class="status-ok">&nbsp;No predicted overflow — all waste can be processed</div>',
+            '<div class="wg-status">No predicted overflow — all waste can be processed</div>',
             unsafe_allow_html=True,
         )
     else:
         st.markdown(
-            f'<div class="status-alert">&nbsp;Potential overflow: <b>{total_overflow/1000:.2f} T</b></div>',
+            f'<div class="wg-status red">Potential overflow: {total_overflow/1000:.2f} T</div>',
             unsafe_allow_html=True,
         )
         if not reoptimized:
             st.markdown(
-                '<div class="status-warn">&nbsp;Allocation plan is stale. Click <b>Re-optimize</b> to respond.</div>',
+                '<div class="wg-status warn">Allocation plan is stale. Click RE-OPTIMIZE to respond.</div>',
                 unsafe_allow_html=True,
             )
 
 
-def facility_card(col, facility, allocated_kg, text_muted, normal_color=None):
-    theme = st.session_state.get("theme", "light")
-    if normal_color is None:
-        normal_color = "#0a0a0a" if theme == "light" else "#fafafa"
+def action_buttons():
+    """Render 4 action buttons as query-param links. Returns clicked action or None."""
+    st.markdown("""
+        <div class="action-grid">
+            <a class="act-btn" href="?action=event" target="_self">Add Event</a>
+            <a class="act-btn" href="?action=outage" target="_self">Outage</a>
+            <a class="act-btn primary" href="?action=reopt" target="_self">Re-optimize</a>
+            <a class="act-btn" href="?action=reset" target="_self">Reset</a>
+        </div>
+    """, unsafe_allow_html=True)
 
-    util = allocated_kg / facility["capacity_kg"] * 100 if facility["capacity_kg"] > 0 else 0
-    if util < 70:
-        color = normal_color
-    elif util < 95:
-        color = "#b45309"
-    else:
-        color = "#d5001c"
 
-    col.markdown(f"""
-        <div class="facility-card">
-            <div class="facility-name">Facility {facility['id']}</div>
-            <div class="facility-type">Accepts: {facility['accepts']} · {facility['distance_km']} km</div>
-            <div style="margin-top:16px; font-size:0.82rem; color:{text_muted}; font-weight:400; font-variant-numeric: tabular-nums;">
-                {round(allocated_kg):,} / {facility['capacity_kg']:,} kg
+def facility_grid(facilities, allocations, p):
+    cards = []
+    for f in facilities:
+        alloc = allocations.get(f["id"], 0)
+        util = alloc / f["capacity_kg"] * 100 if f["capacity_kg"] > 0 else 0
+        if util < 70:
+            color = p["success"]
+        elif util < 95:
+            color = p["warn"]
+        else:
+            color = p["accent"]
+
+        cards.append(f"""
+            <div class="fac-card">
+                <div class="fac-name">Facility {f['id']}</div>
+                <div class="fac-type">Accepts {f['accepts']} · {f['distance_km']} km</div>
+                <div class="fac-stat">{round(alloc):,} / {f['capacity_kg']:,} kg</div>
+                <div class="fac-bar-wrap">
+                    <div class="fac-bar" style="width:{min(util,100)}%; background:{color};"></div>
+                </div>
+                <div class="fac-util" style="color:{color};">{util:.0f}% utilized</div>
             </div>
-            <div class="util-bar">
-                <div class="util-fill" style="width:{min(util,100)}%; background:{color};"></div>
+        """)
+
+    st.markdown(f'<div class="fac-grid">{"".join(cards)}</div>', unsafe_allow_html=True)
+
+
+def comparison_cards(fixed_overflow, total_overflow, p):
+    f_cls = "red" if fixed_overflow > 0 else ""
+    w_cls = "red" if total_overflow > 0 else ""
+    st.markdown(f"""
+        <div class="cmp-grid">
+            <div class="cmp-card">
+                <div class="cmp-label">Fixed Allocation — Overflow</div>
+                <div class="cmp-value {f_cls}">{fixed_overflow/1000:.2f} T</div>
             </div>
-            <div style="margin-top:10px; font-size:0.7rem; color:{color}; font-weight:500; letter-spacing:0.08em; text-transform:uppercase;">
-                {util:.0f}% utilized
+            <div class="cmp-card">
+                <div class="cmp-label">WasteGrid — Overflow</div>
+                <div class="cmp-value {w_cls}">{total_overflow/1000:.2f} T</div>
             </div>
         </div>
     """, unsafe_allow_html=True)
 
 
 def success_banner(text):
-    st.markdown(f'<div class="status-success">&nbsp;{text}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="success-banner">{text}</div>', unsafe_allow_html=True)

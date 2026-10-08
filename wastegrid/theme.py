@@ -1,45 +1,22 @@
 import streamlit as st
 
 
-def get_palette(theme):
-    if theme == "light":
-        return {
-            "bg": "#f4f4f5",
-            "bg_soft": "#eaeaec",
-            "card_bg": "#ffffff",
-            "card_border": "#e4e4e7",
-            "card_shadow": "0 1px 2px rgba(0,0,0,0.03), 0 1px 3px rgba(0,0,0,0.04)",
-            "text": "#0a0a0a",
-            "text_muted": "#71717a",
-            "divider": "#e4e4e7",
-            "input_bg": "#f4f4f5",
-            "accent": "#d5001c",
-            "accent_2": "#0a0a0a",
-            "danger": "#d5001c",
-            "warn": "#b45309",
-            "map_bg": "#efeff1",
-        }
+def get_palette(theme="light"):
     return {
-        "bg": "#0c0c0d",
-        "bg_soft": "#18181b",
-        "card_bg": "#18181b",
-        "card_border": "#27272a",
-        "card_shadow": "0 1px 2px rgba(0,0,0,0.4), 0 1px 3px rgba(0,0,0,0.3)",
-        "text": "#fafafa",
-        "text_muted": "#a1a1aa",
-        "divider": "#27272a",
-        "input_bg": "#1f1f23",
-        "accent": "#ff2d3f",
-        "accent_2": "#fafafa",
-        "danger": "#ff2d3f",
-        "warn": "#fbbf24",
-        "map_bg": "#1a1a1d",
+        "bg": "#f4f4f5",
+        "card_bg": "#ffffff",
+        "border": "#e4e4e7",
+        "text": "#0a0a0a",
+        "muted": "#71717a",
+        "accent": "#d5001c",
+        "accent_bg": "rgba(213,0,28,0.06)",
+        "success": "#16a34a",
+        "warn": "#b45309",
+        "shadow": "0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.06)",
     }
 
 
 def inject_css(p):
-    theme = st.session_state.get("theme", "light")
-
     st.markdown(f"""
     <style>
         html, body, [class*="css"], .stApp, button, input, textarea {{
@@ -48,10 +25,7 @@ def inject_css(p):
         }}
 
         .stApp {{ background: {p['bg']}; }}
-
-        h1, h2, h3, h4, p, span, div, label {{
-            color: {p['text']} !important;
-        }}
+        h1, h2, h3, h4, p, span, div, label {{ color: {p['text']} !important; }}
 
         [data-testid="stSidebar"] {{ display: none; }}
         [data-testid="stHeader"] {{ background: {p['bg']}; }}
@@ -60,231 +34,250 @@ def inject_css(p):
         footer {{ visibility: hidden; }}
 
         .block-container {{
-            padding-top: 2.5rem;
+            padding-top: 2rem;
             padding-bottom: 4rem;
             max-width: 1280px;
         }}
 
-        /* ---------- Header ---------- */
-        .logo-title {{
-            font-size: 1.65rem;
-            font-weight: 700;
-            letter-spacing: -0.03em;
-            color: {p['text']} !important;
-            margin: 0;
-            line-height: 1;
-        }}
-        .logo-tagline {{
-            font-size: 0.68rem;
-            color: {p['text_muted']};
-            margin-top: 8px;
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            font-weight: 500;
+        /* Hide Streamlit's default button styling so our query-param buttons work */
+        .stButton > button {{
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+            height: 0 !important;
+            min-height: 0 !important;
+            overflow: hidden !important;
+            color: transparent !important;
         }}
 
-        /* ---------- Panel wrapper (for grouped sections) ---------- */
-        .panel {{
-            background: {p['card_bg']};
-            border: 1px solid {p['card_border']};
-            border-radius: 6px;
-            padding: 24px 26px;
-            box-shadow: {p['card_shadow']};
-            animation: fadeIn 0.35s ease both;
-        }}
-
-        /* ---------- Metric cards ---------- */
-        .metric-card {{
-            background: {p['card_bg']};
-            border: 1px solid {p['card_border']};
-            border-radius: 6px;
-            padding: 24px;
-            box-shadow: {p['card_shadow']};
-            transition: all 0.2s ease;
-            animation: fadeIn 0.35s ease both;
-            height: 100%;
-        }}
-        .metric-card:hover {{
-            border-color: {p['text_muted']};
-            transform: translateY(-1px);
-        }}
-        .metric-label {{
-            font-size: 0.62rem;
-            color: {p['text_muted']};
-            text-transform: uppercase;
-            letter-spacing: 0.22em;
-            font-weight: 600;
-            margin-bottom: 16px;
-        }}
-        .metric-value {{
-            font-size: 2.6rem;
-            font-weight: 300;
-            letter-spacing: -0.045em;
-            line-height: 1;
-            font-variant-numeric: tabular-nums;
-        }}
-        .metric-card.emphasize {{
-            border: 1.5px solid {p['text']};
-            padding: 30px 26px;
-        }}
-        .metric-card.emphasize .metric-value {{
-            font-size: 3.2rem;
-            font-weight: 300;
-        }}
-        .metric-sub {{
-            font-size: 0.72rem;
-            color: {p['text_muted']};
-            margin-top: 10px;
-            font-weight: 400;
-        }}
-
-        /* ---------- Status banners ---------- */
-        .status-ok, .status-alert, .status-warn, .status-success {{
-            border-radius: 4px;
-            padding: 14px 20px;
-            font-weight: 500;
-            font-size: 0.82rem;
-            letter-spacing: 0.01em;
+        /* Header */
+        .wg-header {{
             display: flex;
             align-items: center;
-            gap: 12px;
-            animation: fadeIn 0.35s ease both;
-            border: 1px solid;
+            justify-content: space-between;
+            padding-bottom: 20px;
+            border-bottom: 1px solid {p['border']};
+            margin-bottom: 28px;
         }}
-        .status-ok {{
-            background: {p['card_bg']};
-            border-color: {p['card_border']};
+        .wg-brand {{ display: flex; align-items: center; gap: 14px; }}
+        .wg-brand img {{ width: 52px; height: 52px; }}
+        .wg-title {{
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            line-height: 1;
             color: {p['text']};
         }}
-        .status-alert {{
-            background: rgba(213,0,28,0.06);
-            border-color: {p['accent']};
-            color: {"#d5001c" if theme == "light" else "#ff2d3f"};
-            font-weight: 600;
-        }}
-        .status-warn {{
-            background: {p['card_bg']};
-            border-color: {p['card_border']};
-            color: {"#92400e" if theme == "light" else "#fcd34d"};
-            margin-top: 10px;
-        }}
-        .status-success {{
-            background: {p['card_bg']};
-            border-color: {p['text']};
-            color: {p['text']};
-            margin-top: 12px;
-            font-weight: 600;
+        .wg-tagline {{
+            font-size: 0.65rem;
+            color: {p['muted']};
+            margin-top: 6px;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            font-weight: 500;
         }}
 
-        /* ---------- Facility cards ---------- */
-        .facility-card {{
-            background: {p['card_bg']};
-            border: 1px solid {p['card_border']};
-            border-radius: 6px;
-            padding: 20px;
-            box-shadow: {p['card_shadow']};
-            transition: all 0.2s ease;
-            animation: fadeIn 0.35s ease both;
-            height: 100%;
+        /* Metric row */
+        .metric-grid {{
+            display: grid;
+            grid-template-columns: 1fr 1fr 1.3fr 1fr;
+            gap: 14px;
+            margin-bottom: 20px;
         }}
-        .facility-card:hover {{
-            border-color: {p['text_muted']};
+        .m-card {{
+            background: {p['card_bg']};
+            border: 1px solid {p['border']};
+            border-radius: 6px;
+            padding: 22px 20px;
+            box-shadow: {p['shadow']};
+        }}
+        .m-card.hero {{
+            border: 1.5px solid {p['text']};
+        }}
+        .m-label {{
+            font-size: 0.6rem;
+            color: {p['muted']};
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            font-weight: 600;
+            margin-bottom: 14px;
+        }}
+        .m-value {{
+            font-size: 2.3rem;
+            font-weight: 300;
+            letter-spacing: -0.04em;
+            line-height: 1;
+            color: {p['text']};
+            font-variant-numeric: tabular-nums;
+        }}
+        .m-card.hero .m-value {{ font-size: 2.9rem; }}
+        .m-value.text {{ font-size: 1.4rem; font-weight: 400; }}
+        .m-value.red {{ color: {p['accent']}; }}
+
+        /* Status */
+        .wg-status {{
+            border: 1px solid {p['border']};
+            background: {p['card_bg']};
+            border-radius: 4px;
+            padding: 14px 20px;
+            font-size: 0.82rem;
+            color: {p['text']};
+            margin-bottom: 20px;
+            box-shadow: {p['shadow']};
+        }}
+        .wg-status.red {{
+            border-color: {p['accent']};
+            background: {p['accent_bg']};
+            color: {p['accent']};
+            font-weight: 600;
+        }}
+        .wg-status.warn {{
+            border-color: {p['warn']};
+            color: {p['warn']};
+            margin-top: -12px;
+            margin-bottom: 20px;
+        }}
+
+        /* Action buttons row */
+        .action-grid {{
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 28px;
+        }}
+        .act-btn {{
+            display: block;
+            text-align: center;
+            padding: 14px 12px;
+            background: {p['card_bg']};
+            border: 1px solid {p['border']};
+            border-radius: 4px;
+            font-size: 0.68rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: {p['text']} !important;
+            text-decoration: none !important;
+            box-shadow: {p['shadow']};
+            transition: all 0.15s ease;
+        }}
+        .act-btn:hover {{
+            border-color: {p['accent']};
+            color: {p['accent']} !important;
             transform: translateY(-1px);
         }}
-        .facility-name {{
-            font-weight: 600;
-            font-size: 0.92rem;
-            letter-spacing: -0.01em;
+        .act-btn.primary {{
+            background: {p['text']};
+            color: {p['card_bg']} !important;
+            border-color: {p['text']};
         }}
-        .facility-type {{
-            font-size: 0.6rem;
-            color: {p['text_muted']};
+        .act-btn.primary:hover {{
+            background: {p['accent']};
+            border-color: {p['accent']};
+            color: #ffffff !important;
+        }}
+
+        /* Section title */
+        .sec-title {{
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: {p['muted']};
+            letter-spacing: 0.24em;
             text-transform: uppercase;
-            letter-spacing: 0.18em;
+            margin: 8px 0 16px 0;
+        }}
+
+        /* Facility cards */
+        .fac-grid {{
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-bottom: 32px;
+        }}
+        .fac-card {{
+            background: {p['card_bg']};
+            border: 1px solid {p['border']};
+            border-radius: 6px;
+            padding: 20px;
+            box-shadow: {p['shadow']};
+        }}
+        .fac-name {{ font-weight: 600; font-size: 0.92rem; color: {p['text']}; }}
+        .fac-type {{
+            font-size: 0.58rem;
+            color: {p['muted']};
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
             font-weight: 500;
             margin-top: 4px;
         }}
-        .util-bar {{
+        .fac-bar-wrap {{
             height: 6px;
-            background: {p['divider']};
+            background: {p['border']};
             border-radius: 3px;
             overflow: hidden;
             margin-top: 16px;
         }}
-        .util-fill {{
+        .fac-bar {{
             height: 100%;
             border-radius: 3px;
             transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-            animation: growBar 0.8s ease-out;
+        }}
+        .fac-stat {{
+            margin-top: 10px;
+            font-size: 0.78rem;
+            color: {p['muted']};
+            font-variant-numeric: tabular-nums;
+        }}
+        .fac-util {{
+            margin-top: 6px;
+            font-size: 0.66rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
         }}
 
-        /* ---------- Buttons ---------- */
-        .stButton > button {{
+        /* Compare grid */
+        .cmp-grid {{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 20px;
+        }}
+        .cmp-card {{
             background: {p['card_bg']};
-            color: {p['text']};
-            font-weight: 600;
-            font-size: 0.7rem;
-            letter-spacing: 0.16em;
+            border: 1px solid {p['border']};
+            border-radius: 6px;
+            padding: 22px;
+            box-shadow: {p['shadow']};
+        }}
+        .cmp-label {{
+            font-size: 0.6rem;
+            color: {p['muted']};
             text-transform: uppercase;
-            border: 1px solid {p['card_border']};
+            letter-spacing: 0.2em;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }}
+        .cmp-value {{
+            font-size: 2.2rem;
+            font-weight: 300;
+            letter-spacing: -0.04em;
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+        }}
+        .cmp-value.red {{ color: {p['accent']}; }}
+
+        /* Success banner */
+        .success-banner {{
+            border: 1px solid {p['text']};
+            background: {p['card_bg']};
             border-radius: 4px;
             padding: 14px 20px;
-            transition: all 0.15s ease;
-            box-shadow: {p['card_shadow']};
-            width: 100%;
-        }}
-        .stButton > button:hover {{
-            border-color: {p['accent']};
-            color: {p['accent']} !important;
-            background: {p['bg_soft']};
-            transform: translateY(-1px);
-        }}
-        .stButton > button:active {{
-            transform: translateY(0);
-        }}
-
-        /* ---------- Expander ---------- */
-        [data-testid="stExpander"] {{
-            background: {p['card_bg']};
-            border: 1px solid {p['card_border']};
-            border-radius: 6px;
-            overflow: hidden;
-            box-shadow: {p['card_shadow']};
-        }}
-        [data-testid="stExpander"] summary {{
+            font-size: 0.82rem;
             font-weight: 600;
-            font-size: 0.72rem;
-            letter-spacing: 0.16em;
-            text-transform: uppercase;
-            padding: 18px 22px;
-            color: {p['text_muted']};
-        }}
-
-        /* ---------- Section titles ---------- */
-        .section-title {{
-            font-size: 0.68rem;
-            font-weight: 700;
-            color: {p['text_muted']};
-            letter-spacing: 0.24em;
-            text-transform: uppercase;
-            margin: 4px 0 18px 0;
-            display: block;
-        }}
-
-        /* ---------- Dataframe ---------- */
-        [data-testid="stDataFrame"] {{
-            border: 1px solid {p['card_border']} !important;
-            border-radius: 6px !important;
-            box-shadow: {p['card_shadow']} !important;
-        }}
-
-        /* ---------- Animations ---------- */
-        @keyframes fadeIn {{
-            from {{ opacity: 0; transform: translateY(4px); }}
-            to   {{ opacity: 1; transform: translateY(0); }}
-        }}
-        @keyframes growBar {{
-            from {{ width: 0%; }}
+            color: {p['text']};
+            box-shadow: {p['shadow']};
+            margin-top: 12px;
         }}
     </style>
     """, unsafe_allow_html=True)
