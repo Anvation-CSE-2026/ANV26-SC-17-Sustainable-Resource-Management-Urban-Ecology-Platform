@@ -77,18 +77,37 @@ else:
 
 sources = data.apply_event_state(sources, st.session_state.event_active)
 
-# --- Compute ---
+# --- Compute current totals (always live) ---
 wet_total, dry_total, total_waste = data.totals(sources)
 total_capacity = sum(f["capacity_kg"] for f in data.FACILITIES)
 
-allocations, overflow = optimizer.optimize(data.FACILITIES, wet_total, dry_total)
+# --- Detect if the demand picture has changed since last optimization ---
+demand_signature = (round(wet_total), round(dry_total))
+
+if "allocations" not in st.session_state or "demand_signature" not in st.session_state:
+    # First load — compute once
+    allocs, ovf = optimizer.optimize(data.FACILITIES, wet_total, dry_total)
+    st.session_state.allocations = allocs
+    st.session_state.overflow = ovf
+    st.session_state.demand_signature = demand_signature
+    st.session_state.reoptimized = True  # nothing pending
+
+# If user clicked Re-optimize, recompute and update the stored state
+if st.session_state.reoptimized is False and st.session_state.demand_signature != demand_signature:
+    # Demand changed but user hasn't re-optimized yet → keep OLD allocation
+    pass  # intentionally do nothing; use frozen plan
+
+# The frozen allocation:
+allocations = st.session_state.allocations
+overflow = st.session_state.overflow
 total_overflow = optimizer.total_overflow(overflow)
 
 # --- Metric cards ---
 m1, m2, m3, m4 = st.columns(4)
 components.metric_card(m1, "Predicted Waste", f"{total_waste/1000:.2f} T", "#0891b2")
 components.metric_card(m2, "Available Capacity", f"{total_capacity/1000:.2f} T", "#16a34a")
-components.metric_card(m3, "Overflow", f"{total_overflow/1000:.2f} T", "#dc2626" if total_overflow > 0 else "#16a34a")
+components.metric_card(m3, "Overflow", f"{total_overflow/1000:.2f} T",
+                       "#dc2626" if total_overflow > 0 else "#16a34a")
 components.metric_card(m4, "Data Source", data_mode, "#7c3aed")
 
 st.markdown("<br>", unsafe_allow_html=True)
@@ -100,16 +119,25 @@ b1, b2, b3 = st.columns(3)
 with b1:
     if st.button("➕  Add Large Event", use_container_width=True):
         st.session_state.event_active = True
-        st.session_state.reoptimized = False
+        st.session_state.reoptimized = False  # allocation becomes stale
         st.rerun()
 with b2:
     if st.button("⚙️  Re-optimize", use_container_width=True):
+        # Recompute with current demand and store the fresh result
+        allocs, ovf = optimizer.optimize(data.FACILITIES, wet_total, dry_total)
+        st.session_state.allocations = allocs
+        st.session_state.overflow = ovf
+        st.session_state.demand_signature = demand_signature
         st.session_state.reoptimized = True
         st.rerun()
 with b3:
     if st.button("🔄  Reset", use_container_width=True):
         st.session_state.event_active = False
         st.session_state.reoptimized = False
+        # Clear frozen state so next render recomputes from scratch
+        for k in ["allocations", "overflow", "demand_signature"]:
+            if k in st.session_state:
+                del st.session_state[k]
         st.rerun()
 
 st.markdown("<br>", unsafe_allow_html=True)
@@ -122,7 +150,7 @@ for i, f in enumerate(data.FACILITIES):
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# --- Comparison (themed cards, no dataframe) ---
+# --- Comparison ---
 st.markdown(f"<h3 style='color:{palette['text']};'>📊 Fixed Allocation vs WasteGrid</h3>", unsafe_allow_html=True)
 
 fixed_overflow = optimizer.fixed_allocation_overflow(total_waste, total_capacity)
