@@ -2,19 +2,46 @@ import streamlit as st
 
 
 def get_palette(theme="light"):
+    if theme == "dark":
+        return {
+            "name": "dark",
+            "bg": "#0d131d",             # Deep rich obsidian-slate (NOT pitch pure black)
+            "bg_soft": "#141c28",        # Subtle secondary surface
+            "card_bg": "#151e2b",        # Elevated card background
+            "card_hover": "#1c2738",     # Hover state
+            "border": "#223145",         # Crisp slate border
+            "border_subtle": "#1a2636",
+            "text": "#f1f5f9",           # Soft porcelain white (NOT harsh glare)
+            "muted": "#94a3b8",          # Refined slate gray
+            "accent": "#ff3856",         # Luminous surgical red
+            "accent_bg": "rgba(255, 56, 86, 0.12)",
+            "success": "#22c55e",        # Luminous emerald
+            "warn": "#fbbf24",           # Warm radiant amber
+            "blue": "#38bdf8",           # Sky cyan
+            "purple": "#a855f7",         # Radiant purple
+            "shadow": "0 2px 6px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3)",
+            "divider": "#223145",
+        }
+
+    # Light palette: Soft architectural zinc-slate (NOT blinding pure white)
     return {
-        "bg": "#eef1f5",
-        "card_bg": "#ffffff",
-        "border": "#e2e8f0",
-        "text": "#0f172a",
-        "muted": "#64748b",
-        "accent": "#d5001c",
-        "accent_bg": "rgba(213,0,28,0.08)",
-        "success": "#16a34a",
-        "warn": "#f59e0b",
-        "blue": "#0891b2",
-        "purple": "#7c3aed",
-        "shadow": "0 1px 3px rgba(15,23,42,0.08), 0 4px 12px rgba(15,23,42,0.06)",
+        "name": "light",
+        "bg": "#eef2f6",                 # Balanced atmosphere slate (NOT stark #ffffff)
+        "bg_soft": "#e2e7ef",            # Subtle secondary surface
+        "card_bg": "#ffffff",            # Crisp elevated card
+        "card_hover": "#f8fafc",         # Hover state
+        "border": "#dbe3ec",             # Subtle crisp border
+        "border_subtle": "#e8eef6",
+        "text": "#0f172a",               # Rich deep slate (NOT harsh jet black)
+        "muted": "#64748b",              # Elegant slate gray
+        "accent": "#d5001c",             # Porsche red
+        "accent_bg": "rgba(213, 0, 28, 0.08)",
+        "success": "#16a34a",            # Fresh emerald
+        "warn": "#d97706",               # Warm amber
+        "blue": "#0284c7",               # Vibrant ocean blue
+        "purple": "#7c3aed",             # Royal purple
+        "shadow": "0 1px 3px rgba(15,23,42,0.06), 0 6px 16px rgba(15,23,42,0.04)",
+        "divider": "#dbe3ec",
     }
 
 
@@ -26,41 +53,42 @@ def inject_css(p):
             -webkit-font-smoothing: antialiased;
         }}
 
-        .stApp {{ background: {p['bg']}; }}
-        h1, h2, h3, h4, p, span, div, label {{ color: {p['text']} !important; }}
+        /* Force background and text colors on all Streamlit wrapper containers */
+        .stApp,
+        [data-testid="stAppViewContainer"],
+        [data-testid="stAppViewContainer"] > .main,
+        [data-testid="stHeader"],
+        [data-testid="stBottom"],
+        .main {{
+            background: {p['bg']} !important;
+            background-color: {p['bg']} !important;
+            color: {p['text']} !important;
+        }}
+
+        h1, h2, h3, h4, p, span, label {{ color: {p['text']}; }}
 
         [data-testid="stSidebar"] {{ display: none; }}
-        [data-testid="stHeader"] {{ background: {p['bg']}; }}
         [data-testid="stToolbar"] {{ display: none; }}
         #MainMenu {{ visibility: hidden; }}
         footer {{ visibility: hidden; }}
 
         .block-container {{
-            padding-top: 2rem;
+            padding-top: 1.8rem;
             padding-bottom: 4rem;
             max-width: 1280px;
-        }}
-
-        .stButton > button {{
-            background: transparent !important;
-            border: none !important;
-            padding: 0 !important;
-            height: 0 !important;
-            min-height: 0 !important;
-            overflow: hidden !important;
-            color: transparent !important;
         }}
 
         /* Header */
         .wg-header {{
             display: flex;
             align-items: center;
-            padding-bottom: 22px;
-            border-bottom: 2px solid {p['text']};
-            margin-bottom: 28px;
+            justify-content: space-between;
+            padding-bottom: 20px;
+            border-bottom: 2px solid {p['border']};
+            margin-bottom: 24px;
         }}
         .wg-brand {{ display: flex; align-items: center; gap: 14px; }}
-        .wg-brand img {{ width: 52px; height: 52px; }}
+        .wg-brand img {{ width: 50px; height: 50px; border-radius: 8px; }}
         .wg-title {{
             font-size: 1.7rem;
             font-weight: 800;
@@ -77,6 +105,66 @@ def inject_css(p):
             font-weight: 600;
         }}
 
+        /* Header Controls */
+        .hdr-controls {{
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }}
+        .hdr-badge {{
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            font-size: 0.66rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            background: {p['card_bg']};
+            border: 1px solid {p['border']};
+            box-shadow: {p['shadow']};
+            transition: all 0.3s ease;
+        }}
+        .hdr-badge.optimal {{ border-color: rgba(34, 197, 94, 0.4); color: {p['success']}; }}
+        .hdr-badge.warn {{ border-color: rgba(245, 158, 11, 0.5); color: {p['warn']}; }}
+        .hdr-badge.alert {{ border-color: rgba(255, 56, 86, 0.5); color: {p['accent']}; }}
+        
+        .pulse-dot {{
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulseBeacon 1.8s infinite ease-in-out;
+        }}
+        .pulse-dot.green {{ background: {p['success']}; box-shadow: 0 0 8px {p['success']}; }}
+        .pulse-dot.yellow {{ background: {p['warn']}; box-shadow: 0 0 8px {p['warn']}; }}
+        .pulse-dot.red {{ background: {p['accent']}; box-shadow: 0 0 8px {p['accent']}; }}
+
+        .theme-toggle-link {{
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: {p['card_bg']};
+            border: 1px solid {p['border']};
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: {p['text']} !important;
+            text-decoration: none !important;
+            box-shadow: {p['shadow']};
+            transition: all 0.2s ease;
+        }}
+        .theme-toggle-link:hover {{
+            border-color: {p['accent']};
+            color: {p['accent']} !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }}
+
         /* Metric row */
         .metric-grid {{
             display: grid;
@@ -89,11 +177,15 @@ def inject_css(p):
             border: 1px solid {p['border']};
             border-top: 3px solid {p['blue']};
             border-radius: 8px;
-            padding: 22px 22px;
+            padding: 22px;
             box-shadow: {p['shadow']};
-            transition: transform 0.2s ease;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }}
-        .m-card:hover {{ transform: translateY(-2px); }}
+        .m-card:hover {{
+            transform: translateY(-3px);
+            border-color: {p['muted']};
+            box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+        }}
         .m-card.hero {{
             border-top: 3px solid {p['accent']};
         }}
@@ -106,6 +198,9 @@ def inject_css(p):
             letter-spacing: 0.18em;
             font-weight: 700;
             margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }}
         .m-value {{
             font-size: 2.4rem;
@@ -117,10 +212,10 @@ def inject_css(p):
         }}
         .m-card.hero .m-value {{ font-size: 3rem; }}
         .m-value.text {{ font-size: 1.5rem; font-weight: 600; }}
-        .m-value.red {{ color: {p['accent']}; }}
-        .m-value.green {{ color: {p['success']}; }}
+        .m-value.red {{ color: {p['accent']} !important; }}
+        .m-value.green {{ color: {p['success']} !important; }}
 
-        /* Status */
+        /* Status Banner */
         .wg-status {{
             background: {p['card_bg']};
             border: 1px solid {p['border']};
@@ -132,17 +227,20 @@ def inject_css(p):
             margin-bottom: 20px;
             box-shadow: {p['shadow']};
             font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }}
         .wg-status.red {{
             border-left-color: {p['accent']};
             background: {p['accent_bg']};
-            color: {p['accent']};
+            color: {p['accent']} !important;
             font-weight: 700;
         }}
         .wg-status.warn {{
             border-left-color: {p['warn']};
-            background: rgba(245,158,11,0.06);
-            color: {p['warn']};
+            background: rgba(245,158,11,0.08);
+            color: {p['warn']} !important;
             margin-top: -12px;
             margin-bottom: 20px;
             font-weight: 600;
@@ -153,10 +251,13 @@ def inject_css(p):
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 14px;
-            margin-bottom: 32px;
+            margin-bottom: 22px;
         }}
         .act-btn {{
-            display: block;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
             text-align: center;
             padding: 16px 12px;
             background: {p['card_bg']};
@@ -169,13 +270,13 @@ def inject_css(p):
             color: {p['text']} !important;
             text-decoration: none !important;
             box-shadow: {p['shadow']};
-            transition: all 0.15s ease;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }}
         .act-btn:hover {{
             border-color: {p['accent']};
             color: {p['accent']} !important;
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(213,0,28,0.18);
+            box-shadow: 0 6px 16px rgba(213,0,28,0.2);
         }}
         .act-btn.primary {{
             background: {p['accent']};
@@ -186,7 +287,73 @@ def inject_css(p):
             background: #b00018;
             border-color: #b00018;
             color: #ffffff !important;
-            box-shadow: 0 6px 20px rgba(213,0,28,0.35);
+            box-shadow: 0 6px 20px rgba(213,0,28,0.4);
+        }}
+
+        /* Stream Breakdown Component */
+        .breakdown-card {{
+            background: {p['card_bg']};
+            border: 1px solid {p['border']};
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            box-shadow: {p['shadow']};
+        }}
+        .breakdown-header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }}
+        .breakdown-title {{
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: {p['muted']};
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }}
+        .breakdown-ratio {{
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: {p['text']};
+            font-variant-numeric: tabular-nums;
+        }}
+        .split-bar-wrap {{
+            height: 10px;
+            background: {p['border']};
+            border-radius: 5px;
+            overflow: hidden;
+            display: flex;
+            margin-bottom: 14px;
+        }}
+        .split-bar-wet {{
+            height: 100%;
+            background: {p['blue']};
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }}
+        .split-bar-dry {{
+            height: 100%;
+            background: {p['purple']};
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }}
+        .breakdown-legend {{
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: {p['muted']};
+        }}
+        .legend-item {{
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }}
+        .legend-dot {{
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
         }}
 
         /* Section titles */
@@ -196,10 +363,12 @@ def inject_css(p):
             color: {p['text']};
             letter-spacing: 0.22em;
             text-transform: uppercase;
-            margin: 12px 0 18px 0;
-            padding-bottom: 10px;
+            margin: 18px 0 16px 0;
+            padding-bottom: 8px;
             border-bottom: 2px solid {p['accent']};
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }}
 
         /* Facility cards */
@@ -207,7 +376,7 @@ def inject_css(p):
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 16px;
-            margin-bottom: 36px;
+            margin-bottom: 32px;
         }}
         .fac-card {{
             background: {p['card_bg']};
@@ -215,14 +384,37 @@ def inject_css(p):
             border-radius: 8px;
             padding: 22px;
             box-shadow: {p['shadow']};
-            transition: transform 0.2s ease;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }}
-        .fac-card:hover {{ transform: translateY(-2px); }}
+        .fac-card:hover {{
+            transform: translateY(-3px);
+            border-color: {p['muted']};
+            box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+        }}
+        .fac-card.offline {{
+            opacity: 0.6;
+            border-style: dashed;
+        }}
+        .fac-name-row {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }}
         .fac-name {{
             font-weight: 700;
             font-size: 0.98rem;
             color: {p['text']};
         }}
+        .fac-badge {{
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: 999px;
+        }}
+        .fac-badge.active {{ background: rgba(34, 197, 94, 0.15); color: {p['success']}; border: 1px solid rgba(34, 197, 94, 0.3); }}
+        .fac-badge.offline {{ background: rgba(239, 68, 68, 0.15); color: {p['accent']}; border: 1px solid rgba(239, 68, 68, 0.3); }}
         .fac-type {{
             font-size: 0.6rem;
             color: {p['muted']};
@@ -272,7 +464,9 @@ def inject_css(p):
             border-radius: 8px;
             padding: 24px;
             box-shadow: {p['shadow']};
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }}
+        .cmp-card:hover {{ transform: translateY(-3px); }}
         .cmp-card.win {{
             border-top-color: {p['success']};
         }}
@@ -292,13 +486,13 @@ def inject_css(p):
             color: {p['text']};
             font-variant-numeric: tabular-nums;
         }}
-        .cmp-value.red {{ color: {p['accent']}; }}
-        .cmp-value.green {{ color: {p['success']}; }}
+        .cmp-value.red {{ color: {p['accent']} !important; }}
+        .cmp-value.green {{ color: {p['success']} !important; }}
 
         /* Success banner */
         .success-banner {{
             border-left: 4px solid {p['success']};
-            background: rgba(22,163,74,0.06);
+            background: rgba(22,163,74,0.08);
             border-radius: 6px;
             padding: 16px 22px;
             font-size: 0.85rem;
@@ -306,45 +500,229 @@ def inject_css(p):
             color: {p['success']};
             box-shadow: {p['shadow']};
             margin-top: 14px;
+            margin-bottom: 24px;
         }}
 
-        /* Streamlit widgets */
-        [data-testid="stExpander"] {{
+        /* 7-Day Forecast Visual Grid */
+        .fc-visual-grid {{
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 12px;
+            margin-bottom: 18px;
+        }}
+        .fc-day-card {{
+            background: {p['card_bg']};
+            border: 1px solid {p['border']};
+            border-radius: 8px;
+            padding: 16px 12px;
+            text-align: center;
+            box-shadow: {p['shadow']};
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }}
+        .fc-day-card:hover {{
+            transform: translateY(-3px);
+            border-color: {p['muted']};
+        }}
+        .fc-day-card.overflow {{
+            border-color: {p['accent']};
+            background: {p['accent_bg']};
+        }}
+        .fc-day-name {{
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: {p['muted']};
+            margin-bottom: 8px;
+        }}
+        .fc-meter-wrap {{
+            height: 90px;
+            width: 14px;
+            background: {p['border']};
+            border-radius: 7px;
+            margin: 0 auto 12px auto;
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            overflow: hidden;
+        }}
+        .fc-meter-fill {{
+            width: 100%;
+            border-radius: 7px;
+            transition: height 0.8s ease;
+        }}
+        .fc-meter-fill.normal {{ background: {p['blue']}; }}
+        .fc-meter-fill.surge {{ background: {p['accent']}; }}
+        .fc-day-val {{
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: {p['text']};
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
+        }}
+        .fc-day-badge {{
+            font-size: 0.58rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-top: 8px;
+            padding: 3px 6px;
+            border-radius: 4px;
+            display: inline-block;
+        }}
+        .fc-day-badge.safe {{ background: rgba(34,197,94,0.15); color: {p['success']}; }}
+        .fc-day-badge.risk {{ background: rgba(255,56,86,0.2); color: {p['accent']}; }}
+
+        /* Executive HTML Forecast Table */
+        .fc-table-wrap {{
             background: {p['card_bg']};
             border: 1px solid {p['border']};
             border-radius: 8px;
             overflow: hidden;
             box-shadow: {p['shadow']};
+            margin-bottom: 28px;
         }}
-        [data-testid="stExpander"] summary {{
+        .fc-table {{
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.82rem;
+        }}
+        .fc-table th {{
+            background: {p['bg_soft']};
+            color: {p['muted']};
+            font-size: 0.64rem;
             font-weight: 700;
-            font-size: 0.72rem;
             letter-spacing: 0.14em;
             text-transform: uppercase;
-            padding: 18px 22px;
-            color: {p['text']};
+            padding: 14px 18px;
+            border-bottom: 1px solid {p['border']};
         }}
-        [data-testid="stDataFrame"] {{
+        .fc-table td {{
+            padding: 13px 18px;
+            border-bottom: 1px solid {p['border_subtle']};
+            color: {p['text']};
+            font-variant-numeric: tabular-nums;
+        }}
+        .fc-table tr:last-child td {{
+            border-bottom: none;
+        }}
+        .fc-table tr:hover td {{
+            background: {p['bg_soft']};
+        }}
+        .fc-pill {{
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 9px;
+            border-radius: 999px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }}
+        .fc-pill.safe {{ background: rgba(34,197,94,0.12); color: {p['success']}; }}
+        .fc-pill.overflow {{ background: rgba(255,56,86,0.15); color: {p['accent']}; }}
+
+        /* Data Ingestion Box */
+        .data-source-card {{
+            background: {p['card_bg']};
+            border: 1px solid {p['border']};
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 28px;
+            box-shadow: {p['shadow']};
+        }}
+
+        /* Streamlit overrides */
+        [data-testid="stExpander"] {{
+            background: {p['card_bg']} !important;
             border: 1px solid {p['border']} !important;
             border-radius: 8px !important;
-            overflow: hidden;
+            overflow: hidden !important;
             box-shadow: {p['shadow']} !important;
+            margin-bottom: 24px !important;
         }}
-        .stDownloadButton > button {{
-            background: {p['text']} !important;
+        [data-testid="stExpander"] summary {{
+            font-weight: 700 !important;
+            font-size: 0.72rem !important;
+            letter-spacing: 0.14em !important;
+            text-transform: uppercase !important;
+            padding: 16px 22px !important;
+            color: {p['text']} !important;
+        }}
+        /* File Uploader styling */
+        [data-testid="stFileUploader"] {{
+            background: transparent !important;
+            padding: 4px 0 !important;
+        }}
+        [data-testid="stFileUploaderDropzone"] {{
+            background: {p['bg_soft']} !important;
+            border: 1px dashed {p['muted']} !important;
+            border-radius: 8px !important;
+            padding: 16px !important;
+            transition: all 0.2s ease !important;
+        }}
+        [data-testid="stFileUploaderDropzone"]:hover {{
+            border-color: {p['accent']} !important;
+            background: {p['accent_bg']} !important;
+        }}
+        [data-testid="stFileUploaderDropzone"] * {{
+            color: {p['text']} !important;
+        }}
+
+        /* Download Button Fix */
+        .stDownloadButton, [data-testid="stDownloadButton"] {{
+            display: inline-block !important;
+            margin: 8px 0 !important;
+        }}
+        .stDownloadButton > button,
+        [data-testid="stDownloadButton"] > button {{
+            background: {p['accent']} !important;
             color: #ffffff !important;
             font-weight: 700 !important;
-            font-size: 0.7rem !important;
+            font-size: 0.74rem !important;
             letter-spacing: 0.12em !important;
             text-transform: uppercase !important;
-            border: none !important;
+            border: 1px solid {p['accent']} !important;
             border-radius: 6px !important;
-            padding: 14px 22px !important;
-            transition: all 0.15s ease !important;
+            padding: 12px 24px !important;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            box-shadow: 0 4px 14px rgba(213,0,28,0.25) !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 8px !important;
+            cursor: pointer !important;
+            width: auto !important;
         }}
-        .stDownloadButton > button:hover {{
-            background: {p['accent']} !important;
-            transform: translateY(-1px);
+        .stDownloadButton > button p,
+        .stDownloadButton > button span,
+        .stDownloadButton > button div,
+        [data-testid="stDownloadButton"] > button p,
+        [data-testid="stDownloadButton"] > button span,
+        [data-testid="stDownloadButton"] > button div {{
+            color: #ffffff !important;
+            font-weight: 700 !important;
+            font-size: 0.74rem !important;
+            letter-spacing: 0.12em !important;
+            text-transform: uppercase !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }}
+        .stDownloadButton > button:hover,
+        [data-testid="stDownloadButton"] > button:hover {{
+            background: #b00018 !important;
+            border-color: #b00018 !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 22px rgba(213,0,28,0.4) !important;
+        }}
+
+        /* Animations */
+        @keyframes pulseBeacon {{
+            0%, 100% {{ transform: scale(1); opacity: 1; }}
+            50% {{ transform: scale(1.3); opacity: 0.6; }}
         }}
     </style>
     """, unsafe_allow_html=True)

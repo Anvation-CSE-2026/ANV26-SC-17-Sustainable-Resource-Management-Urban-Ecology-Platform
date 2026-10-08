@@ -1,12 +1,8 @@
 source,baseline_kg,waste_type
-household,2000,wet
-household_2,1800,wet
-office,800,dry
-office_2,600,dry
-restaurant,1500,wet
-restaurant_2,1200,wet
-mall,1100,dry
-college,600,dry
-hospital,400,wet
-hotel,900,wet
+Downtown Residential Hub,1400,wet
+Suburban Green Villas,600,wet
+Culinary District & Food Market,1800,wet
+Silicon Tech Park Offices,500,dry
+Metropolitan Shopping Mall,400,dry
+University Campus & Hostels,500,dry
 event,0,wet

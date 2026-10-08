@@ -10,7 +10,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# --- Session state ---
+# --- Session state initialization ---
 defaults = {
     "event_active": False,
     "reoptimized": True,
@@ -21,12 +21,23 @@ for k, v in defaults.items():
     if k not in st.session_state:
         st.session_state[k] = v
 
+# --- Theme resolution ---
+# Check URL query param first so toggling between ?theme=dark and ?theme=light is 100% reliable
+param_theme = st.query_params.get("theme")
+if param_theme in ["light", "dark"]:
+    st.session_state.theme = param_theme
+elif "theme" not in st.session_state or st.session_state.theme not in ["light", "dark"]:
+    st.session_state.theme = "light"
+
+# Sync URL query param to reflect active theme
+st.query_params["theme"] = st.session_state.theme
+
 # --- Handle query-param actions ---
 qp = st.query_params
 action = qp.get("action")
 if action:
     if action == "event":
-        st.session_state.event_active = True
+        st.session_state.event_active = not st.session_state.event_active
         st.session_state.reoptimized = False
     elif action == "outage":
         cycle = {None: "B", "B": "C", "C": None}
@@ -41,26 +52,17 @@ if action:
         st.session_state.outage_facility = None
         for k in ["allocations", "overflow", "demand_signature", "_force_reopt"]:
             st.session_state.pop(k, None)
-    st.query_params.clear()
+    # Remove action from query params while keeping the theme param intact
+    if "action" in st.query_params:
+        del st.query_params["action"]
     st.rerun()
 
 # --- Theme ---
 palette = theme.get_palette(st.session_state.theme)
 theme.inject_css(palette)
 
-# --- Header ---
-components.header()
-
-# --- Data source ---
-with st.expander("DATA SOURCE — UPLOAD CSV OR USE SAMPLE DATA", expanded=False):
-    uploaded = st.file_uploader("Upload CSV", type=["csv"], label_visibility="collapsed")
-    try:
-        with open("sample_data.csv", "rb") as f:
-            st.download_button("DOWNLOAD SAMPLE CSV", f, file_name="sample_data.csv", mime="text/csv")
-    except FileNotFoundError:
-        pass
-
-# --- Load sources ---
+# --- Load sources (from uploaded CSV widget or sample baseline) ---
+uploaded = st.session_state.get("csv_uploader")
 if uploaded is not None:
     try:
         sources = data.load_sources_from_csv(uploaded)
@@ -103,18 +105,54 @@ allocations = st.session_state.allocations
 overflow = st.session_state.overflow
 total_overflow = optimizer.total_overflow(overflow)
 
+# --- Header with live status badge & theme toggle ---
+if total_overflow > 0:
+    system_status = "alert"
+elif st.session_state.outage_facility:
+    system_status = "warn"
+else:
+    system_status = "optimal"
+
+components.header(theme=st.session_state.theme, status=system_status, p=palette)
+
 # --- Metrics row ---
 components.metrics_row(total_waste, total_capacity, total_overflow, data_mode, palette)
 
-# --- Status ---
+# --- Waste Stream Breakdown ---
+components.stream_breakdown(wet_total, dry_total, palette)
+
+# --- Status Banner ---
 components.status_banner(total_overflow, st.session_state.reoptimized, st.session_state.outage_facility)
 
-# --- Actions ---
-components.action_buttons()
+# --- Actions with active scenario indicators ---
+components.action_buttons(
+    event_active=st.session_state.event_active,
+    outage=st.session_state.outage_facility,
+    theme=st.session_state.theme,
+)
 
-# --- Facility grid ---
-components.section_title("FACILITY UTILIZATION")
-components.facility_grid(active_facilities, allocations, palette)
+# --- Data Ingestion Drawer (Positioned under Action Buttons) ---
+with st.expander("📁 DATA INGESTION — UPLOAD CSV OR DOWNLOAD TEMPLATE", expanded=False):
+    st.markdown(
+        f'<div style="font-size:0.75rem; color:{palette["muted"]}; margin-bottom:12px; line-height:1.5;">'
+        'Upload your municipal waste stream dataset (.csv) with columns: <code>source, baseline_kg, waste_type</code>, '
+        'or download the standard multi-source template to inspect the schema.'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+    col_u1, col_u2 = st.columns([3, 1])
+    with col_u1:
+        st.file_uploader("Upload CSV", type=["csv"], key="csv_uploader", label_visibility="collapsed")
+    with col_u2:
+        try:
+            with open("sample_data.csv", "rb") as f:
+                st.download_button("📥 SAMPLE CSV", f, file_name="sample_data.csv", mime="text/csv")
+        except FileNotFoundError:
+            pass
+
+# --- Facility grid with active/offline pills ---
+components.section_title("FACILITY UTILIZATION & LOAD BALANCING")
+components.facility_grid(active_facilities, allocations, palette, outage=st.session_state.outage_facility)
 
 # --- Comparison ---
 components.section_title("FIXED ALLOCATION VS WASTEGRID")
@@ -123,23 +161,13 @@ components.comparison_cards(fixed_overflow, total_overflow, palette)
 
 if fixed_overflow > 0 and total_overflow < fixed_overflow:
     pct = optimizer.reduction_pct(fixed_overflow, total_overflow)
-    components.success_banner(f"WasteGrid reduced overflow by {pct:.1f}% vs fixed allocation")
+    components.success_banner(f"WasteGrid prevented {fixed_overflow - total_overflow:,.0f} kg ({pct:.1f}%) of overflow vs static fixed routing!")
 
 # --- 7-Day Forecast ---
-components.section_title("7-DAY FORECAST")
+components.section_title("7-DAY PREDICTIVE FORECAST & CAPACITY CEILING")
 forecast_rows = forecast.forecast_week(sources, total_capacity)
 forecast_df = pd.DataFrame(forecast_rows)
-
-def highlight_overflow(row):
-    if row["Overflow (T)"] > 0:
-        return ["background-color: rgba(213,0,28,0.08)"] * len(row)
-    return [""] * len(row)
-
-st.dataframe(
-    forecast_df.style.apply(highlight_overflow, axis=1),
-    use_container_width=True,
-    hide_index=True,
-)
+components.forecast_section(forecast_df, palette)
 
 # --- Export ---
 export_df = pd.DataFrame([
@@ -153,7 +181,7 @@ export_df = pd.DataFrame([
     for f in active_facilities
 ])
 st.download_button(
-    "DOWNLOAD ALLOCATION PLAN (CSV)",
+    "📥 DOWNLOAD ALLOCATION PLAN (CSV)",
     export_df.to_csv(index=False).encode("utf-8"),
     file_name="wastegrid_allocation.csv",
     mime="text/csv",
