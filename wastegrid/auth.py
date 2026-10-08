@@ -216,6 +216,225 @@ def render_sidebar_auth_widget():
                         st.error(m)
 
 
+def register_account(username, password, full_name, email, role="municipality", jurisdiction="City Ward Operations"):
+    """Register a new user account and log in immediately."""
+    if len(username.strip()) < 3:
+        return False, "Username must be at least 3 characters."
+    if len(password) < 6:
+        return False, "Password must be at least 6 characters."
+    if "@" not in email:
+        return False, "Please provide a valid email address."
+
+    role_titles = {
+        "admin": "System Administrator",
+        "state": "State Urban Authority",
+        "district": "District Magistrate / Authority",
+        "municipality": "Municipal Operations Officer",
+        "factory": "Processing Plant Manager",
+    }
+    title = role_titles.get(role, "Municipal Field Officer")
+
+    success, msg = db.create_user(username, password, role, title, jurisdiction, full_name, email)
+    if not success:
+        return False, msg
+
+    # Auto-login after creation
+    user = db.get_user_by_username(username)
+    if user:
+        st.session_state["authenticated_user"] = user
+        db.add_audit_log(username, "USER_REGISTERED", f"New user created and logged in with role {role}")
+        return True, "Account created successfully! You are now logged in."
+    return True, "Account created successfully."
+
+
+def render_auth_modal(palette):
+    """
+    Renders an in-page modal/panel for Login, Account Registration, or Active Profile.
+    Triggered when Profile icon is clicked in the header.
+    """
+    p = palette
+    user = get_current_user()
+
+    st.markdown(
+        f"""
+        <div style="background:{p['card_bg']}; border:2px solid {p['blue']}; border-radius:14px; 
+                    padding:24px 28px; margin-bottom:24px; box-shadow:{p['shadow']};">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid {p['border']}; padding-bottom:14px; margin-bottom:18px;">
+                <div style="font-size:1.25rem; font-weight:800; color:{p['text']}; display:flex; align-items:center; gap:10px;">
+                    <span>👤</span>
+                    <span>{'My Account & Active Profile' if user else 'Sign In or Create Account'}</span>
+                </div>
+            </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    if user:
+        # User is already signed in
+        col_info, col_pwd = st.columns([1.2, 1], gap="large")
+        with col_info:
+            role_colors = {"admin": "#ef4444", "state": "#3b82f6", "district": "#8b5cf6", "municipality": "#10b981", "factory": "#f59e0b"}
+            r_col = role_colors.get(user["role"], "#3b82f6")
+            st.markdown(
+                f"""
+                <div style="background:{p['bg_soft']}; border:1px solid {p['border']}; border-radius:10px; padding:18px; line-height:1.8; font-size:0.85rem;">
+                    <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+                        <div style="width:44px; height:44px; border-radius:50%; background:{r_col}; color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.3rem; font-weight:800;">
+                            {user['full_name'][:1]}
+                        </div>
+                        <div>
+                            <div style="font-size:1.1rem; font-weight:800; color:{p['text']};">{user['full_name']}</div>
+                            <span style="background:{r_col}; color:#fff; padding:2px 8px; border-radius:999px; font-size:0.68rem; font-weight:700; text-transform:uppercase;">{user['role']} Authority</span>
+                        </div>
+                    </div>
+                    <div><b>Username:</b> <code>{user['username']}</code></div>
+                    <div><b>Official Title:</b> {user['authority_title']}</div>
+                    <div><b>Jurisdiction Scope:</b> {user['jurisdiction']}</div>
+                    <div><b>Official Email:</b> {user['email']}</div>
+                    <div><b>Account Status:</b> <span style="color:#10b981; font-weight:700;">● Active Verified</span></div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+            st.markdown("<br>", unsafe_allow_html=True)
+            col_b1, col_b2 = st.columns(2)
+            with col_b1:
+                if st.button("🚪 Sign Out / Logout", key="btn_modal_logout", type="primary", use_container_width=True):
+                    logout()
+            with col_b2:
+                if st.button("✖️ Close Profile", key="btn_modal_close_user", use_container_width=True):
+                    st.session_state["show_auth_modal"] = False
+                    st.rerun()
+
+        with col_pwd:
+            st.markdown(f'<div style="font-weight:700; color:{p["text"]}; margin-bottom:8px;">🔑 Change Account Password</div>', unsafe_allow_html=True)
+            with st.form("modal_change_pwd_form"):
+                cur_p = st.text_input("Current Password", type="password")
+                new_p = st.text_input("New Secure Password", type="password")
+                cfm_p = st.text_input("Confirm New Password", type="password")
+                sub_pwd = st.form_submit_button("Update Password ➔", use_container_width=True)
+                if sub_pwd:
+                    s, m = change_password(user["username"], cur_p, new_p, cfm_p)
+                    if s:
+                        st.success(m)
+                    else:
+                        st.error(m)
+
+    else:
+        # User is NOT signed in: Provide Sign In, Create Account, and 1-Click Demo Logins!
+        tab_login, tab_register, tab_forgot = st.tabs(["🔑 Sign In to Existing Account", "📝 Create New Account", "❓ Forgot Password"])
+
+        with tab_login:
+            col_f, col_quick = st.columns([1, 1], gap="large")
+            with col_f:
+                st.markdown(f'<div style="font-weight:700; color:{p["text"]}; margin-bottom:8px;">Enter Your Official Credentials</div>', unsafe_allow_html=True)
+                with st.form("modal_login_form"):
+                    u_in = st.text_input("Username", placeholder="e.g. municipality_admin", key="modal_u_in")
+                    p_in = st.text_input("Password", type="password", placeholder="••••••••", key="modal_p_in")
+                    btn_login = st.form_submit_button("Sign In ➔", type="primary", use_container_width=True)
+                    if btn_login:
+                        if u_in and p_in:
+                            ok, msg = login(u_in, p_in)
+                            if ok:
+                                st.session_state["show_auth_modal"] = False
+                                st.toast("✅ Signed in successfully!")
+                                st.rerun()
+                            else:
+                                st.error(msg)
+                        else:
+                            st.warning("Please enter both username and password.")
+
+            with col_quick:
+                st.markdown(
+                    f"""
+                    <div style="font-weight:700; color:{p['blue']}; margin-bottom:8px;">
+                        ⚡ 1-Click Fast Login (Evaluator Demo Presets)
+                    </div>
+                    <div style="font-size:0.75rem; color:{p['muted']}; margin-bottom:12px;">
+                        Click any role below to instantly log in and experience the tailored dashboard:
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+                q_col1, q_col2 = st.columns(2)
+                with q_col1:
+                    if st.button("👑 Super Admin", use_container_width=True):
+                        login("admin", "Admin@123")
+                        st.session_state["show_auth_modal"] = False
+                        st.rerun()
+                    if st.button("🏛️ State Authority", use_container_width=True):
+                        login("state_admin", "Waste@123")
+                        st.session_state["show_auth_modal"] = False
+                        st.rerun()
+                    if st.button("🏢 District Authority", use_container_width=True):
+                        login("district_admin", "District@123")
+                        st.session_state["show_auth_modal"] = False
+                        st.rerun()
+                with q_col2:
+                    if st.button("🏙️ Municipal Office", use_container_width=True):
+                        login("municipality_admin", "Municipality@123")
+                        st.session_state["show_auth_modal"] = False
+                        st.rerun()
+                    if st.button("🏭 Plant Manager", use_container_width=True):
+                        login("factory_admin", "Factory@123")
+                        st.session_state["show_auth_modal"] = False
+                        st.rerun()
+
+        with tab_register:
+            st.markdown(f'<div style="font-weight:700; color:{p["text"]}; margin-bottom:8px;">Register Official Municipal or Citizen Account</div>', unsafe_allow_html=True)
+            with st.form("modal_reg_form"):
+                r_c1, r_c2 = st.columns(2)
+                with r_c1:
+                    reg_fname = st.text_input("Full Name", placeholder="e.g. Ramesh Chandra")
+                    reg_uname = st.text_input("Desired Username", placeholder="e.g. ramesh_officer")
+                    reg_email = st.text_input("Email Address", placeholder="officer@smartcity.gov.in")
+                with r_c2:
+                    reg_role = st.selectbox("Role / Authority Category", ["municipality", "factory", "district", "state"], format_func=lambda x: {
+                        "municipality": "🏙️ Municipal Ward Officer",
+                        "factory": "🏭 Processing Plant Manager",
+                        "district": "🏢 District Urban Inspector",
+                        "state": "🏛️ State Urban Authority",
+                    }.get(x, x))
+                    reg_juris = st.text_input("Jurisdiction / Ward", placeholder="e.g. Ward 112 - Central Zone")
+                    reg_pwd1 = st.text_input("Password (min 6 chars)", type="password")
+                    reg_pwd2 = st.text_input("Confirm Password", type="password")
+
+                btn_reg = st.form_submit_button("Register & Sign In ➔", type="primary", use_container_width=True)
+                if btn_reg:
+                    if reg_pwd1 != reg_pwd2:
+                        st.error("Passwords do not match.")
+                    else:
+                        ok, msg = register_account(reg_uname, reg_pwd1, reg_fname, reg_email, reg_role, reg_juris)
+                        if ok:
+                            st.session_state["show_auth_modal"] = False
+                            st.toast("🎉 Account created and logged in!")
+                            st.rerun()
+                        else:
+                            st.error(msg)
+
+        with tab_forgot:
+            st.markdown(f'<div style="font-weight:700; color:{p["text"]}; margin-bottom:8px;">Self-Service Password Reset via Verified Email</div>', unsafe_allow_html=True)
+            with st.form("modal_forgot_form"):
+                f_u = st.text_input("Account Username")
+                f_e = st.text_input("Registered Official Email")
+                f_p = st.text_input("New Password", type="password")
+                f_cp = st.text_input("Confirm New Password", type="password")
+                btn_f = st.form_submit_button("Reset Password ➔", use_container_width=True)
+                if btn_f:
+                    s, m = forgot_password_reset(f_u, f_e, f_p, f_cp)
+                    if s:
+                        st.success(m)
+                    else:
+                        st.error(m)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("✖️ Close Sign In Panel", key="btn_close_auth_modal", use_container_width=True):
+            st.session_state["show_auth_modal"] = False
+            st.rerun()
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
 def render_access_restricted_view(page_name):
     """Renders a clean notice when a user tries to access a page outside their role authority."""
     user = get_current_user()
@@ -234,3 +453,5 @@ def render_access_restricted_view(page_name):
         f'</div></div>'
     )
     st.markdown(msg_html, unsafe_allow_html=True)
+
+

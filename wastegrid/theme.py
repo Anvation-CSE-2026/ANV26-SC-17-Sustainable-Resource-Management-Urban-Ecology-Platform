@@ -149,9 +149,101 @@ def inject_css(p):
         }}
 
         .block-container {{
-            padding-top: 2.8rem !important;
-            padding-bottom: 4rem !important;
-            max-width: 1280px !important;
+            padding-top: 1.2rem !important;
+            padding-bottom: 3.5rem !important;
+            padding-left: 2rem !important;
+            padding-right: 2rem !important;
+            max-width: 100% !important;
+            width: 100% !important;
+        }}
+
+        /* Full-Width Hero Section */
+        .wg-hero {{
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(2, 132, 199, 0.15) 50%, rgba(124, 58, 237, 0.1) 100%);
+            border: 1.5px solid rgba(16, 185, 129, 0.35);
+            border-radius: 14px;
+            padding: 24px 28px;
+            margin-bottom: 22px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            position: relative;
+        }}
+
+        /* Services Grid */
+        .services-grid {{
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-bottom: 24px;
+        }}
+        @media (max-width: 1100px) {{
+            .services-grid {{
+                grid-template-columns: repeat(2, 1fr);
+            }}
+        }}
+        @media (max-width: 650px) {{
+            .services-grid {{
+                grid-template-columns: 1fr;
+            }}
+        }}
+        .service-card {{
+            background: {p['card_bg']};
+            border: 1px solid {p['border']};
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: {p['shadow']};
+            transition: all 0.25s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }}
+        .service-card:hover {{
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+            border-color: {p['blue']};
+        }}
+
+        /* Professional Full Footer */
+        .site-footer {{
+            margin-top: 48px;
+            padding-top: 32px;
+            border-top: 1px solid {p['border']};
+            color: {p['muted']};
+            font-size: 0.82rem;
+            line-height: 1.7;
+        }}
+        .footer-grid {{
+            display: grid;
+            grid-template-columns: 2.2fr 1.2fr 1.3fr 1.3fr;
+            gap: 28px;
+            margin-bottom: 24px;
+        }}
+        @media (max-width: 900px) {{
+            .footer-grid {{
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }}
+        }}
+        .footer-col-title {{
+            font-size: 0.74rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: {p['text']};
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }}
+        .footer-bottom {{
+            padding-top: 18px;
+            border-top: 1px solid {p['border_subtle']};
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.72rem;
+            color: {p['muted']};
+            flex-wrap: wrap;
+            gap: 12px;
         }}
 
         /* Header */

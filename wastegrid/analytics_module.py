@@ -270,3 +270,87 @@ def render_factory_authority_view(active_facilities, allocations, palette):
         )
 
     st.markdown('<div class="fac-grid" style="grid-template-columns:1fr;">' + "".join(cards) + '</div>', unsafe_allow_html=True)
+
+
+def render_super_admin_view(palette, active_facilities, allocations, pending_alert_count):
+    """Render Super Administrator Command Center — Full System Oversight."""
+    p = palette
+    st.markdown(
+        f'<div class="role-view-hero" style="border-left:4px solid #ef4444;">'
+        f'<div class="role-hero-title">🛡️ Super Administrator Command Center — Full System Oversight</div>'
+        f'<div class="role-hero-sub">Platform-wide Infrastructure Health, Multi-Tenant Hierarchy, Cryptographic Auditing & Global Reallocation</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        f'<div class="metric-grid">'
+        f'<div class="m-card hero"><div class="m-label">👑 Platform Status</div><div class="m-value green">Active Online</div></div>'
+        f'<div class="m-card"><div class="m-label">👥 Tenant Roles</div><div class="m-value">5 Active</div></div>'
+        f'<div class="m-card purple"><div class="m-label">🏭 Processing Plants</div><div class="m-value">{len(active_facilities)} Monitored</div></div>'
+        f'<div class="m-card {"red" if pending_alert_count>0 else "green"}"><div class="m-label">🔔 Global Alerts</div><div class="m-value">{pending_alert_count} Incidents</div></div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    # Super admin tenant matrix
+    st.markdown(f'<div class="sec-title">🏛️ MULTI-TENANT MUNICIPAL HIERARCHY MATRIX</div>', unsafe_allow_html=True)
+    tenants = [
+        {"role": "State Authority", "user": "state_admin", "scope": "Statewide Urban Municipal Hubs", "status": "Online", "access": "Macro Allocation & ESG Analytics"},
+        {"role": "District Authority", "user": "district_admin", "scope": "Bengaluru Urban District", "status": "Online", "access": "Zonal Stations & Transit Fleet"},
+        {"role": "Municipal Office", "user": "municipality_admin", "scope": "Central & South Municipal Wards", "status": "Online", "access": "Ward Operations & Citizen Grievance"},
+        {"role": "Plant Manager", "user": "factory_admin", "scope": "Regional Processing Plants (A, B, C)", "status": "Online", "access": "Intake Hoppers & Receiving Docks"},
+    ]
+    t_cards = []
+    for t in tenants:
+        t_cards.append(
+            f'<div class="fac-card">'
+            f'<div class="fac-name-row"><div class="fac-name">🏢 {t["role"]} (<code>{t["user"]}</code>)</div><span class="fac-badge active">● {t["status"]}</span></div>'
+            f'<div class="fac-type"><b>Scope:</b> {t["scope"]}</div>'
+            f'<div class="fac-stat" style="font-size:0.8rem; color:{p["muted"]};">Clearance: {t["access"]}</div>'
+            f'</div>'
+        )
+    st.markdown('<div class="fac-grid" style="grid-template-columns:repeat(2,1fr);">' + "".join(t_cards) + '</div>', unsafe_allow_html=True)
+
+
+def render_municipal_office_view(palette, pending_alert_count):
+    """Render Municipal Corporation Ward Operations & Citizen Services Hub."""
+    p = palette
+    st.markdown(
+        f'<div class="role-view-hero" style="border-left:4px solid #10b981;">'
+        f'<div class="role-hero-title">🏙️ Municipal Corporation Ward Operations & Citizen Services Hub</div>'
+        f'<div class="role-hero-sub">Ward-Level Door-to-Door Collection, Real-time Bin Telemetry, Compactor Dispatches & Citizen Grievances</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        f'<div class="metric-grid">'
+        f'<div class="m-card green"><div class="m-label">🏙️ Active Wards</div><div class="m-value">8 Wards</div></div>'
+        f'<div class="m-card"><div class="m-label">🚚 Ward Compactor Units</div><div class="m-value">8 Trucks</div></div>'
+        f'<div class="m-card hero"><div class="m-label">🎫 Open Citizen Reports</div><div class="m-value">2 Active</div></div>'
+        f'<div class="m-card purple"><div class="m-label">⏱️ Dispatch SLA</div><div class="m-value green">&lt; 15 Mins</div></div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(f'<div class="sec-title">📍 MUNICIPAL WARD IoT SENSOR & COLLECTION STATUS</div>', unsafe_allow_html=True)
+    wards = [
+        {"name": "Ward 112 — Downtown Residential", "type": "Organic Wet Waste", "bin_fill": "64%", "status": "Normal", "truck": "KA-01-EA-101 Dispatched"},
+        {"name": "Ward 145 — Suburban Green Villas", "type": "Segregated Kitchen Waste", "bin_fill": "45%", "status": "Normal", "truck": "KA-01-EA-102 En Route"},
+        {"name": "Ward 088 — Culinary & Food Market", "type": "High Commercial Wet", "bin_fill": "78%", "status": "Caution", "truck": "KA-04-MB-204 At Weighbridge"},
+        {"name": "Ward 174 — Tech Park & Office Hub", "type": "Dry Packaging & Paper", "bin_fill": "38%", "status": "Normal", "truck": "KA-04-MB-312 In Transit"},
+    ]
+    w_cards = []
+    for w in wards:
+        is_warn = w["status"] == "Caution"
+        badge = f'<span class="fac-badge {"warn" if is_warn else "active"}">● {w["status"]}</span>'
+        w_cards.append(
+            f'<div class="fac-card">'
+            f'<div class="fac-name-row"><div class="fac-name">🏙️ {w["name"]}</div>{badge}</div>'
+            f'<div class="fac-type">{w["type"]} · Fill Level: <b>{w["bin_fill"]}</b></div>'
+            f'<div class="fac-stat" style="font-size:0.8rem; color:{p["blue"]};">🚚 Assigned: {w["truck"]}</div>'
+            f'</div>'
+        )
+    st.markdown('<div class="fac-grid" style="grid-template-columns:repeat(2,1fr);">' + "".join(w_cards) + '</div>', unsafe_allow_html=True)
+

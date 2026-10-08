@@ -102,5 +102,38 @@ def render_settings_page(palette):
         st.selectbox("Default Linear Programming Solver", ["HiGHS (Dual Simplex)", "HiGHS (Interior Point)", "Greedy Heuristic Fallback"])
 
     st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("Save System Configuration"):
-        st.toast("✅ Settings saved successfully.")
+    st.markdown(f'<div class="sec-title">🔑 EXTERNAL API KEYS & TELEMETRY INTEGRATIONS</div>', unsafe_allow_html=True)
+    st.markdown(
+        f"""
+        <div style="font-size:0.75rem; color:{p['muted']}; margin-bottom:12px;">
+            Configure external microservice API credentials for live weather multipliers, GIS geocoding, and IoT sensor gateways.
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    api_col1, api_col2 = st.columns(2)
+    with api_col1:
+        st.text_input("OpenWeatherMap API Key (Rainfall Surges)", value="owm_live_9a8f4c2817e0b5", type="password")
+        st.text_input("GIS Geocoding API Key (Mapbox / Google Maps)", value="pk.eyJ1Ijoid2FzdGVncmlkIiwicmF3IjoiY2xqdWV2", type="password")
+        st.text_input("SMS Gateway Auth Token (Twilio / Gov SMS)", value="tw_auth_8829104018aa", type="password")
+
+    with api_col2:
+        st.text_input("Municipal IoT MQTT Broker Endpoint", value="mqtts://iot-telemetry.wastegrid.smartcity.gov.in:8883")
+        st.text_input("WasteGrid REST API Ingestion Token", value="wg_live_sec_7721a9f0e13b82c74d6e", type="password")
+        st.selectbox("Webhook Delivery Mode", ["Real-Time HTTPS Push", "Batch Polling (15 Min Interval)", "Manual Synchronize"])
+
+    st.markdown(
+        f"""
+        <div style="background:{p['bg_soft']}; border:1px solid {p['border']}; border-radius:8px; padding:12px 16px; margin-top:14px; font-size:0.75rem;">
+            <b>Sample REST Ingestion Curl:</b><br>
+            <code>curl -X POST https://api.wastegrid.smartcity.gov.in/v2/telemetry -H "Authorization: Bearer wg_live_sec_..." -d '{{"ward":"WARD-112","wet_kg":1420,"dry_kg":580}}'</code>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("Save System Configuration & API Keys", type="primary"):
+        st.toast("✅ Settings and API Keys updated successfully.")
+

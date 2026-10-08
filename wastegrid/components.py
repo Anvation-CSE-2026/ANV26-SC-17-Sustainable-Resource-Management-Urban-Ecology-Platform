@@ -45,42 +45,194 @@ def header(theme="light", status="optimal", logo_path="logo.png", p=None, user=N
     )
 
 
-def top_nav_bar(page_title, status="optimal", pending_alerts=0, user=None, theme="light", p=None):
-    if status == "alert":
-        badge_cls, badge_dot, badge_text = "alert", "red", "Overflow Alert"
-    elif status == "warn":
-        badge_cls, badge_dot, badge_text = "warn", "yellow", "Facility Offline"
-    else:
-        badge_cls, badge_dot, badge_text = "optimal", "green", "System Optimal"
-
+def top_nav_bar(page_title="Dashboard", status="optimal", pending_alerts=0, user=None, theme="light", p=None):
     next_theme = "dark" if theme == "light" else "light"
     toggle_icon = "🌙" if theme == "light" else "☀️"
     toggle_label = "Dark" if theme == "light" else "Light"
 
-    user_html = ""
-    if user:
-        user_html = (
-            f'<div class="user-pill">{user.get("authority_title", user.get("title", "User"))} '
-            f'<span class="badge">{user.get("role", "admin").upper()}</span></div>'
-        )
-
-    alert_badge = f'<span style="background:{p["accent"]}; color:#ffffff; padding:2px 7px; border-radius:999px; font-size:0.65rem; margin-left:4px;">{pending_alerts}</span>' if pending_alerts > 0 else ""
+    user_label = f"👤 {user['full_name'].split()[0]} ({user['role'].upper()})" if user else "👤 Profile"
+    user_btn_style = f"border-color:{p['blue']}; background:{'rgba(59,130,246,0.12)' if user else 'transparent'};"
 
     nav_html = (
         f'<div style="display:flex; justify-content:space-between; align-items:center; background:{p["card_bg"]}; '
-        f'border:1px solid {p["border"]}; border-radius:10px; padding:12px 20px; margin-bottom:22px; margin-left:54px; box-shadow:{p["shadow"]}; flex-wrap:wrap; gap:12px;">'
-        f'<div style="display:flex; align-items:center; gap:14px; min-width:240px; flex:1;">'
-        f'<div style="font-size:1.15rem; font-weight:800; color:{p["text"]}; letter-spacing:-0.02em;">{page_title}</div>'
+        f'border:1px solid {p["border"]}; border-radius:12px; padding:12px 24px; margin-bottom:20px; margin-left:54px; box-shadow:{p["shadow"]}; flex-wrap:wrap; gap:12px;">'
+        # 1. KEEP the WasteGrid logo in the top-left header with Tagline
+        f'<div style="display:flex; align-items:center; gap:14px;">'
+        f'<div style="width:38px; height:38px; border-radius:8px; background:linear-gradient(135deg, #10b981, #0284c7); display:flex; align-items:center; justify-content:center; font-size:1.35rem; box-shadow:0 2px 8px rgba(0,0,0,0.2);">♻️</div>'
+        f'<div>'
+        f'<div style="font-size:1.3rem; font-weight:900; color:{p["text"]}; letter-spacing:-0.02em; line-height:1.1;">WasteGrid</div>'
+        f'<div style="font-size:0.68rem; color:{p["muted"]}; letter-spacing:0.18em; text-transform:uppercase; margin-top:2px; font-weight:700;">Predict. Detect. Allocate.</div>'
         f'</div>'
-        f'<div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">'
-        f'<div class="hdr-badge {badge_cls}"><span class="pulse-dot {badge_dot}"></span>{badge_text}</div>'
-        f'<div class="hdr-badge">🔔 Alerts {alert_badge}</div>'
-        f'{user_html}'
+        f'</div>'
+        # 2. KEEP the Login/Profile icon in the top-right header (No Services, About, or Contact in top header)
+        f'<div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">'
+        f'<a class="theme-toggle-link" href="?profile=1" target="_self" style="{user_btn_style}">'
+        f'<span>{user_label}</span></a>'
         f'<a class="theme-toggle-link" href="?theme={next_theme}" target="_self"><span>{toggle_icon}</span><span>{toggle_label}</span></a>'
         f'</div>'
         f'</div>'
     )
     st.markdown(nav_html, unsafe_allow_html=True)
+
+
+def website_footer(p):
+    """
+    Clean, subtle and professional footer spanning available application width:
+    Services | About | Contact
+    © 2026 WasteGrid. All rights reserved.
+    """
+    footer_html = f"""
+    <footer style="margin-top:48px; padding:22px 0 16px 0; border-top:1px solid {p['border']}; width:100%; text-align:center;">
+        <div style="font-size:0.84rem; font-weight:600; color:{p['muted']}; margin-bottom:8px; display:flex; justify-content:center; align-items:center; gap:18px;">
+            <a href="?footer_info=services" target="_self" style="color:{p['muted']}; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='{p['blue']}'" onmouseout="this.style.color='{p['muted']}'">Services</a>
+            <span style="color:{p['border']};">|</span>
+            <a href="?footer_info=about" target="_self" style="color:{p['muted']}; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='{p['blue']}'" onmouseout="this.style.color='{p['muted']}'">About</a>
+            <span style="color:{p['border']};">|</span>
+            <a href="?footer_info=contact" target="_self" style="color:{p['muted']}; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='{p['blue']}'" onmouseout="this.style.color='{p['muted']}'">Contact</a>
+        </div>
+        <div style="font-size:0.75rem; color:{p['muted']}; letter-spacing:0.04em;">
+            © 2026 WasteGrid. All rights reserved.
+        </div>
+    </footer>
+    """
+    st.markdown(footer_html, unsafe_allow_html=True)
+
+
+def render_footer_info_modal(info_type, p):
+    """Renders a clean popup drawer when Services, About, or Contact is clicked from the footer."""
+    st.markdown(
+        f"""
+        <div style="background:{p['card_bg']}; border:2px solid {p['blue']}; border-radius:14px; padding:24px 28px; margin-bottom:24px; box-shadow:{p['shadow']};">
+        """,
+        unsafe_allow_html=True,
+    )
+    if info_type == "services":
+        st.markdown(
+            f"""
+            <div style="font-size:1.2rem; font-weight:800; color:{p['text']}; margin-bottom:12px;">⚡ WasteGrid Municipal Services</div>
+            <div style="font-size:0.84rem; color:{p['muted']}; line-height:1.7;">
+                ● <b>Autonomous Fleet Telematics:</b> Real-time GPS tracking and dynamic routing for municipal compactor trucks.<br>
+                ● <b>Simplex LP Optimization:</b> Dual-simplex linear solver preventing facility overflow and minimizing transport emissions.<br>
+                ● <b>Predictive Demand Forecasting:</b> 7-day machine learning projection with weekend commercial and residential multipliers.<br>
+                ● <b>Smart IoT Overflow Sensors:</b> Real-time bin level telemetry and automated incident escalation.<br>
+                ● <b>Citizen Grievance Redressal:</b> Public blackspot reporting portal with geotagged tickets and 24h SLA tracking.<br>
+                ● <b>Carbon ESG Accounting:</b> Quantified methane avoidance and circular economy landfill diversion tracking.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    elif info_type == "about":
+        st.markdown(
+            f"""
+            <div style="font-size:1.2rem; font-weight:800; color:{p['text']}; margin-bottom:12px;">ℹ️ About WasteGrid Platform</div>
+            <div style="font-size:0.84rem; color:{p['muted']}; line-height:1.7;">
+                WasteGrid is an enterprise municipal decision-support operating system designed for urban local bodies, district authorities, 
+                and state urban development departments.<br><br>
+                <b>Universal Architecture Notice:</b> WasteGrid is state-agnostic and deployable across any municipality nationwide. 
+                The live deployment utilizes empirical telemetry and ward generation profiles from the <b>Bengaluru Urban pilot case study</b> as a real-world demonstration model.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    elif info_type == "contact":
+        st.markdown(
+            f"""
+            <div style="font-size:1.2rem; font-weight:800; color:{p['text']}; margin-bottom:12px;">📞 Municipal Help Desk & Operations Contact</div>
+            <div style="font-size:0.84rem; color:{p['muted']}; line-height:1.7;">
+                ● <b>Citizen Grievance Toll-Free:</b> <code>1800-425-GRID</code> (24/7 Helpline)<br>
+                ● <b>Municipal Command & Dispatch:</b> <code>080-2222-9278</code><br>
+                ● <b>Technical Support:</b> <code>support@wastegrid.smartcity.gov.in</code><br>
+                ● <b>Grievance SLA Standard:</b> Maximum 24-hour resolution for verified citizen blackspots.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("✖️ Close Info", key="btn_close_footer_info", use_container_width=True):
+        st.session_state["footer_info_active"] = None
+        st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+def render_help_section(p):
+    """Renders comprehensive user guide and FAQ for users who need help navigating the platform."""
+    st.markdown(
+        f"""
+        <div style="background:{p['card_bg']}; border:2px solid {p['blue']}; border-radius:14px; padding:24px 28px; margin-bottom:26px; box-shadow:{p['shadow']};">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid {p['border']}; padding-bottom:12px; margin-bottom:16px;">
+                <div style="font-size:1.25rem; font-weight:800; color:{p['text']}; display:flex; align-items:center; gap:10px;">
+                    <span>📘</span>
+                    <span>WasteGrid 2.0 — Platform User Guide, Architecture & FAQ</span>
+                </div>
+            </div>
+            <div style="font-size:0.86rem; color:{p['text']}; line-height:1.7; margin-bottom:18px;">
+                WasteGrid is an intelligent smart-city decision support platform designed to eliminate municipal garbage overflow, 
+                streamline segregated waste routing, and ensure carbon-neutral waste processing.
+            </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    h_col1, h_col2 = st.columns(2, gap="large")
+    with h_col1:
+        st.markdown(f'<div style="font-weight:800; color:{p["blue"]}; margin-bottom:8px;">1. HOW THE WASTE REALLOCATION WORKS</div>', unsafe_allow_html=True)
+        st.markdown(
+            f"""
+            <div style="font-size:0.8rem; color:{p['muted']}; line-height:1.6;">
+                ● <b>Stream Compatibility:</b> Wet / organic waste can only be processed at composting plants (Facility A) and anaerobic biodigesters (Facility B). Recyclable dry packaging is routed to Material Recovery Facilities (Facility C).<br>
+                ● <b>Linear Programming Solver:</b> When a surge occurs or a facility experiences an outage, the HiGHS simplex optimizer redistributes incoming waste across remaining operational facilities to minimize distance and prevent overflow.<br>
+                ● <b>7-Day Predictive Forecaster:</b> Tracks weekend household surges, commercial market waste, and holiday events to prepare compactor trucks in advance.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown(f'<div style="font-weight:800; color:{p["success"]}; margin-bottom:8px;">2. CITIZEN GRIEVANCE REPORTING</div>', unsafe_allow_html=True)
+        st.markdown(
+            f"""
+            <div style="font-size:0.8rem; color:{p['muted']}; line-height:1.6;">
+                ● Citizens can report black spots, overflowing street bins, or missed door-to-door collections via the <b>Citizen Reports</b> portal.<br>
+                ● Each report receives an official tracking ID (e.g. <code>WG-REP-2026-9041</code>) and is assigned to the nearest active compactor vehicle driver with a 24-hour resolution SLA.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with h_col2:
+        st.markdown(f'<div style="font-weight:800; color:{p["purple"]}; margin-bottom:8px;">3. AUTHORITY ROLES & RESPONSIBILITIES</div>', unsafe_allow_html=True)
+        st.markdown(
+            f"""
+            <div style="font-size:0.8rem; color:{p['muted']}; line-height:1.6;">
+                ● <b>State Authority:</b> Monitors macro statewide metrics, ESG carbon avoidance credits, and regional facility capacity balance.<br>
+                ● <b>District Magistrate / Collector:</b> Oversees inter-ward transfer stations, bulk transport corridors, and compliance.<br>
+                ● <b>Municipal Ward Officer:</b> Manages daily collection routes, driver dispatches, and citizen grievance tickets.<br>
+                ● <b>Processing Plant Manager:</b> Monitors receiving docks, hopper fill ratios, and schedules preventive maintenance shutdowns.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown(f'<div style="font-weight:800; color:{p["warn"]}; margin-bottom:8px;">4. PILOT DEMONSTRATION & EXTENSIBILITY</div>', unsafe_allow_html=True)
+        st.markdown(
+            f"""
+            <div style="font-size:0.8rem; color:{p['muted']}; line-height:1.6;">
+                ● <b>General Deployment:</b> WasteGrid is not limited to any single region. Any municipal corporation can upload their ward shapefiles, GPS compactor feeds, and plant capacities via CSV or API.<br>
+                ● <b>Reference Pilot:</b> The Karnataka / Bengaluru Urban dataset is provided as a pre-calibrated live demonstration case study.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("✖️ Close Help Guide", key="btn_close_help_section", use_container_width=True):
+        st.session_state["show_help"] = False
+        st.rerun()
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
 
 
 def section_title(text):
