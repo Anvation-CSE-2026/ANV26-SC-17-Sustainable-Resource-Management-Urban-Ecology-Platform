@@ -97,13 +97,6 @@ def render_html(content):
 
 
 # =========================================================================
-# MANDATORY AUTHENTICATION GATE (LOGIN PAGE FIRST)
-# =========================================================================
-if not auth.is_authenticated():
-    auth.render_full_login_page(palette)
-    st.stop()
-
-
 # 5. Core Computational Grid Data
 uploaded = st.session_state.get("csv_uploader")
 if uploaded is not None:
@@ -169,22 +162,57 @@ elif st.session_state.outage_facility or any(f.get("status") in ["offline", "mai
 else:
     system_status = "optimal"
 
-# 6. Exact 8 Sidebar Operations Navigation Menu Items
-NAV_ITEMS = [
+# 6. Current User and 5-Tenant Respective Sidebar Navigation
+current_user = auth.get_current_user()
+user_role = current_user.get("role") if current_user else None
+
+# Core Base Navigation matching the hand-drawn wireframe
+BASE_NAV = [
     ("🏠 Home", "home"),
     ("🛠️ Services", "services"),
     ("📅 Events", "events"),
-    ("🗺️ Live Map", "map"),
+    ("🗺️ Live Maps", "map"),
     ("🚨 Alerts", "alerts"),
-    ("📑 Reports", "reports"),
-    ("⚙️ Settings", "settings"),
-    ("🚪 Logout", "logout"),
 ]
 
-title_to_key = {title: key for title, key in NAV_ITEMS}
-key_to_title = {key: title for title, key in NAV_ITEMS}
+# Build Respective Sidebar for Each of the 5 Tenants
+if user_role in ["state", "state_authority"]:
+    TENANT_NAV = BASE_NAV + [
+        ("🏛️ State Policy", "state_policy"),
+        ("📊 Statewide Reports", "reports"),
+    ]
+elif user_role == "commissioner":
+    TENANT_NAV = BASE_NAV + [
+        ("⚖️ Reallocation LP", "allocation_exec"),
+        ("📈 Executive KPIs", "kpis_exec"),
+    ]
+elif user_role in ["waste_officer", "municipality"]:
+    TENANT_NAV = BASE_NAV + [
+        ("🚛 Fleet Telematics", "fleet_ops"),
+        ("🗳️ Citizen Grievances", "citizen_ops"),
+    ]
+elif user_role in ["zonal_officer", "district"]:
+    TENANT_NAV = BASE_NAV + [
+        ("📍 Ward Blackspots", "ward_spots"),
+        ("👥 Citizen Reports", "citizen_zonal"),
+    ]
+elif user_role in ["processing_facility", "recycling_facility", "factory"]:
+    TENANT_NAV = BASE_NAV + [
+        ("🏭 Plant Inflow", "plant_inflow"),
+        ("♻️ Material Recovery", "recycling_ops"),
+    ]
+elif user_role == "admin":
+    TENANT_NAV = BASE_NAV + [
+        ("🛡️ User Governance", "users"),
+        ("🧪 Simulator Sandbox", "simulator"),
+        ("📑 Reports", "reports"),
+        ("⚙️ Settings", "settings"),
+    ]
+else:
+    # Public / Guest Visitor Navigation
+    TENANT_NAV = BASE_NAV
 
-# Map any legacy keys to new keys
+# Map legacy nav keys if present
 legacy_map = {
     "overview": "home",
     "operations": "map",
@@ -196,16 +224,14 @@ legacy_map = {
 if st.session_state.nav_selection in legacy_map:
     st.session_state.nav_selection = legacy_map[st.session_state.nav_selection]
 
-# 7. Left Sidebar Construction
-current_user = auth.get_current_user()
-
+# 7. Left Sidebar Construction matching user hand-drawn wireframe
 with st.sidebar:
     # Sidebar Header Brand
     render_html(
         f"""
         <div style="display:flex; align-items:center; gap:12px; padding:6px 0 16px 0; border-bottom:1px solid {palette['border']}; margin-bottom:16px;">
-            <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg, #10b981, #0284c7); 
-                        display:flex; align-items:center; justify-content:center; font-size:1.4rem; box-shadow:0 2px 10px rgba(0,0,0,0.25);">
+            <div style="width:38px; height:38px; border-radius:10px; background:linear-gradient(135deg, #10b981, #0284c7); 
+                        display:flex; align-items:center; justify-content:center; font-size:1.35rem; box-shadow:0 2px 10px rgba(0,0,0,0.25);">
                 ♻️
             </div>
             <div>
@@ -216,74 +242,47 @@ with st.sidebar:
         """
     )
 
-    # Secure Sidebar Authentication Widget
-    auth.render_sidebar_auth_widget()
+    # Active Tenant Badge if logged in
+    if current_user:
+        u_fname = current_user.get("full_name") or current_user.get("username") or "Officer"
+        u_role_title = current_user.get("authority_title") or str(current_user.get("role", "Authority")).title()
+        render_html(
+            f"""
+            <div style="background:{palette['bg_soft']}; border:1px solid {palette['border']}; border-radius:8px; padding:10px 12px; margin-bottom:14px; font-size:0.75rem;">
+                <div style="font-weight:700; color:{palette['text']}; display:flex; align-items:center; gap:6px;">
+                    <span>👤</span> <span>{u_fname}</span>
+                </div>
+                <div style="font-size:0.68rem; color:{palette['blue']}; font-weight:700; text-transform:uppercase; margin-top:3px;">
+                    {u_role_title}
+                </div>
+            </div>
+            """
+        )
 
+    # Clean Sidebar Navigation Buttons: Icon on Left, Name on Right, NO RADIO DOTS!
+    for label, nav_key in TENANT_NAV:
+        is_active = (st.session_state.nav_selection == nav_key)
+        if st.button(
+            label,
+            key=f"sb_nav_btn_{nav_key}",
+            type="primary" if is_active else "secondary",
+            use_container_width=True,
+        ):
+            st.session_state.nav_selection = nav_key
+            st.rerun()
+
+    # Bottom of Sidebar: Logout Icon with Logout under it, and NOTHING ELSE AFTER IT!
     st.markdown(
-        f'<div style="font-size:0.7rem; font-weight:700; color:{palette["muted"]}; text-transform:uppercase; letter-spacing:0.12em; margin-bottom:8px;">'
-        f'🧭 OPERATIONS NAVIGATION'
-        f'</div>',
+        f"<div style='margin-top:42px; padding-top:16px; border-top:1px solid {palette['border']}; text-align:center;'></div>",
         unsafe_allow_html=True,
     )
-
-    # Calculate default index in nav items
-    active_nav_key = st.session_state.get("nav_selection", "home")
-    if active_nav_key not in key_to_title:
-        active_nav_key = "home"
-
-    active_index = 0
-    for idx, (_, k) in enumerate(NAV_ITEMS):
-        if k == active_nav_key:
-            active_index = idx
-            break
-
-    selected_nav_title = st.radio(
-        "Sidebar Navigation",
-        [t for t, k in NAV_ITEMS],
-        index=active_index,
-        label_visibility="collapsed",
-        key="main_sidebar_nav_radio",
-    )
-    selected_key = title_to_key[selected_nav_title]
-
-    if selected_key == "logout":
-        auth.logout()
-
-    if selected_key != st.session_state.nav_selection:
-        st.session_state.nav_selection = selected_key
-        st.rerun()
-
-    # Sidebar Quick Actions & Help Button
-    st.markdown("<br>", unsafe_allow_html=True)
-    col_sb_act1, col_sb_act2 = st.columns(2)
-    with col_sb_act1:
-        if st.button("⚙️ Settings", use_container_width=True, key="btn_sb_open_prof"):
-            st.session_state["nav_selection"] = "settings"
+    if current_user:
+        if st.button("🚪\n\nLogout", key="btn_sb_logout_bottom", use_container_width=True, help="Sign out of WasteGrid"):
+            auth.logout()
+    else:
+        if st.button("🔑\n\nSign In", key="btn_sb_signin_bottom", use_container_width=True, help="Open Authority Sign In / Sign Up"):
+            st.session_state["show_auth_modal"] = True
             st.rerun()
-    with col_sb_act2:
-        if st.button("❓ Help", use_container_width=True, key="btn_sb_open_help"):
-            st.session_state["show_help"] = True
-            st.rerun()
-
-    # Sidebar Grid Summary Footer Card
-    active_trucks_count = len([v for v in db.get_all_vehicles() if v["status"] in ["available", "in_transit", "assigned"]])
-    render_html(
-        f"""
-        <div style="margin-top:20px; padding:12px; background:rgba(255,255,255,0.03); border:1px solid {palette['border']}; 
-                    border-radius:8px; font-size:0.72rem; color:{palette['muted']}; line-height:1.6;">
-            <div style="font-weight:700; color:{palette['text']}; margin-bottom:4px; display:flex; justify-content:space-between;">
-                <span>Grid Telemetry</span>
-                <span style="color:{palette['success']};">● Live</span>
-            </div>
-            <div>Facilities: <b>{len(db_facilities)} Active Nodes</b></div>
-            <div>Fleet Units: <b>{active_trucks_count} Vehicles</b></div>
-            <div>Active Incidents: <b>{pending_alert_count} Alerts</b></div>
-            <div style="margin-top:6px; font-size:0.65rem; color:{palette['muted']}; border-top:1px solid {palette['border']}; padding-top:4px;">
-                256-bit PBKDF2 · Authority RBAC
-            </div>
-        </div>
-        """
-    )
 
 # 8. Modals & Overlay Drawers
 if st.session_state.get("show_auth_modal"):
@@ -309,30 +308,56 @@ current_nav_key = st.session_state.get("nav_selection", "home")
 # PAGE 1: HOME AUTHORITY DASHBOARD (INSPIRED BY WIREFRAME LAYOUT)
 # =========================================================================
 if current_nav_key in ["home", "overview"]:
-    # 1. Pilot Case Study Reference Banner
-    render_html(
-        f"""
-        <div style="background:linear-gradient(135deg, rgba(2, 132, 199, 0.08) 0%, rgba(16, 185, 129, 0.08) 100%); 
-                    border:1px solid rgba(2, 132, 199, 0.25); border-radius:10px; padding:12px 18px; margin-bottom:20px; 
-                    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <span style="font-size:1.3rem;">📍</span>
-                <div>
-                    <div style="font-size:0.85rem; font-weight:800; color:{palette['text']};">
-                        WasteGrid Municipal Authority Operations Command Center
-                    </div>
-                    <div style="font-size:0.74rem; color:{palette['muted']}; margin-top:2px;">
-                        Logged in as <b>{current_user.get('full_name', 'Authorized Officer')}</b> ({current_user.get('authority_title', 'Municipal Authority')}) · 
-                        Scope: <b>{current_user.get('jurisdiction', 'City Operations')}</b>
+    # 1. Executive Status / Welcome Banner
+    if current_user:
+        u_name = current_user.get("full_name") or current_user.get("username") or "Authorized Officer"
+        u_role_text = current_user.get("authority_title") or "Municipal Authority"
+        u_juris = current_user.get("jurisdiction") or "City Operations"
+        render_html(
+            f"""
+            <div style="background:linear-gradient(135deg, rgba(2, 132, 199, 0.08) 0%, rgba(16, 185, 129, 0.08) 100%); 
+                        border:1px solid rgba(2, 132, 199, 0.25); border-radius:10px; padding:12px 18px; margin-bottom:20px; 
+                        display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span style="font-size:1.3rem;">📍</span>
+                    <div>
+                        <div style="font-size:0.85rem; font-weight:800; color:{palette['text']};">
+                            WasteGrid Municipal Authority Operations Command Center
+                        </div>
+                        <div style="font-size:0.74rem; color:{palette['muted']}; margin-top:2px;">
+                            Logged in as <b>{u_name}</b> ({u_role_text}) · Scope: <b>{u_juris}</b>
+                        </div>
                     </div>
                 </div>
+                <span style="font-size:0.68rem; font-weight:700; background:rgba(16,185,129,0.15); color:{palette['success']}; border:1px solid rgba(16,185,129,0.3); padding:4px 10px; border-radius:999px; text-transform:uppercase;">
+                    ● Live Grid Authenticated
+                </span>
             </div>
-            <span style="font-size:0.68rem; font-weight:700; background:rgba(16,185,129,0.15); color:{palette['success']}; border:1px solid rgba(16,185,129,0.3); padding:4px 10px; border-radius:999px; text-transform:uppercase;">
-                ● Live Grid Authenticated
-            </span>
-        </div>
-        """
-    )
+            """
+        )
+    else:
+        render_html(
+            f"""
+            <div style="background:linear-gradient(135deg, rgba(2, 132, 199, 0.08) 0%, rgba(16, 185, 129, 0.08) 100%); 
+                        border:1px solid rgba(2, 132, 199, 0.25); border-radius:10px; padding:12px 18px; margin-bottom:20px; 
+                        display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span style="font-size:1.3rem;">🏛️</span>
+                    <div>
+                        <div style="font-size:0.85rem; font-weight:800; color:{palette['text']};">
+                            WasteGrid — Smart Municipal Solid-Waste Management Platform
+                        </div>
+                        <div style="font-size:0.74rem; color:{palette['muted']}; margin-top:2px;">
+                            Predict. Detect. Allocate. · Official 5-Tenant Authority System
+                        </div>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:0.72rem; color:{palette['muted']};">Click the Profile icon <b>(P)</b> at the top-right to sign into your authority tenant dashboard.</span>
+                </div>
+            </div>
+            """
+        )
 
     # Dedicated Role-Specific Dashboard for Each of the 6 Official Authority Logins
     if current_user:
@@ -986,6 +1011,43 @@ elif current_nav_key == "settings":
     if current_user and current_user.get("role") == "admin":
         with st_tabs[2]:
             analytics_dashboards.render_user_management_page(palette)
+
+# =========================================================================
+# TENANT-SPECIFIC CONSOLES
+# =========================================================================
+elif current_nav_key == "state_policy":
+    analytics_module.render_state_authority_view(palette)
+    wet_alloc = allocations.get("A", 0) + allocations.get("B", 0) + allocations.get("E", 0)
+    dry_alloc = allocations.get("C", 0) + allocations.get("D", 0)
+    analytics_module.render_carbon_scorecard(wet_alloc, dry_alloc, total_overflow, total_waste, palette)
+
+elif current_nav_key == "allocation_exec":
+    optimizer.render_smart_allocation_page(palette, wet_total, dry_total)
+
+elif current_nav_key == "kpis_exec":
+    analytics_dashboards.render_performance_dashboard_page(palette)
+
+elif current_nav_key == "fleet_ops":
+    vehicle_module.render_vehicle_tracking_page(palette)
+
+elif current_nav_key in ["citizen_ops", "citizen_zonal"]:
+    citizen_module.render_citizen_reports_page(palette)
+
+elif current_nav_key == "ward_spots":
+    analytics_module.render_zonal_officer_view(palette)
+    alert_engine.render_alerts_dashboard(palette)
+
+elif current_nav_key == "plant_inflow":
+    facility_module.render_facility_management_page(palette)
+
+elif current_nav_key == "recycling_ops":
+    analytics_module.render_recycling_facility_view(active_facilities, allocations, palette)
+
+elif current_nav_key == "users":
+    analytics_dashboards.render_user_management_page(palette)
+
+elif current_nav_key == "simulator":
+    simulator_module.render_scenario_simulator_page(palette, wet_total, dry_total)
 
 # =========================================================================
 # PAGE 8: LOGOUT

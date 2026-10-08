@@ -381,3 +381,18 @@ def test_7_day_forecast_calculation():
     for r in forecast_rows:
         assert r["Predicted (T)"] > 0
         assert r["Capacity (T)"] == 10.0
+
+
+def test_five_tenant_authority_roles():
+    """Verify all 5 tenant authority roles exist and authenticate cleanly with role validation."""
+    tenants = [
+        ("state_authority", "Waste@123", "State Waste Management Authority"),
+        ("commissioner", "Waste@123", "Municipal Commissioner"),
+        ("waste_officer", "Waste@123", "Municipal Waste Officer"),
+        ("zonal_officer", "Waste@123", "Zonal Officer"),
+        ("processing_facility", "Waste@123", "Waste Processing & Recycling Facility"),
+    ]
+    for username, password, role_name in tenants:
+        success, msg = auth.login(username, password, selected_role=role_name)
+        assert success is True, f"Failed for {username} with {role_name}: {msg}"
+        assert "successful" in msg.lower()

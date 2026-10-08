@@ -70,38 +70,27 @@ def top_nav_bar(*args, **kwargs):
     alert_count = kwargs.get("alert_count", 0)
 
     # Format user profile name and designated authority role
-    user_label = "👤 Authorized Officer"
-    role_badge = ""
+    # Profile button matching hand-drawn wireframe: Circle with 'P'
+    p_circle_bg = "#10b981" if user else p.get("blue", "#0284c7")
+    user_initial = "P"
     if user and isinstance(user, dict):
-        full_name = user.get("full_name") or user.get("username") or "Authorized Officer"
+        full_name = user.get("full_name") or user.get("username") or "P"
+        user_initial = full_name[:1].upper()
+        user_display = full_name
         role_title = user.get("authority_title") or str(user.get("role", "Authority")).title()
-        user_label = f"👤 {full_name}"
-        role_badge = f'<span style="font-size:0.68rem; color:#10b981; font-weight:700; background:rgba(16,185,129,0.15); padding:2px 7px; border-radius:4px; margin-left:6px; border:1px solid rgba(16,185,129,0.3);">{role_title}</span>'
-
-    blue_col = p.get("blue", "#0284c7")
-    user_btn_style = f"border-color:{blue_col}; background:{'rgba(59,130,246,0.12)' if user else 'transparent'};"
-
-    card_bg = p.get("card_bg", "#ffffff")
-    border_col = p.get("border", "#dbe3ec")
-    shadow_val = p.get("shadow", "none")
-    text_col = p.get("text", "#0f172a")
-    muted_col = p.get("muted", "#64748b")
-
-    alert_badge_html = ""
-    if alert_count > 0:
-        alert_badge_html = (
-            f'<a class="theme-toggle-link" href="?nav=alerts" target="_self" title="{alert_count} Active WasteGrid Incident Alerts" '
-            f'style="border-color:#ef4444; background:rgba(239,68,68,0.1); color:#ef4444; font-weight:700;">'
-            f'<span>🔔 Alerts</span>'
-            f'<span style="background:#ef4444; color:#fff; font-size:0.65rem; padding:1px 6px; border-radius:999px; margin-left:4px;">{alert_count}</span>'
-            f'</a>'
-        )
+        profile_title = f"{user_display} ({role_title})"
     else:
-        alert_badge_html = (
-            f'<a class="theme-toggle-link" href="?nav=alerts" target="_self" title="No critical alerts" style="color:{muted_col};">'
-            f'<span>🔔 Alerts</span>'
-            f'</a>'
-        )
+        user_display = "Profile / Login"
+        role_title = ""
+        profile_title = "Click to Sign In or Sign Up"
+
+    profile_btn_html = (
+        f'<a class="theme-toggle-link" href="?profile=1" target="_self" title="{profile_title}" style="{user_btn_style} font-weight:700;">'
+        f'<span style="width:26px; height:26px; border-radius:50%; background:{p_circle_bg}; color:#ffffff; '
+        f'display:inline-flex; align-items:center; justify-content:center; font-size:0.8rem; font-weight:900; margin-right:6px;">'
+        f'{user_initial}</span>'
+        f'<span>{user_display}</span>{role_badge}</a>'
+    )
 
     nav_html = (
         f'<div style="display:flex; justify-content:space-between; align-items:center; background:{card_bg}; '
@@ -114,13 +103,10 @@ def top_nav_bar(*args, **kwargs):
         f'<div style="font-size:0.68rem; color:{muted_col}; letter-spacing:0.18em; text-transform:uppercase; margin-top:2px; font-weight:700;">Predict. Detect. Allocate.</div>'
         f'</div>'
         f'</div>'
-        # 2. Right Actions: Notification/Alert icon, User Profile (Name + Role), Logout, and Theme toggle
+        # 2. Right Actions: Alerts Badge, Profile Icon (P), and Theme toggle (Logout kept cleanly at bottom of sidebar only)
         f'<div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; flex-shrink:0;">'
         f'{alert_badge_html}'
-        f'<a class="theme-toggle-link" href="?profile=1" target="_self" style="{user_btn_style}">'
-        f'<span>{user_label}</span>{role_badge}</a>'
-        f'<a class="theme-toggle-link" href="?logout=1" target="_self" style="border-color:rgba(239,68,68,0.4); color:#ef4444;" title="Sign out of WasteGrid session">'
-        f'<span>🚪 Logout</span></a>'
+        f'{profile_btn_html}'
         f'<a class="theme-toggle-link" href="?theme={next_theme}" target="_self"><span>{toggle_icon}</span><span>{toggle_label}</span></a>'
         f'</div>'
         f'</div>'
@@ -131,13 +117,21 @@ def top_nav_bar(*args, **kwargs):
 def website_footer(p):
     """
     Clean, subtle and professional footer spanning available application width:
-    Services | About | Contact
+    Services | Events | Live Maps | Alerts | Help | About | Contact
     © 2026 WasteGrid. All rights reserved.
     """
     footer_html = f"""
     <footer style="margin-top:48px; padding:22px 0 16px 0; border-top:1px solid {p['border']}; width:100%; text-align:center;">
-        <div style="font-size:0.84rem; font-weight:600; color:{p['muted']}; margin-bottom:8px; display:flex; justify-content:center; align-items:center; gap:18px;">
-            <a href="?footer_info=services" target="_self" style="color:{p['muted']}; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='{p['blue']}'" onmouseout="this.style.color='{p['muted']}'">Services</a>
+        <div style="font-size:0.84rem; font-weight:600; color:{p['muted']}; margin-bottom:8px; display:flex; justify-content:center; align-items:center; gap:16px; flex-wrap:wrap;">
+            <a href="?nav=services" target="_self" style="color:{p['muted']}; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='{p['blue']}'" onmouseout="this.style.color='{p['muted']}'">Services</a>
+            <span style="color:{p['border']};">|</span>
+            <a href="?nav=events" target="_self" style="color:{p['muted']}; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='{p['blue']}'" onmouseout="this.style.color='{p['muted']}'">Events</a>
+            <span style="color:{p['border']};">|</span>
+            <a href="?nav=map" target="_self" style="color:{p['muted']}; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='{p['blue']}'" onmouseout="this.style.color='{p['muted']}'">Live Maps</a>
+            <span style="color:{p['border']};">|</span>
+            <a href="?nav=alerts" target="_self" style="color:{p['muted']}; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='{p['blue']}'" onmouseout="this.style.color='{p['muted']}'">Alerts</a>
+            <span style="color:{p['border']};">|</span>
+            <a href="?help=1" target="_self" style="color:{p['muted']}; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='{p['blue']}'" onmouseout="this.style.color='{p['muted']}'">Help</a>
             <span style="color:{p['border']};">|</span>
             <a href="?footer_info=about" target="_self" style="color:{p['muted']}; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='{p['blue']}'" onmouseout="this.style.color='{p['muted']}'">About</a>
             <span style="color:{p['border']};">|</span>
