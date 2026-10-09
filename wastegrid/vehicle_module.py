@@ -354,6 +354,17 @@ def render_truck_driver_dashboard(palette, driver_user=None):
     - Dynamic Central Dispatch Siren / Rerouting alerts
     """
     p = palette
+    is_light = (p.get("name") == "light")
+
+    card_surface = p.get("card_bg", "#ffffff")
+    inner_surface = p.get("bg_soft", "#e2e7ef") if is_light else "rgba(255,255,255,0.04)"
+    border_col = p.get("border", "#dbe3ec")
+    text_main = p.get("text", "#0f172a")
+    text_muted = p.get("muted", "#64748b")
+    blue_accent = p.get("blue", "#0284c7")
+    success_accent = p.get("success", "#16a34a")
+    warn_accent = p.get("warn", "#d97706")
+    shadow_effect = p.get("shadow", "0 2px 8px rgba(0,0,0,0.06)")
 
     if "driver_on_duty" not in st.session_state:
         st.session_state.driver_on_duty = True
@@ -373,28 +384,30 @@ def render_truck_driver_dashboard(palette, driver_user=None):
     assigned_zone = "Central Zone (Ward 112 Domlur)"
     gate_otp = "7492"
 
-    duty_color = "#10b981" if st.session_state.driver_on_duty else "#ef4444"
+    duty_color = success_accent if st.session_state.driver_on_duty else "#ef4444"
     duty_text = "🟢 ACTIVE ON-DUTY (SHIFT 06:00 - 14:00)" if st.session_state.driver_on_duty else "🔴 OFF-DUTY / REST BREAK"
+    banner_bg = f"linear-gradient(135deg, {card_surface} 0%, {inner_surface} 100%)"
+    duty_badge_bg = "rgba(22,163,74,0.12)" if st.session_state.driver_on_duty else "rgba(239,68,68,0.12)"
 
     banner_html = f"""
-<div style="background:linear-gradient(135deg, #090d16 0%, #111827 100%); border:2px solid {duty_color}; border-radius:14px; padding:18px 22px; margin-bottom:20px; color:#ffffff; box-shadow:0 8px 30px rgba(0,0,0,0.5);">
+<div style="background:{banner_bg}; border:2px solid {duty_color}; border-radius:14px; padding:18px 22px; margin-bottom:20px; color:{text_main}; box-shadow:{shadow_effect};">
 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
 <div>
-<div style="font-size:0.75rem; color:#10b981; font-weight:800; letter-spacing:0.15em; text-transform:uppercase;">
+<div style="font-size:0.75rem; color:{duty_color}; font-weight:800; letter-spacing:0.15em; text-transform:uppercase;">
 🚚 IN-CAB DRIVER PARTNER MDT · v2.4 (LIVE TELEMETRY)
 </div>
-<div style="font-size:1.6rem; font-weight:900; letter-spacing:-0.02em; margin-top:2px;">
+<div style="font-size:1.6rem; font-weight:900; letter-spacing:-0.02em; margin-top:2px; color:{text_main};">
 {vehicle_reg} · {driver_name}
 </div>
-<div style="font-size:0.8rem; color:#94a3b8; margin-top:4px;">
+<div style="font-size:0.8rem; color:{text_muted}; margin-top:4px;">
 {assigned_zone} · High-Density Hydraulic Compactor (5.0 MT Capacity)
 </div>
 </div>
 <div style="text-align:right;">
-<div style="display:inline-block; background:rgba(255,255,255,0.08); border:1px solid {duty_color}; border-radius:8px; padding:6px 14px; font-size:0.8rem; font-weight:800; color:{duty_color};">
+<div style="display:inline-block; background:{duty_badge_bg}; border:1.5px solid {duty_color}; border-radius:8px; padding:6px 14px; font-size:0.8rem; font-weight:800; color:{duty_color};">
 {duty_text}
 </div>
-<div style="font-size:0.7rem; color:#94a3b8; margin-top:6px;">
+<div style="font-size:0.7rem; color:{text_muted}; margin-top:6px;">
 📶 4G Cellular Linked · GNSS Fix: ±1.2m Accuracy
 </div>
 </div>
@@ -432,16 +445,17 @@ def render_truck_driver_dashboard(palette, driver_user=None):
                 st.rerun()
 
     if st.session_state.driver_rerouted:
+        siren_bg = "rgba(239,68,68,0.08)" if is_light else "rgba(239,68,68,0.2)"
         st.markdown(
-            """
-<div style="background:rgba(239,68,68,0.15); border:2px solid #ef4444; border-radius:12px; padding:16px 20px; margin:16px 0; color:#ffffff;">
+            f"""
+<div style="background:{siren_bg}; border:2px solid #ef4444; border-radius:12px; padding:16px 20px; margin:16px 0; color:{text_main};">
 <div style="display:flex; align-items:center; gap:12px;">
 <span style="font-size:1.8rem;">🚨</span>
 <div>
 <div style="font-size:1.05rem; font-weight:800; color:#ef4444; text-transform:uppercase;">
 CENTRAL DISPATCH DIVERSION ORDER PUSHED
 </div>
-<div style="font-size:0.85rem; color:#f8fafc; margin-top:2px;">
+<div style="font-size:0.85rem; color:{text_main}; margin-top:2px;">
 Plant A (Biocompost) intake hopper queue exceeded 85%. <b>Diverting vehicle to Facility B (Anaerobic Digester & Biogas)</b>.
 Turn RIGHT at Domlur Ring Road Flyover. New ETA: 14 mins.
 </div>
@@ -459,48 +473,48 @@ Turn RIGHT at Domlur Ring Road Flyover. New ETA: 14 mins.
         curr_eta = "14 Mins (Surge Detour)" if st.session_state.driver_rerouted else "9 Mins (Direct Route)"
         curr_dist = "5.2 km" if st.session_state.driver_rerouted else "3.6 km"
         load_pct = min(100.0, (st.session_state.driver_payload_kg / 5000.0) * 100)
-        load_color = "#10b981" if load_pct < 75 else ("#f59e0b" if load_pct < 90 else "#ef4444")
+        load_color = success_accent if load_pct < 75 else (warn_accent if load_pct < 90 else "#ef4444")
 
         mission_html = f"""
-<div style="background:#0b1120; border:2px solid #1e293b; border-radius:14px; padding:20px; color:#ffffff; margin-bottom:18px;">
+<div style="background:{card_surface}; border:1.5px solid {border_col}; border-radius:14px; padding:20px; color:{text_main}; margin-bottom:18px; box-shadow:{shadow_effect};">
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-<div style="font-size:0.8rem; font-weight:800; color:#38bdf8; text-transform:uppercase; letter-spacing:0.1em;">
+<div style="font-size:0.8rem; font-weight:800; color:{blue_accent}; text-transform:uppercase; letter-spacing:0.1em;">
 🎯 ACTIVE LOGISTICS MISSION
 </div>
-<span style="background:rgba(56,189,248,0.15); color:#38bdf8; padding:3px 10px; border-radius:6px; font-size:0.75rem; font-weight:700;">
+<span style="background:rgba(2,132,199,0.12); color:{blue_accent}; padding:3px 10px; border-radius:6px; font-size:0.75rem; font-weight:700;">
 RUN #{st.session_state.driver_runs_completed + 1} OF 4
 </span>
 </div>
 
-<div style="font-size:1.35rem; font-weight:900; color:#f8fafc; margin-bottom:6px;">
+<div style="font-size:1.35rem; font-weight:900; color:{text_main}; margin-bottom:6px;">
 ➔ {curr_dest}
 </div>
-<div style="font-size:0.8rem; color:#94a3b8; margin-bottom:16px;">
-Stream: <b style="color:#10b981; text-transform:uppercase;">WET BIODEGRADABLE WASTE</b> · Origin: Ward 112 Micro-Collector Points
+<div style="font-size:0.8rem; color:{text_muted}; margin-bottom:16px;">
+Stream: <b style="color:{success_accent}; text-transform:uppercase;">WET BIODEGRADABLE WASTE</b> · Origin: Ward 112 Micro-Collector Points
 </div>
 
-<div style="background:rgba(255,255,255,0.04); border-radius:10px; padding:14px; margin-bottom:16px;">
+<div style="background:{inner_surface}; border:1px solid {border_col}; border-radius:10px; padding:14px; margin-bottom:16px;">
 <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:6px;">
-<span style="color:#cbd5e1;">Hydraulic Scale Payload</span>
+<span style="color:{text_main}; font-weight:600;">Hydraulic Scale Payload</span>
 <span style="font-weight:800; color:{load_color};">{st.session_state.driver_payload_kg:,.0f} kg / 5,000 kg ({load_pct:.1f}%)</span>
 </div>
-<div style="background:#1e293b; border-radius:6px; height:10px; overflow:hidden;">
+<div style="background:{border_col}; border-radius:6px; height:10px; overflow:hidden;">
 <div style="background:{load_color}; width:{load_pct}%; height:100%; transition:width 0.5s ease;"></div>
 </div>
 </div>
 
 <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; text-align:center;">
-<div style="background:rgba(255,255,255,0.03); border:1px solid #1e293b; border-radius:8px; padding:10px;">
-<div style="font-size:0.68rem; color:#94a3b8;">DISTANCE</div>
-<div style="font-size:1.15rem; font-weight:800; color:#ffffff;">{curr_dist}</div>
+<div style="background:{inner_surface}; border:1px solid {border_col}; border-radius:8px; padding:10px;">
+<div style="font-size:0.68rem; color:{text_muted}; font-weight:700;">DISTANCE</div>
+<div style="font-size:1.15rem; font-weight:800; color:{text_main};">{curr_dist}</div>
 </div>
-<div style="background:rgba(255,255,255,0.03); border:1px solid #1e293b; border-radius:8px; padding:10px;">
-<div style="font-size:0.68rem; color:#94a3b8;">GATE ETA</div>
-<div style="font-size:1.15rem; font-weight:800; color:#f59e0b;">{curr_eta}</div>
+<div style="background:{inner_surface}; border:1px solid {border_col}; border-radius:8px; padding:10px;">
+<div style="font-size:0.68rem; color:{text_muted}; font-weight:700;">GATE ETA</div>
+<div style="font-size:1.15rem; font-weight:800; color:{warn_accent};">{curr_eta}</div>
 </div>
-<div style="background:rgba(255,255,255,0.03); border:1px solid #1e293b; border-radius:8px; padding:10px;">
-<div style="font-size:0.68rem; color:#94a3b8;">TRANSIT SPEED</div>
-<div style="font-size:1.15rem; font-weight:800; color:#38bdf8;">34 km/h</div>
+<div style="background:{inner_surface}; border:1px solid {border_col}; border-radius:8px; padding:10px;">
+<div style="font-size:0.68rem; color:{text_muted}; font-weight:700;">TRANSIT SPEED</div>
+<div style="font-size:1.15rem; font-weight:800; color:{blue_accent};">34 km/h</div>
 </div>
 </div>
 </div>
@@ -508,19 +522,19 @@ Stream: <b style="color:#10b981; text-transform:uppercase;">WET BIODEGRADABLE WA
         st.markdown(mission_html.strip(), unsafe_allow_html=True)
 
         st.markdown(f'<div class="sec-title">📍 ASSIGNED RAPID-RESPONSE PICKUP</div>', unsafe_allow_html=True)
-        ticket_stat_color = "#10b981" if st.session_state.driver_blackspot_cleared else "#f59e0b"
+        ticket_stat_color = success_accent if st.session_state.driver_blackspot_cleared else warn_accent
         ticket_status_text = "CLEARED & COMPACTED" if st.session_state.driver_blackspot_cleared else "PENDING PICKUP"
 
         task_html = f"""
-<div style="background:{p['card_bg']}; border:1px solid {p['border']}; border-left:4px solid {ticket_stat_color}; border-radius:10px; padding:16px; margin-bottom:16px;">
+<div style="background:{card_surface}; border:1px solid {border_col}; border-left:4px solid {ticket_stat_color}; border-radius:10px; padding:16px; margin-bottom:16px; box-shadow:{shadow_effect};">
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
 <div><b>Ticket #WG-REP-2026-153F</b> · <span style="font-size:0.8rem; font-weight:700;">Overflowing Dumpster</span></div>
 <span style="font-size:0.75rem; font-weight:800; color:{ticket_stat_color};">● {ticket_status_text}</span>
 </div>
-<div style="font-size:0.82rem; color:{p['text']}; margin-bottom:4px;">
+<div style="font-size:0.82rem; color:{text_main}; margin-bottom:4px;">
 <b>Location:</b> Indiranagar 12th Main Junction (Ward 112)
 </div>
-<div style="font-size:0.78rem; color:{p['muted']}; margin-bottom:12px;">
+<div style="font-size:0.78rem; color:{text_muted}; margin-bottom:12px;">
 Citizen report: Commercial market packaging waste overflowing onto sidewalk. High priority.
 </div>
 </div>
@@ -545,27 +559,27 @@ Citizen report: Commercial market packaging waste overflowing onto sidewalk. Hig
     with c_right:
         st.markdown(f'<div class="sec-title">🔐 DIGITAL WEIGHBRIDGE GATE PASS & OTP</div>', unsafe_allow_html=True)
 
-        wb_status_color = "#10b981" if st.session_state.driver_weighbridge_done else "#38bdf8"
+        wb_status_color = success_accent if st.session_state.driver_weighbridge_done else blue_accent
         wb_status_txt = "GATE ENTRY APPROVED · NET TARE VERIFIED" if st.session_state.driver_weighbridge_done else "READY FOR WEIGHBRIDGE CHECK-IN"
 
         otp_html = f"""
-<div style="background:#0f172a; border:2px solid {wb_status_color}; border-radius:14px; padding:20px; color:#ffffff; text-align:center; margin-bottom:16px;">
-<div style="font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.12em; font-weight:800;">
+<div style="background:{card_surface}; border:2px solid {wb_status_color}; border-radius:14px; padding:20px; color:{text_main}; text-align:center; margin-bottom:16px; box-shadow:{shadow_effect};">
+<div style="font-size:0.7rem; color:{text_muted}; text-transform:uppercase; letter-spacing:0.12em; font-weight:800;">
 SECURITY BOOM BARRIER PASS
 </div>
-<div style="font-size:1.15rem; font-weight:900; color:#38bdf8; margin:6px 0;">
+<div style="font-size:1.25rem; font-weight:900; color:{blue_accent}; margin:6px 0;">
 WG-PASS-2026-101
 </div>
 
-<div style="background:rgba(255,255,255,0.06); border-radius:10px; padding:12px; margin:14px 0;">
-<div style="font-size:0.72rem; color:#cbd5e1; margin-bottom:4px;">DRIVER SECURITY ENTRY OTP (UBER-STYLE)</div>
-<div style="font-size:2.2rem; font-weight:900; letter-spacing:0.25em; color:#10b981;">
+<div style="background:{inner_surface}; border:1px solid {border_col}; border-radius:10px; padding:14px; margin:14px 0;">
+<div style="font-size:0.72rem; color:{text_muted}; font-weight:700; margin-bottom:4px;">DRIVER SECURITY ENTRY OTP (UBER-STYLE)</div>
+<div style="font-size:2.4rem; font-weight:900; letter-spacing:0.25em; color:{success_accent}; font-family:monospace;">
 {gate_otp}
 </div>
-<div style="font-size:0.68rem; color:#94a3b8;">Show or speak this OTP at the plant entry weighbridge sensor</div>
+<div style="font-size:0.7rem; color:{text_muted}; margin-top:2px;">Show or speak this OTP at the plant entry weighbridge sensor</div>
 </div>
 
-<div style="font-size:0.75rem; color:{wb_status_color}; font-weight:800;">
+<div style="font-size:0.78rem; color:{wb_status_color}; font-weight:800;">
 ● {wb_status_txt}
 </div>
 </div>
@@ -578,14 +592,15 @@ WG-PASS-2026-101
                 st.toast("✅ Gate weighbridge verified: Gross Weight 8,420 kg · Tare 4,220 kg · Net Waste 4,200 kg recorded!")
                 st.rerun()
         else:
+            audit_bg = "rgba(22,163,74,0.08)" if is_light else "rgba(16,185,129,0.18)"
             st.markdown(
-                """
-<div style="background:rgba(16,185,129,0.1); border:1px solid #10b981; border-radius:8px; padding:10px 14px; font-size:0.78rem; color:#ffffff; margin-bottom:12px;">
+                f"""
+<div style="background:{audit_bg}; border:1.5px solid {success_accent}; border-radius:8px; padding:12px 14px; font-size:0.8rem; color:{text_main}; margin-bottom:12px;">
 <b>Weighbridge Audit Log:</b><br>
 • Gross Vehicle Weight: <b>8,420 kg</b><br>
 • Tare (Unladen) Weight: <b>4,220 kg</b><br>
 • Net Waste Accepted: <b>4,200 kg</b><br>
-• Boom Barrier: <span style="color:#10b981; font-weight:800;">OPEN (BAY #2)</span>
+• Boom Barrier: <span style="color:{success_accent}; font-weight:800;">OPEN (BAY #2)</span>
 </div>
 """,
                 unsafe_allow_html=True,
