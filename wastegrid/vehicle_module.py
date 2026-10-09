@@ -416,7 +416,7 @@ def render_truck_driver_dashboard(palette, driver_user=None):
 """
     st.markdown(banner_html.strip(), unsafe_allow_html=True)
 
-    q_col1, q_col2, q_col3 = st.columns([1, 1, 1.2])
+    q_col1, q_col2, q_col3, q_col4 = st.columns([1, 1, 1.2, 1.2])
     with q_col1:
         if st.session_state.driver_on_duty:
             if st.button("⏸️ Take Rest / Go Off-Duty", key="drv_toggle_duty", use_container_width=True):
@@ -432,20 +432,37 @@ def render_truck_driver_dashboard(palette, driver_user=None):
             st.session_state.driver_rerouted = False
             st.session_state.driver_weighbridge_done = False
             st.session_state.driver_blackspot_cleared = False
-            st.toast("Simulation state reset to active collection run!")
+            st.toast("Simulation state reset to standard active collection run!")
             st.rerun()
     with q_col3:
-        if not st.session_state.driver_rerouted:
-            if st.button("🚨 Simulate Central Divert Siren", key="drv_test_siren", use_container_width=True):
+        if st.session_state.driver_payload_kg <= 5000.0:
+            if st.button("⚡ Simulate Overload (+1,200 kg)", key="drv_overload_sim", use_container_width=True, help="Simulate truck picking up extra unexpected waste"):
+                st.session_state.driver_payload_kg = 5400.0
                 st.session_state.driver_rerouted = True
+                st.toast("⚠️ Scale telemetry triggered: 5,400 kg recorded! Dynamic LP diversion initiated.")
                 st.rerun()
         else:
-            if st.button("↩️ Clear Divert / Return Route", key="drv_clear_divert", use_container_width=True):
+            if st.button("↩️ Revert Normal Load (4,200 kg)", key="drv_normal_load", use_container_width=True):
+                st.session_state.driver_payload_kg = 4200.0
                 st.session_state.driver_rerouted = False
                 st.rerun()
+    with q_col4:
+        if st.button("📞 1-Tap Call Zonal Dispatch", key="drv_call_dispatch", use_container_width=True, help="Direct radio/telephony hotline to Central Control Room"):
+            st.toast("📞 Connecting Driver Ramesh Kumar to Central Dispatch Shift Officer (BBMP Command: +91 80 2266 0000)... Connected!")
 
     if st.session_state.driver_rerouted:
         siren_bg = "rgba(239,68,68,0.08)" if is_light else "rgba(239,68,68,0.2)"
+        is_overload = (st.session_state.driver_payload_kg > 5000.0)
+        reroute_title = "CENTRAL DISPATCH DIVERSION ORDER: OVERLOAD SURGE DETECTED" if is_overload else "CENTRAL DISPATCH DIVERSION ORDER PUSHED"
+        reroute_desc = (
+            f"<b>⚠️ Hydraulic Load-Cell Telemetry:</b> Onboard scale registered <b>{st.session_state.driver_payload_kg:,.0f} kg</b> (exceeds rated 5.0 MT). "
+            f"WasteGrid LP optimizer automatically rerouted truck from congested Plant A to <b>Facility B (High-Capacity Anaerobic Digester & Biogas)</b> to prevent dock refusal. "
+            f"<br><i>No manual CSV upload or phone call needed — IoT sensor synced automatically with municipal grid!</i>"
+        ) if is_overload else (
+            "Plant A (Biocompost) intake hopper queue exceeded 85%. <b>Diverting vehicle to Facility B (Anaerobic Digester & Biogas)</b>. "
+            "Turn RIGHT at Domlur Ring Road Flyover. New ETA: 14 mins."
+        )
+
         st.markdown(
             f"""
 <div style="background:{siren_bg}; border:2px solid #ef4444; border-radius:12px; padding:16px 20px; margin:16px 0; color:{text_main};">
@@ -453,11 +470,10 @@ def render_truck_driver_dashboard(palette, driver_user=None):
 <span style="font-size:1.8rem;">🚨</span>
 <div>
 <div style="font-size:1.05rem; font-weight:800; color:#ef4444; text-transform:uppercase;">
-CENTRAL DISPATCH DIVERSION ORDER PUSHED
+{reroute_title}
 </div>
 <div style="font-size:0.85rem; color:{text_main}; margin-top:2px;">
-Plant A (Biocompost) intake hopper queue exceeded 85%. <b>Diverting vehicle to Facility B (Anaerobic Digester & Biogas)</b>.
-Turn RIGHT at Domlur Ring Road Flyover. New ETA: 14 mins.
+{reroute_desc}
 </div>
 </div>
 </div>
