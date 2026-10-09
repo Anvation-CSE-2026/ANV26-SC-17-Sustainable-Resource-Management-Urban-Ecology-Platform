@@ -42,7 +42,7 @@ def render_profile_page(palette):
             <div style="background:{p['card_bg']}; border:1px solid {p['border']}; border-radius:8px; padding:20px; line-height:1.8; font-size:0.85rem; color:{p['text']};">
                 <b>Username:</b> <code>{user['username']}</code><br>
                 <b>Full Name:</b> {user['full_name']}<br>
-                <b>Authority Level:</b> {user['authority_title']}<br>
+                <b>Authority Level:</b> <span style="color:#0284c7; font-weight:800;">{user['authority_title']}</span><br>
                 <b>Role Identifier:</b> <code>{user['role'].upper()}</code><br>
                 <b>Official Email:</b> {user['email']}<br>
                 <b>Jurisdictional Scope:</b> {user['jurisdiction']}<br>
@@ -51,6 +51,41 @@ def render_profile_page(palette):
             """,
             unsafe_allow_html=True,
         )
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown(f'<div class="sec-title">🏛️ UPDATE DESIGNATED AUTHORITY TENANT ROLE</div>', unsafe_allow_html=True)
+        with st.form("change_authority_role_form"):
+            role_options = [
+                "Zonal Officer",
+                "Municipal Commissioner",
+                "Municipal Waste Officer",
+                "State Waste Management Authority",
+                "Waste Processing & Recycling Facility",
+                "Municipal Truck Driver (In-Cab Logistics)",
+            ]
+            current_title = user.get("authority_title") or "Zonal Officer"
+            curr_idx = role_options.index(current_title) if current_title in role_options else 0
+            new_title = st.selectbox("Assigned Authority Tenant Role", role_options, index=curr_idx)
+            new_juris = st.text_input("Jurisdiction Scope / Wards", value=user.get("jurisdiction", "City Operations"))
+            if st.form_submit_button("Update Designated Role & Reload ➔", use_container_width=True):
+                role_key_map = {
+                    "State Waste Management Authority": "state_authority",
+                    "Municipal Commissioner": "commissioner",
+                    "Municipal Waste Officer": "waste_officer",
+                    "Zonal Officer": "zonal_officer",
+                    "Waste Processing & Recycling Facility": "processing_facility",
+                    "Municipal Truck Driver (In-Cab Logistics)": "truck_driver",
+                }
+                internal_r = role_key_map.get(new_title, "waste_officer")
+                conn = db.get_connection()
+                cur = conn.cursor()
+                cur.execute("UPDATE users SET role = ?, authority_title = ?, jurisdiction = ? WHERE username = ?",
+                            (internal_r, new_title, new_juris, user["username"]))
+                conn.commit()
+                updated_user = db.get_user_by_username(user["username"])
+                st.session_state["authenticated_user"] = updated_user
+                st.success(f"Authority Role successfully updated to {new_title}!")
+                st.rerun()
 
     with col2:
         st.markdown(f'<div class="sec-title">🔑 CHANGE ACCOUNT PASSWORD</div>', unsafe_allow_html=True)
@@ -149,4 +184,47 @@ def render_settings_page(palette):
 
     if st.button("Save Alert Threshold Parameters", type="primary"):
         st.toast("✅ Operational thresholds updated successfully.")
+
+
+def render_data_ingestion_tab(palette):
+    """Render Advanced Municipal Data Ingestion and CSV Import with full operational rationale."""
+    p = palette
+
+    st.markdown(
+        f"""
+        <div style="background:{p['card_bg']}; border:1px solid {p['border']}; border-left:4px solid #0284c7;
+                    border-radius:10px; padding:18px 22px; margin-bottom:20px;">
+            <div style="font-size:1.15rem; font-weight:800; color:{p['text']};">📁 Municipal Data Ingestion & Legacy CSV Import</div>
+            <div style="font-size:0.8rem; color:{p['muted']}; margin-top:6px; line-height:1.6;">
+                <b>Why CSV Ingestion?</b> Most municipal corporations (BBMP, BMC, MCD, etc.) still maintain legacy daily waste weighbridge logs and ward collection manifests in Excel / CSV spreadsheets. WasteGrid provides an ingestion engine to upload legacy CSV sheets so municipal data isn't siloed and existing IT infrastructure doesn't need to be rewritten on Day 1.
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    col1, col2 = st.columns([2, 1], gap="large")
+    with col1:
+        st.markdown(f'<div class="sec-title">📤 UPLOAD MUNICIPAL WARD MANIFEST (CSV)</div>', unsafe_allow_html=True)
+        uploaded = st.file_uploader("Upload CSV Dataset", type=["csv"], key="settings_csv_uploader")
+        if uploaded:
+            st.session_state["csv_uploader"] = uploaded
+            st.success(f"✅ Successfully ingested file: `{uploaded.name}`! Reloading active sources...")
+            st.rerun()
+
+    with col2:
+        st.markdown(f'<div class="sec-title">📥 DOWNLOAD SAMPLE TEMPLATE</div>', unsafe_allow_html=True)
+        st.markdown(
+            f"""
+            <div style="font-size:0.78rem; color:{p['muted']}; margin-bottom:12px;">
+                Download the standardized municipal solid-waste template conforming to MoHUA (Ministry of Housing and Urban Affairs) guidelines:
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        try:
+            with open("sample_data.csv", "rb") as f:
+                st.download_button("📥 Download sample_data.csv", f, file_name="sample_data.csv", mime="text/csv", use_container_width=True)
+        except Exception:
+            pass
 

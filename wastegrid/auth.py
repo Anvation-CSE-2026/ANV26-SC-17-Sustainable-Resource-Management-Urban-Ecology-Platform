@@ -18,9 +18,10 @@ TENANT_ROLES_5 = [
     "Municipal Waste Officer",
     "Zonal Officer",
     "Waste Processing & Recycling Facility",
+    "Municipal Truck Driver (In-Cab Logistics)",
 ]
 
-# Legacy/Extended 6 roles list
+# Legacy/Extended roles list
 OFFICIAL_ROLES = [
     "State Waste Management Authority",
     "Municipal Commissioner",
@@ -28,6 +29,7 @@ OFFICIAL_ROLES = [
     "Zonal Officer",
     "Waste Processing Facility",
     "Recycling Facility",
+    "Municipal Truck Driver (In-Cab Logistics)",
 ]
 
 # Canonical role matching dictionary
@@ -39,6 +41,7 @@ ROLE_CANONICAL = {
     "Waste Processing & Recycling Facility": ["processing_facility", "recycling_facility", "factory", "Waste Processing & Recycling Facility", "Waste Processing Facility", "Recycling Facility"],
     "Waste Processing Facility": ["processing_facility", "factory", "Waste Processing Facility"],
     "Recycling Facility": ["recycling_facility", "factory", "Recycling Facility"],
+    "Municipal Truck Driver (In-Cab Logistics)": ["truck_driver", "driver_ramesh", "Municipal Truck Driver (In-Cab Logistics)", "Compactor Truck Driver (In-Cab Logistics)"],
 }
 
 # Page-level role permissions matrix
@@ -60,6 +63,7 @@ ROLE_PERMISSIONS = {
     "processing_facility": BASE_PERMS,
     "factory": BASE_PERMS,
     "recycling_facility": BASE_PERMS,
+    "truck_driver": ["home", "driver_in_cab", "driver_route", "driver_pass", "alerts", "settings", "logout", "profile"],
 }
 
 
@@ -255,7 +259,7 @@ def render_sidebar_auth_widget():
                         st.error(m)
 
 
-def register_account(username, password, full_name, email, role="municipality", jurisdiction="City Ward Operations"):
+def register_account(username, password, full_name, email, role="municipality", jurisdiction="City Ward Operations", authority_title=None):
     """Register a new user account and log in immediately."""
     if len(username.strip()) < 3:
         return False, "Username must be at least 3 characters."
@@ -266,12 +270,19 @@ def register_account(username, password, full_name, email, role="municipality", 
 
     role_titles = {
         "admin": "System Administrator",
-        "state": "State Urban Authority",
-        "district": "District Magistrate / Authority",
-        "municipality": "Municipal Operations Officer",
-        "factory": "Processing Plant Manager",
+        "state": "State Waste Management Authority",
+        "state_authority": "State Waste Management Authority",
+        "district": "Zonal Officer",
+        "commissioner": "Municipal Commissioner",
+        "waste_officer": "Municipal Waste Officer",
+        "municipality": "Municipal Waste Officer",
+        "zonal_officer": "Zonal Officer",
+        "processing_facility": "Waste Processing Facility",
+        "factory": "Waste Processing Facility",
+        "recycling_facility": "Recycling Facility",
+        "truck_driver": "Municipal Truck Driver (In-Cab Logistics)",
     }
-    title = role_titles.get(role, "Municipal Field Officer")
+    title = authority_title or role_titles.get(role, "Municipal Waste Officer")
 
     success, msg = db.create_user(username, password, role, title, jurisdiction, full_name, email)
     if not success:
@@ -281,7 +292,7 @@ def register_account(username, password, full_name, email, role="municipality", 
     user = db.get_user_by_username(username)
     if user:
         st.session_state["authenticated_user"] = user
-        db.add_audit_log(username, "USER_REGISTERED", f"New user created and logged in with role {role}")
+        db.add_audit_log(username, "USER_REGISTERED", f"New user created and logged in with role {role} ({title})")
         return True, "Account created successfully! You are now logged in."
     return True, "Account created successfully."
 
@@ -447,6 +458,11 @@ def show_auth_dialog(palette):
                     login("processing_facility", "Waste@123", selected_role="Waste Processing Facility")
                     st.session_state["show_auth_modal"] = False
                     st.rerun()
+                if st.button("🚚 Truck Driver (Ramesh Kumar · KA-01-EA-101)", use_container_width=True, key="btn_quick_t6"):
+                    login("driver_ramesh", "Driver@123", selected_role="Municipal Truck Driver (In-Cab Logistics)")
+                    st.session_state["show_auth_modal"] = False
+                    st.session_state["nav_selection"] = "driver_in_cab"
+                    st.rerun()
 
         with tab_register:
             st.markdown(f'<div style="font-weight:700; color:{p["text"]}; margin-bottom:8px;">Register Official Municipal Authority Account</div>', unsafe_allow_html=True)
@@ -479,11 +495,13 @@ def show_auth_dialog(palette):
                             "Municipal Waste Officer": "waste_officer",
                             "Zonal Officer": "zonal_officer",
                             "Waste Processing & Recycling Facility": "processing_facility",
+                            "Municipal Truck Driver (In-Cab Logistics)": "truck_driver",
                         }
                         internal_role = role_map.get(reg_role, "waste_officer")
                         ok, msg = register_account(
                             reg_uname, reg_pwd1, reg_fname or reg_uname, reg_email,
-                            role=internal_role, jurisdiction=reg_juris or "City Operations"
+                            role=internal_role, jurisdiction=reg_juris or "City Operations",
+                            authority_title=reg_role,
                         )
                         if ok:
                             st.session_state["show_auth_modal"] = False
@@ -494,9 +512,10 @@ def show_auth_dialog(palette):
 
         with tab_forgot:
             st.markdown(f'<div style="font-weight:700; color:{p["text"]}; margin-bottom:8px;">Self-Service Password Recovery</div>', unsafe_allow_html=True)
+            st.caption("Hint for demo accounts: `commissioner@bbmp.gov.in`, `driver.ramesh@wastegrid.gov.in`, `waste.officer@bbmp.gov.in`, `state.authority@wastegrid.gov.in`")
             with st.form("dlg_forgot_form"):
-                f_u = st.text_input("Account Authority ID / Username", key="f_un")
-                f_e = st.text_input("Registered Official Email", key="f_em")
+                f_u = st.text_input("Account Authority ID / Username", placeholder="e.g. driver_ramesh, commissioner", key="f_un")
+                f_e = st.text_input("Registered Official Email", placeholder="e.g. driver.ramesh@wastegrid.gov.in", key="f_em")
                 f_p = st.text_input("New Password (min 8 chars)", type="password", key="f_np")
                 f_cp = st.text_input("Confirm New Password", type="password", key="f_ncp")
                 btn_f = st.form_submit_button("Reset Password ➔", use_container_width=True)

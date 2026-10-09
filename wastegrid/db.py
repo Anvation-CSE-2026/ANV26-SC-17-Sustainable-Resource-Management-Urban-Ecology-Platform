@@ -226,6 +226,7 @@ def _ensure_authority_users(conn):
         ("district_admin", "District@123", "district", "Zonal Officer", "Bengaluru Urban District", "Dr. Rajendra Kumar IAS", "district.admin@smartcity.gov.in"),
         ("municipality_admin", "Municipality@123", "municipality", "Municipal Commissioner", "BBMP Central Municipal Wards", "Tushar Giri Nath", "commissioner@bbmp.gov.in"),
         ("factory_admin", "Factory@123", "factory", "Waste Processing Facility", "Processing Plants A, B, C & D", "S. Manjunath", "plant.head@wastegrid-consortium.org"),
+        ("driver_ramesh", "Driver@123", "truck_driver", "Compactor Truck Driver (In-Cab Logistics)", "Central Collection Route · Vehicle KA-01-EA-101", "Ramesh Kumar", "driver.ramesh@wastegrid.gov.in"),
     ]
 
     for uname, pw, role, auth_title, juris, fname, email in official_accounts:
@@ -262,6 +263,7 @@ def _seed_initial_data(conn):
         ("district_admin", "District@123", "district", "Zonal Officer", "Bengaluru Urban District", "Dr. Rajendra Kumar IAS", "district.admin@smartcity.gov.in"),
         ("municipality_admin", "Municipality@123", "municipality", "Municipal Commissioner", "BBMP Central Municipal Wards", "Tushar Giri Nath", "commissioner@bbmp.gov.in"),
         ("factory_admin", "Factory@123", "factory", "Waste Processing Facility", "Processing Plants A, B, C & D", "S. Manjunath", "plant.head@wastegrid-consortium.org"),
+        ("driver_ramesh", "Driver@123", "truck_driver", "Compactor Truck Driver (In-Cab Logistics)", "Central Collection Route · Vehicle KA-01-EA-101", "Ramesh Kumar", "driver.ramesh@wastegrid.gov.in"),
     ]
 
     for uname, pw, role, auth_title, juris, fname, email in seed_users:

@@ -396,3 +396,22 @@ def test_five_tenant_authority_roles():
         success, msg = auth.login(username, password, selected_role=role_name)
         assert success is True, f"Failed for {username} with {role_name}: {msg}"
         assert "successful" in msg.lower()
+
+
+def test_truck_driver_role_and_logistics_auth():
+    """Verify truck driver role authentication, RBAC permissions, and email recovery."""
+    success, msg = auth.login("driver_ramesh", "Driver@123", selected_role="Municipal Truck Driver (In-Cab Logistics)")
+    assert success is True, f"Truck driver login failed: {msg}"
+
+    # Verify driver user properties
+    user = db.get_user_by_username("driver_ramesh")
+    assert user is not None
+    assert user["role"] == "truck_driver"
+    assert user["full_name"] == "Ramesh Kumar"
+    assert user["email"] == "driver.ramesh@wastegrid.gov.in"
+
+    # Verify self-service password reset with email
+    reset_ok, reset_msg = auth.forgot_password_reset("driver_ramesh", "driver.ramesh@wastegrid.gov.in", "NewDriverPass@123", "NewDriverPass@123")
+    assert reset_ok is True
+    # Restore original password
+    auth.change_password("driver_ramesh", "NewDriverPass@123", "Driver@123", "Driver@123")
