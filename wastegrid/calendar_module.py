@@ -4,8 +4,8 @@ Tracks national holidays, regional festivals, and scheduled civic notices to
 forecast waste spikes in advance and trigger pre-allocation protocols.
 """
 
-from datetime import datetime, date, timedelta
-import pandas as pd
+from datetime import date, datetime, timedelta
+
 import streamlit as st
 
 # Pre-configured National Holidays and Regional Festivals
@@ -138,15 +138,18 @@ def get_all_calendar_events():
 def add_custom_notice(notice_id, name, event_date, spike_kg, stream, location, notes):
     """Add a new scheduled municipal notice event."""
     init_calendar_state()
-    st.session_state.custom_events.append({
-        "notice_id": notice_id.strip() or f"NOTC-{datetime.now().strftime('%m%d%H%M')}",
-        "name": name.strip(),
-        "date": str(event_date),
-        "spike_kg": float(spike_kg),
-        "primary_stream": stream,
-        "location": location.strip(),
-        "notes": notes.strip(),
-    })
+    st.session_state.custom_events.append(
+        {
+            "notice_id": notice_id.strip()
+            or f"NOTC-{datetime.now().strftime('%m%d%H%M')}",
+            "name": name.strip(),
+            "date": str(event_date),
+            "spike_kg": float(spike_kg),
+            "primary_stream": stream,
+            "location": location.strip(),
+            "notes": notes.strip(),
+        }
+    )
 
 
 def render_calendar_section(palette, total_capacity=7000):
@@ -156,55 +159,82 @@ def render_calendar_section(palette, total_capacity=7000):
     all_events = get_all_calendar_events()
 
     st.markdown(
-        f'<div class="cal-header-card">'
-        f'<div class="cal-title-row">'
-        f'<div><div class="cal-title">📅 Municipal Surge Calendar & Predictive Holiday Forecaster</div>'
-        f'<div class="cal-sub">Correlates national holidays, state festivals, and civic event notices with automated waste surge models.</div></div>'
-        f'</div>'
-        f'</div>',
+        '<div class="cal-header-card">'
+        '<div class="cal-title-row">'
+        '<div><div class="cal-title">📅 Municipal Surge Calendar & Predictive Holiday Forecaster</div>'
+        '<div class="cal-sub">Correlates national holidays, state festivals, and civic event notices with automated waste surge models.</div></div>'
+        "</div>"
+        "</div>",
         unsafe_allow_html=True,
     )
 
     # 1. Add Event Notice Drawer
-    with st.expander("➕ REGISTER UPCOMING EVENT NOTICE (PRE-ALLOCATE GRID)", expanded=False):
+    with st.expander(
+        "➕ REGISTER UPCOMING EVENT NOTICE (PRE-ALLOCATE GRID)", expanded=False
+    ):
         st.markdown(
             f'<div style="font-size:0.75rem; color:{p["muted"]}; margin-bottom:12px;">'
-            'When a municipal department or police commissionerate issues an event clearance notice, '
-            'register the event details here. WasteGrid automatically forecasts the surge date and pre-allocates facility buffer capacity.'
-            '</div>',
+            "When a municipal department or police commissionerate issues an event clearance notice, "
+            "register the event details here. WasteGrid automatically forecasts the surge date and pre-allocates facility buffer capacity."
+            "</div>",
             unsafe_allow_html=True,
         )
 
         with st.form("new_event_notice_form"):
             col1, col2, col3 = st.columns(3)
             with col1:
-                f_name = st.text_input("Event Name", placeholder="e.g. Annual Cultural Expo & Festival")
-                f_notice = st.text_input("Notice / Order Ref. No.", placeholder="e.g. BBMP/CL/2026/099")
+                f_name = st.text_input(
+                    "Event Name", placeholder="e.g. Annual Cultural Expo & Festival"
+                )
+                f_notice = st.text_input(
+                    "Notice / Order Ref. No.", placeholder="e.g. BBMP/CL/2026/099"
+                )
             with col2:
                 f_date = st.date_input("Event Date", value=date(2026, 10, 20))
-                f_spike = st.number_input("Estimated Waste Surge (kg)", min_value=500, max_value=25000, value=3000, step=500)
+                f_spike = st.number_input(
+                    "Estimated Waste Surge (kg)",
+                    min_value=500,
+                    max_value=25000,
+                    value=3000,
+                    step=500,
+                )
             with col3:
-                f_stream = st.selectbox("Predominant Waste Stream", ["wet", "dry", "mixed"], format_func=lambda x: {
-                    "wet": "💧 Organic / Food Stalls (Wet)",
-                    "dry": "📦 Merchandise / Packaging (Dry)",
-                    "mixed": "🔄 Mixed Municipal Streams",
-                }[x])
-                f_loc = st.text_input("Venue / Ward Location", placeholder="e.g. Freedom Park, Ward 77")
+                f_stream = st.selectbox(
+                    "Predominant Waste Stream",
+                    ["wet", "dry", "mixed"],
+                    format_func=lambda x: {
+                        "wet": "💧 Organic / Food Stalls (Wet)",
+                        "dry": "📦 Merchandise / Packaging (Dry)",
+                        "mixed": "🔄 Mixed Municipal Streams",
+                    }[x],
+                )
+                f_loc = st.text_input(
+                    "Venue / Ward Location", placeholder="e.g. Freedom Park, Ward 77"
+                )
 
-            f_notes = st.text_input("Operational Logistics Note", placeholder="e.g. Request 2 extra collection trucks & priority gate at Facility A")
-            submit_event = st.form_submit_button("🗓️ Add Event & Update Predictive Schedule", use_container_width=True)
+            f_notes = st.text_input(
+                "Operational Logistics Note",
+                placeholder="e.g. Request 2 extra collection trucks & priority gate at Facility A",
+            )
+            submit_event = st.form_submit_button(
+                "🗓️ Add Event & Update Predictive Schedule", use_container_width=True
+            )
 
             if submit_event:
                 if f_name:
-                    add_custom_notice(f_notice, f_name, f_date, f_spike, f_stream, f_loc, f_notes)
-                    st.success(f"Event notice '{f_name}' on {f_date} registered! Predictive capacity buffer allocated.")
+                    add_custom_notice(
+                        f_notice, f_name, f_date, f_spike, f_stream, f_loc, f_notes
+                    )
+                    st.success(
+                        f"Event notice '{f_name}' on {f_date} registered! Predictive capacity buffer allocated."
+                    )
                     st.rerun()
                 else:
                     st.error("Please enter a valid event name.")
 
     # 2. Upcoming High-Impact Dates Grid (Next 30 Days)
     st.markdown(
-        f'<div class="sec-title">🔔 UPCOMING SURGE DATES & CAPACITY IMPACT PROJECTION</div>',
+        '<div class="sec-title">🔔 UPCOMING SURGE DATES & CAPACITY IMPACT PROJECTION</div>',
         unsafe_allow_html=True,
     )
 
@@ -231,7 +261,11 @@ def render_calendar_section(palette, total_capacity=7000):
             spike_kg = 0
             total_pred_kg = base_demand_kg
             ev_title = "Standard Routine Collection"
-            ev_badge = '<span class="cal-badge normal">Nominal</span>' if not is_weekend else '<span class="cal-badge weekend">Weekend Peak</span>'
+            ev_badge = (
+                '<span class="cal-badge normal">Nominal</span>'
+                if not is_weekend
+                else '<span class="cal-badge weekend">Weekend Peak</span>'
+            )
 
         total_pred_tons = total_pred_kg / 1000
         capacity_tons = total_capacity / 1000
@@ -239,7 +273,11 @@ def render_calendar_section(palette, total_capacity=7000):
         ovf_tons = max(0, total_pred_tons - capacity_tons)
 
         card_cls = "danger" if is_overflow else ("warn" if event_info else "normal")
-        status_text = f'🚨 Capacity Breach (+{ovf_tons:.2f} T)' if is_overflow else f'✓ Buffer Safe ({capacity_tons - total_pred_tons:.2f} T)'
+        status_text = (
+            f"🚨 Capacity Breach (+{ovf_tons:.2f} T)"
+            if is_overflow
+            else f"✓ Buffer Safe ({capacity_tons - total_pred_tons:.2f} T)"
+        )
 
         timeline_cards.append(
             f'<div class="cal-date-card {card_cls}">'
@@ -248,17 +286,17 @@ def render_calendar_section(palette, total_capacity=7000):
             f'<div class="cal-badge-wrap">{ev_badge}</div>'
             f'<div class="cal-demand-val">{total_pred_tons:.2f} T</div>'
             f'<div class="cal-status-text">{status_text}</div>'
-            f'</div>'
+            f"</div>"
         )
 
     st.markdown(
-        f'<div class="cal-timeline-grid">' + "".join(timeline_cards) + '</div>',
+        '<div class="cal-timeline-grid">' + "".join(timeline_cards) + "</div>",
         unsafe_allow_html=True,
     )
 
     # 3. Master Holiday & Event Register Table
     st.markdown(
-        f'<div class="sec-title">📋 MASTER SCHEDULED NOTICE & FESTIVAL LOGBOOK</div>',
+        '<div class="sec-title">📋 MASTER SCHEDULED NOTICE & FESTIVAL LOGBOOK</div>',
         unsafe_allow_html=True,
     )
 
@@ -268,7 +306,7 @@ def render_calendar_section(palette, total_capacity=7000):
         ev = all_events[d]
         dt_obj = datetime.strptime(d, "%Y-%m-%d")
         f_date_str = dt_obj.strftime("%d %B %Y (%A)")
-        
+
         pred_tons = (5200 + ev["spike_kg"]) / 1000
         risk_pill = (
             f'<span class="fc-pill overflow">▲ High Surge Risk ({pred_tons:.2f} T)</span>'
@@ -276,35 +314,43 @@ def render_calendar_section(palette, total_capacity=7000):
             else f'<span class="fc-pill safe">● Handled ({pred_tons:.2f} T)</span>'
         )
 
-        stream_pill = "💧 Organic (Wet)" if ev["primary_stream"] == "wet" else ("📦 Packaging (Dry)" if ev["primary_stream"] == "dry" else "🔄 Mixed Streams")
+        stream_pill = (
+            "💧 Organic (Wet)"
+            if ev["primary_stream"] == "wet"
+            else (
+                "📦 Packaging (Dry)"
+                if ev["primary_stream"] == "dry"
+                else "🔄 Mixed Streams"
+            )
+        )
         badge_type = f'<b>{ev["title"]}</b> <span style="font-size:0.65rem; color:{p["muted"]};">[{ev["type"]}]</span>'
 
         table_rows.append(
-            f'<tr>'
-            f'<td><b>{f_date_str}</b></td>'
-            f'<td>{badge_type}</td>'
-            f'<td>+{ev["spike_kg"]:,} kg (+{ev["surge_pct"]}%)</td>'
-            f'<td>{stream_pill}</td>'
-            f'<td>{risk_pill}</td>'
-            f'<td><small>{ev["desc"]}</small></td>'
-            f'</tr>'
+            f"<tr>"
+            f"<td><b>{f_date_str}</b></td>"
+            f"<td>{badge_type}</td>"
+            f"<td>+{ev['spike_kg']:,} kg (+{ev['surge_pct']}%)</td>"
+            f"<td>{stream_pill}</td>"
+            f"<td>{risk_pill}</td>"
+            f"<td><small>{ev['desc']}</small></td>"
+            f"</tr>"
         )
 
     st.markdown(
         f'<div class="fc-table-wrap">'
         f'<table class="fc-table">'
-        f'<thead><tr>'
-        f'<th>Scheduled Date</th>'
-        f'<th>Occasion / Notice Reference</th>'
-        f'<th>Anticipated Surge</th>'
-        f'<th>Primary Stream</th>'
-        f'<th>Grid Status</th>'
-        f'<th>Logistics Mitigation Guideline</th>'
-        f'</tr></thead>'
-        f'<tbody>'
-        f'{"".join(table_rows)}'
-        f'</tbody>'
-        f'</table>'
-        f'</div>',
+        f"<thead><tr>"
+        f"<th>Scheduled Date</th>"
+        f"<th>Occasion / Notice Reference</th>"
+        f"<th>Anticipated Surge</th>"
+        f"<th>Primary Stream</th>"
+        f"<th>Grid Status</th>"
+        f"<th>Logistics Mitigation Guideline</th>"
+        f"</tr></thead>"
+        f"<tbody>"
+        f"{''.join(table_rows)}"
+        f"</tbody>"
+        f"</table>"
+        f"</div>",
         unsafe_allow_html=True,
     )

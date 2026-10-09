@@ -8,10 +8,11 @@ Built with Folium and Streamlit-Folium:
 - Multi-dimensional filters (Zone, Stream Type, Facility Status)
 """
 
-import streamlit as st
 import folium
+import streamlit as st
 from folium.plugins import HeatMap
 from streamlit_folium import st_folium
+
 from wastegrid import db
 
 
@@ -21,10 +22,10 @@ def render_map_page(palette):
 
     st.markdown(
         f"""
-        <div style="background:{p['card_bg']}; border:1px solid {p['border']}; border-left:4px solid {p['blue']};
+        <div style="background:{p["card_bg"]}; border:1px solid {p["border"]}; border-left:4px solid {p["blue"]};
                     border-radius:8px; padding:18px 22px; margin-bottom:20px;">
-            <div style="font-size:1.15rem; font-weight:800; color:{p['text']};">🗺️ Live Municipal Waste Map & Geographic Heatmap</div>
-            <div style="font-size:0.75rem; color:{p['muted']}; margin-top:4px;">
+            <div style="font-size:1.15rem; font-weight:800; color:{p["text"]};">🗺️ Live Municipal Waste Map & Geographic Heatmap</div>
+            <div style="font-size:0.75rem; color:{p["muted"]}; margin-top:4px;">
                 Geospatial visualization of collection wards, thermal waste generation density, facility capacity thresholds, and active dispatch vectors.
             </div>
             <div style="margin-top:6px; font-size:0.68rem; color:#8ba3c7;">
@@ -42,10 +43,14 @@ def render_map_page(palette):
     # 1. Map Control Filter Bar
     col_f1, col_f2, col_f3, col_f4 = st.columns(4)
     with col_f1:
-        zones = ["All Zones"] + sorted(list(set(s.get("zone", "Central") for s in sources)))
+        zones = ["All Zones"] + sorted(
+            list(set(s.get("zone", "Central") for s in sources))
+        )
         sel_zone = st.selectbox("Municipal Zone", zones)
     with col_f2:
-        sel_stream = st.selectbox("Waste Stream", ["All Streams", "Wet / Organic", "Dry / Recyclable"])
+        sel_stream = st.selectbox(
+            "Waste Stream", ["All Streams", "Wet / Organic", "Dry / Recyclable"]
+        )
     with col_f3:
         show_heatmap = st.checkbox("Show Density Heatmap", value=True)
     with col_f4:
@@ -80,7 +85,11 @@ def render_map_page(palette):
     # 2. Add Heatmap Layer
     if show_heatmap and filtered_sources:
         heat_data = [
-            [s["latitude"], s["longitude"], float(s["baseline_kg"] + s.get("active_spike_kg", 0))]
+            [
+                s["latitude"],
+                s["longitude"],
+                float(s["baseline_kg"] + s.get("active_spike_kg", 0)),
+            ]
             for s in filtered_sources
         ]
         HeatMap(
@@ -99,8 +108,8 @@ def render_map_page(palette):
 
         popup_html = f"""
         <div style="font-family:sans-serif; font-size:12px; width:200px;">
-            <b style="font-size:13px; color:#1e293b;">{s['name']}</b><br>
-            <b>Ward:</b> {s['ward_code']} ({s['zone']})<br>
+            <b style="font-size:13px; color:#1e293b;">{s["name"]}</b><br>
+            <b>Ward:</b> {s["ward_code"]} ({s["zone"]})<br>
             <b>Daily Generation:</b> {total_s_kg:,.0f} kg<br>
             <b>Stream:</b> {wtype}<br>
             <small style="color:#64748b;">Source Telemetry: Smart Compactor Bins</small>
@@ -147,13 +156,13 @@ def render_map_page(palette):
 
         popup_html = f"""
         <div style="font-family:sans-serif; font-size:12px; width:230px;">
-            <b style="font-size:14px; color:#0f172a;">Facility {fid}: {f['name']}</b><br>
+            <b style="font-size:14px; color:#0f172a;">Facility {fid}: {f["name"]}</b><br>
             <b style="color:{icon_color};">Status: {badge} ({util:.1f}%)</b><br>
-            <b>Technology:</b> {f['type'].upper()}<br>
-            <b>Accepts:</b> {f['accepts'].upper()}<br>
+            <b>Technology:</b> {f["type"].upper()}<br>
+            <b>Accepts:</b> {f["accepts"].upper()}<br>
             <b>Current Load:</b> {load_kg:,.0f} / {cap_kg:,.0f} kg<br>
-            <b>Distance:</b> {f['distance_km']} km | <b>Cost:</b> {f.get('cost_per_ton', 350):.0f} ₹/T<br>
-            <b>Operating Hours:</b> {f.get('operating_hours', '24/7')}
+            <b>Distance:</b> {f["distance_km"]} km | <b>Cost:</b> {f.get("cost_per_ton", 350):.0f} ₹/T<br>
+            <b>Operating Hours:</b> {f.get("operating_hours", "24/7")}
         </div>
         """
 
@@ -191,11 +200,11 @@ def render_map_page(palette):
     # 7. Map Legend Card
     st.markdown(
         f"""
-        <div style="background:{p['card_bg']}; border:1px solid {p['border']}; border-radius:8px; padding:14px 20px; margin-top:14px;">
-            <div style="font-size:0.75rem; font-weight:800; letter-spacing:0.12em; text-transform:uppercase; color:{p['text']}; margin-bottom:10px;">
+        <div style="background:{p["card_bg"]}; border:1px solid {p["border"]}; border-radius:8px; padding:14px 20px; margin-top:14px;">
+            <div style="font-size:0.75rem; font-weight:800; letter-spacing:0.12em; text-transform:uppercase; color:{p["text"]}; margin-bottom:10px;">
                 🗺️ Geospatial Legend & Indicator Guide
             </div>
-            <div style="display:flex; flex-wrap:wrap; gap:24px; font-size:0.75rem; color:{p['text']};">
+            <div style="display:flex; flex-wrap:wrap; gap:24px; font-size:0.75rem; color:{p["text"]};">
                 <div><span style="color:#22c55e;">●</span> <b>Green Plant Marker:</b> Normal Utilization (&lt;70%)</div>
                 <div><span style="color:#3b82f6;">●</span> <b>Blue Plant Marker:</b> Moderate Load (70–84%)</div>
                 <div><span style="color:#f59e0b;">●</span> <b>Orange Plant Marker:</b> Elevated Warning (85–94%)</div>

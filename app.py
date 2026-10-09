@@ -1,29 +1,27 @@
-import streamlit as st
+
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
-from datetime import datetime, timezone
+import streamlit as st
 
 from wastegrid import (
-    db,
-    auth,
-    data,
-    optimizer,
-    theme,
-    components,
-    forecast,
-    calendar_module,
-    truck_module,
-    analytics_module,
-    facility_module,
-    map_module,
     alert_engine,
-    vehicle_module,
-    simulator_module,
-    citizen_module,
-    reports_module,
     analytics_dashboards,
+    analytics_module,
+    auth,
+    calendar_module,
+    citizen_module,
+    components,
+    data,
+    db,
+    facility_module,
+    forecast,
+    map_module,
+    optimizer,
+    reports_module,
     settings_module,
+    simulator_module,
+    theme,
+    vehicle_module,
 )
 
 # 1. Page Configuration (Full Widescreen Layout)
@@ -137,8 +135,16 @@ for f in db_facilities:
         fc["status"] = "offline"
     active_facilities.append(fc)
 
-total_capacity = sum(f["capacity_kg"] for f in active_facilities if f.get("status") != "offline")
-active_trucks_count = len([v for v in db.get_all_vehicles() if v.get("status") in ["available", "in_transit", "assigned"]])
+total_capacity = sum(
+    f["capacity_kg"] for f in active_facilities if f.get("status") != "offline"
+)
+active_trucks_count = len(
+    [
+        v
+        for v in db.get_all_vehicles()
+        if v.get("status") in ["available", "in_transit", "assigned"]
+    ]
+)
 
 # Optimization Calculation
 if st.session_state.reoptimized:
@@ -153,7 +159,9 @@ else:
         else:
             allocations[fid] = min(base_plan.get(fid, 1000), f["capacity_kg"])
 
-    assigned_wet = allocations.get("A", 0) + allocations.get("B", 0) + allocations.get("E", 0)
+    assigned_wet = (
+        allocations.get("A", 0) + allocations.get("B", 0) + allocations.get("E", 0)
+    )
     assigned_dry = allocations.get("C", 0) + allocations.get("D", 0)
     overflow = {}
     if wet_total > assigned_wet:
@@ -172,7 +180,9 @@ pending_alert_count = alert_engine.get_pending_alert_count()
 # Grid System Status Determination
 if total_overflow > 0:
     system_status = "alert"
-elif st.session_state.outage_facility or any(f.get("status") in ["offline", "maintenance"] for f in db_facilities):
+elif st.session_state.outage_facility or any(
+    f.get("status") in ["offline", "maintenance"] for f in db_facilities
+):
     system_status = "warn"
 else:
     system_status = "optimal"
@@ -260,11 +270,11 @@ with st.sidebar:
     logo_uri = theme.get_logo_data_uri()
     render_html(
         f"""
-        <div style="display:flex; align-items:center; gap:12px; padding:6px 0 16px 0; border-bottom:1px solid {palette['border']}; margin-bottom:16px;">
+        <div style="display:flex; align-items:center; gap:12px; padding:6px 0 16px 0; border-bottom:1px solid {palette["border"]}; margin-bottom:16px;">
             <img src="{logo_uri}" alt="WasteGrid Logo" style="width:42px; height:42px; object-fit:contain; filter:drop-shadow(0 2px 6px rgba(0,0,0,0.18));" />
             <div>
-                <div style="font-size:1.24rem; font-weight:900; color:{palette['text']}; letter-spacing:-0.02em;">WasteGrid</div>
-                <div style="font-size:0.65rem; color:{palette['muted']}; letter-spacing:0.12em; text-transform:uppercase; font-weight:700;">Predict. Detect. Allocate.</div>
+                <div style="font-size:1.24rem; font-weight:900; color:{palette["text"]}; letter-spacing:-0.02em;">WasteGrid</div>
+                <div style="font-size:0.65rem; color:{palette["muted"]}; letter-spacing:0.12em; text-transform:uppercase; font-weight:700;">Predict. Detect. Allocate.</div>
             </div>
         </div>
         """
@@ -272,15 +282,20 @@ with st.sidebar:
 
     # Active Tenant Badge if logged in
     if current_user:
-        u_fname = current_user.get("full_name") or current_user.get("username") or "Officer"
-        u_role_title = current_user.get("authority_title") or str(current_user.get("role", "Authority")).title()
+        u_fname = (
+            current_user.get("full_name") or current_user.get("username") or "Officer"
+        )
+        u_role_title = (
+            current_user.get("authority_title")
+            or str(current_user.get("role", "Authority")).title()
+        )
         render_html(
             f"""
-            <div style="background:{palette['bg_soft']}; border:1px solid {palette['border']}; border-radius:8px; padding:10px 12px; margin-bottom:14px; font-size:0.75rem;">
-                <div style="font-weight:700; color:{palette['text']}; display:flex; align-items:center; gap:6px;">
+            <div style="background:{palette["bg_soft"]}; border:1px solid {palette["border"]}; border-radius:8px; padding:10px 12px; margin-bottom:14px; font-size:0.75rem;">
+                <div style="font-weight:700; color:{palette["text"]}; display:flex; align-items:center; gap:6px;">
                     <span>👤</span> <span>{u_fname}</span>
                 </div>
-                <div style="font-size:0.68rem; color:{palette['blue']}; font-weight:700; text-transform:uppercase; margin-top:3px;">
+                <div style="font-size:0.68rem; color:{palette["blue"]}; font-weight:700; text-transform:uppercase; margin-top:3px;">
                     {u_role_title}
                 </div>
             </div>
@@ -289,7 +304,7 @@ with st.sidebar:
 
     # Clean Sidebar Navigation Buttons: Icon on Left, Name on Right, NO RADIO DOTS!
     for label, nav_key in TENANT_NAV:
-        is_active = (st.session_state.nav_selection == nav_key)
+        is_active = st.session_state.nav_selection == nav_key
         if st.button(
             label,
             key=f"sb_nav_btn_{nav_key}",
@@ -305,7 +320,12 @@ with st.sidebar:
             f"<div style='margin-top:18px; padding-top:12px; border-top:1px solid {palette['border']}; text-align:center;'></div>",
             unsafe_allow_html=True,
         )
-        if st.button("🚪\n\nLogout", key="btn_sb_logout_bottom", use_container_width=True, help="Sign out of WasteGrid"):
+        if st.button(
+            "🚪\n\nLogout",
+            key="btn_sb_logout_bottom",
+            use_container_width=True,
+            help="Sign out of WasteGrid",
+        ):
             auth.logout()
 
 # 8. Modals & Overlay Drawers
@@ -328,13 +348,30 @@ components.top_nav_bar(
 
 current_nav_key = st.session_state.get("nav_selection", "home")
 
+# Guarantee that if not logged in, user is directly returned to Home Authority Dashboard
+if not current_user and current_nav_key not in [
+    "home",
+    "services",
+    "events",
+    "map",
+    "alerts",
+    "settings",
+    "overview",
+]:
+    current_nav_key = "home"
+    st.session_state["nav_selection"] = "home"
+
 # =========================================================================
 # PAGE 1: HOME AUTHORITY DASHBOARD (INSPIRED BY WIREFRAME LAYOUT)
 # =========================================================================
 if current_nav_key in ["home", "overview"]:
     # 1. Executive Status / Welcome Banner
     if current_user:
-        u_name = current_user.get("full_name") or current_user.get("username") or "Authorized Officer"
+        u_name = (
+            current_user.get("full_name")
+            or current_user.get("username")
+            or "Authorized Officer"
+        )
         u_role_text = current_user.get("authority_title") or "Municipal Authority"
         u_juris = current_user.get("jurisdiction") or "City Operations"
         render_html(
@@ -345,15 +382,15 @@ if current_nav_key in ["home", "overview"]:
                 <div style="display:flex; align-items:center; gap:10px;">
                     <span style="font-size:1.3rem;">📍</span>
                     <div>
-                        <div style="font-size:0.85rem; font-weight:800; color:{palette['text']};">
+                        <div style="font-size:0.85rem; font-weight:800; color:{palette["text"]};">
                             WasteGrid Municipal Authority Operations Command Center
                         </div>
-                        <div style="font-size:0.74rem; color:{palette['muted']}; margin-top:2px;">
+                        <div style="font-size:0.74rem; color:{palette["muted"]}; margin-top:2px;">
                             Logged in as <b>{u_name}</b> ({u_role_text}) · Scope: <b>{u_juris}</b>
                         </div>
                     </div>
                 </div>
-                <span style="font-size:0.68rem; font-weight:700; background:rgba(16,185,129,0.15); color:{palette['success']}; border:1px solid rgba(16,185,129,0.3); padding:4px 10px; border-radius:999px; text-transform:uppercase;">
+                <span style="font-size:0.68rem; font-weight:700; background:rgba(16,185,129,0.15); color:{palette["success"]}; border:1px solid rgba(16,185,129,0.3); padding:4px 10px; border-radius:999px; text-transform:uppercase;">
                     ● Live Grid Authenticated
                 </span>
             </div>
@@ -369,16 +406,16 @@ if current_nav_key in ["home", "overview"]:
                     <span style="font-size:1.3rem;">🏛️</span>
                     <div>
                         <div style="display:flex; align-items:center; gap:8px;">
-                            <span style="font-size:0.85rem; font-weight:800; color:{palette['text']};">WasteGrid — Smart Municipal Solid-Waste Platform</span>
+                            <span style="font-size:0.85rem; font-weight:800; color:{palette["text"]};">WasteGrid — Smart Municipal Solid-Waste Platform</span>
                             <span style="background:rgba(239, 68, 68, 0.12); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.3); font-size:0.65rem; padding:1px 7px; border-radius:999px; font-weight:800; text-transform:uppercase;">🏆 Hackathon Pilot</span>
                         </div>
-                        <div style="font-size:0.74rem; color:{palette['muted']}; margin-top:2px;">
+                        <div style="font-size:0.74rem; color:{palette["muted"]}; margin-top:2px;">
                             Predict. Detect. Allocate. · Official 5-Tenant Decision Support Architecture (Hackathon Demo)
                         </div>
                     </div>
                 </div>
                 <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="font-size:0.72rem; color:{palette['muted']};">Click the Profile icon <b>(P)</b> at top-right to sign in or view authority roles.</span>
+                    <span style="font-size:0.72rem; color:{palette["muted"]};">Click the Profile icon <b>(P)</b> at top-right to sign in or view authority roles.</span>
                 </div>
             </div>
             """
@@ -390,7 +427,9 @@ if current_nav_key in ["home", "overview"]:
         if user_role == "truck_driver":
             vehicle_module.render_truck_driver_dashboard(palette, current_user)
         elif user_role == "admin":
-            analytics_module.render_super_admin_view(palette, active_facilities, allocations, pending_alert_count)
+            analytics_module.render_super_admin_view(
+                palette, active_facilities, allocations, pending_alert_count
+            )
         elif user_role in ["state", "state_authority"]:
             analytics_module.render_state_authority_view(palette)
         elif user_role == "commissioner":
@@ -400,43 +439,70 @@ if current_nav_key in ["home", "overview"]:
         elif user_role in ["zonal_officer", "district"]:
             analytics_module.render_zonal_officer_view(palette)
         elif user_role in ["processing_facility", "factory"]:
-            analytics_module.render_processing_facility_view(active_facilities, allocations, palette)
+            analytics_module.render_processing_facility_view(
+                active_facilities, allocations, palette
+            )
         elif user_role == "recycling_facility":
-            analytics_module.render_recycling_facility_view(active_facilities, allocations, palette)
+            analytics_module.render_recycling_facility_view(
+                active_facilities, allocations, palette
+            )
         else:
             analytics_module.render_municipal_office_view(palette, pending_alert_count)
 
         if user_role != "truck_driver":
-            with st.expander("🌐 RAW MUNICIPAL GRID ALLOCATION TELEMETRY & MULTI-STREAM FLOW", expanded=False):
+            with st.expander(
+                "🌐 RAW MUNICIPAL GRID ALLOCATION TELEMETRY & MULTI-STREAM FLOW",
+                expanded=False,
+            ):
                 components.stream_breakdown(wet_total, dry_total, palette)
-                components.facility_grid(active_facilities, allocations, palette, outage=st.session_state.outage_facility)
-                fixed_overflow = optimizer.fixed_allocation_overflow(total_waste, total_capacity)
+                components.facility_grid(
+                    active_facilities,
+                    allocations,
+                    palette,
+                    outage=st.session_state.outage_facility,
+                )
+                fixed_overflow = optimizer.fixed_allocation_overflow(
+                    total_waste, total_capacity
+                )
                 components.comparison_cards(fixed_overflow, total_overflow, palette)
     else:
         # 3-Minute Demo Master Overview (Clean, Uncluttered, Executive)
         components.render_demo_overview(
-            palette, sources, allocations, total_waste, total_capacity,
-            active_facilities, active_trucks_count, pending_alert_count, total_overflow
+            palette,
+            sources,
+            allocations,
+            total_waste,
+            total_capacity,
+            active_facilities,
+            active_trucks_count,
+            pending_alert_count,
+            total_overflow,
         )
 
 # =========================================================================
 # PAGE 2: SERVICES & SMART LP ALLOCATION
 # =========================================================================
 elif current_nav_key in ["services", "allocation"]:
-    tab_opt, tab_esg, tab_sim, tab_facs = st.tabs([
-        "⚡ Multi-Objective LP Solver (Simplex)",
-        "🌱 Carbon & ESG Scorecard",
-        "🧪 Scenario Simulator Sandbox",
-        "🏭 Facility Processing Nodes",
-    ])
+    tab_opt, tab_esg, tab_sim, tab_facs = st.tabs(
+        [
+            "⚡ Multi-Objective LP Solver (Simplex)",
+            "🌱 Carbon & ESG Scorecard",
+            "🧪 Scenario Simulator Sandbox",
+            "🏭 Facility Processing Nodes",
+        ]
+    )
 
     with tab_opt:
         optimizer.render_smart_allocation_page(palette, wet_total, dry_total)
 
     with tab_esg:
-        wet_alloc = allocations.get("A", 0) + allocations.get("B", 0) + allocations.get("E", 0)
+        wet_alloc = (
+            allocations.get("A", 0) + allocations.get("B", 0) + allocations.get("E", 0)
+        )
         dry_alloc = allocations.get("C", 0) + allocations.get("D", 0)
-        analytics_module.render_carbon_scorecard(wet_alloc, dry_alloc, total_overflow, total_waste, palette)
+        analytics_module.render_carbon_scorecard(
+            wet_alloc, dry_alloc, total_overflow, total_waste, palette
+        )
 
     with tab_sim:
         simulator_module.render_scenario_simulator_page(palette, wet_total, dry_total)
@@ -448,11 +514,13 @@ elif current_nav_key in ["services", "allocation"]:
 # PAGE 3: EVENTS & HOLIDAY SURGE CALENDAR
 # =========================================================================
 elif current_nav_key == "events":
-    tab_cal, tab_fc, tab_trends = st.tabs([
-        "📅 Municipal Event Calendar & Surge Register",
-        "🔮 7-Day ML Forecast & Trend Dynamics",
-        "📊 Ward-Level Generation Patterns",
-    ])
+    tab_cal, tab_fc, tab_trends = st.tabs(
+        [
+            "📅 Municipal Event Calendar & Surge Register",
+            "🔮 7-Day ML Forecast & Trend Dynamics",
+            "📊 Ward-Level Generation Patterns",
+        ]
+    )
 
     with tab_cal:
         calendar_module.render_calendar_section(palette, total_capacity=total_capacity)
@@ -460,10 +528,10 @@ elif current_nav_key == "events":
     with tab_fc:
         st.markdown(
             f"""
-            <div style="background:{palette['card_bg']}; border:1px solid {palette['border']}; border-left:4px solid {palette['purple']};
+            <div style="background:{palette["card_bg"]}; border:1px solid {palette["border"]}; border-left:4px solid {palette["purple"]};
                         border-radius:8px; padding:18px 22px; margin-bottom:20px;">
-                <div style="font-size:1.15rem; font-weight:800; color:{palette['text']};">🔮 7-Day Predictive Waste Forecast & Capacity Ceilings</div>
-                <div style="font-size:0.75rem; color:{palette['muted']}; margin-top:4px;">
+                <div style="font-size:1.15rem; font-weight:800; color:{palette["text"]};">🔮 7-Day Predictive Waste Forecast & Capacity Ceilings</div>
+                <div style="font-size:0.75rem; color:{palette["muted"]}; margin-top:4px;">
                     Calibrated on day-of-week commercial activity, residential weekend multipliers, and holiday event surges.
                 </div>
             </div>
@@ -478,12 +546,12 @@ elif current_nav_key == "events":
             )
         with col_fc2:
             st.markdown(
-                f"""<div class="m-card"><div class="m-label">⚡ Peak Demand Surge Day</div><div class="m-value">Saturday (Weekend Peak)</div></div>""",
+                """<div class="m-card"><div class="m-label">⚡ Peak Demand Surge Day</div><div class="m-value">Saturday (Weekend Peak)</div></div>""",
                 unsafe_allow_html=True,
             )
         with col_fc3:
             st.markdown(
-                f"""<div class="m-card green"><div class="m-label">🛡️ Minimum Reserve Margin</div><div class="m-value">{max(0, total_capacity - total_waste)/1000:.2f} T Buffer</div></div>""",
+                f"""<div class="m-card green"><div class="m-label">🛡️ Minimum Reserve Margin</div><div class="m-value">{max(0, total_capacity - total_waste) / 1000:.2f} T Buffer</div></div>""",
                 unsafe_allow_html=True,
             )
 
@@ -492,13 +560,26 @@ elif current_nav_key == "events":
         components.forecast_section(forecast_df, palette)
 
     with tab_trends:
-        st.markdown(f'<div class="sec-title">📊 WARD-LEVEL PREDICTED GENERATION DYNAMICS</div>', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="sec-title">📊 WARD-LEVEL PREDICTED GENERATION DYNAMICS</div>',
+            unsafe_allow_html=True,
+        )
         ward_fcs = []
         days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
         for s in sources:
             for d in days:
-                mult = 1.25 if d in ["Sat", "Sun"] and "house" in s["id"] else (0.4 if d in ["Sat", "Sun"] and "office" in s["id"] else 1.0)
-                ward_fcs.append({"Source": s["id"].upper(), "Day": d, "Waste (kg)": round(s["baseline_kg"] * mult)})
+                mult = (
+                    1.25
+                    if d in ["Sat", "Sun"] and "house" in s["id"]
+                    else (0.4 if d in ["Sat", "Sun"] and "office" in s["id"] else 1.0)
+                )
+                ward_fcs.append(
+                    {
+                        "Source": s["id"].upper(),
+                        "Day": d,
+                        "Waste (kg)": round(s["baseline_kg"] * mult),
+                    }
+                )
         df_wf = pd.DataFrame(ward_fcs)
 
         fig_w = px.bar(
@@ -523,11 +604,13 @@ elif current_nav_key == "events":
 # PAGE 4: LIVE MAP & FLEET TELEMATICS
 # =========================================================================
 elif current_nav_key in ["map", "operations"]:
-    tab_map, tab_fleet, tab_facs = st.tabs([
-        "🗺️ Live GIS Waste Map & Heatmap",
-        "🚚 Vehicle Tracking & Fleet Dispatch",
-        "🏭 Facility Processing Nodes",
-    ])
+    tab_map, tab_fleet, tab_facs = st.tabs(
+        [
+            "🗺️ Live GIS Waste Map & Heatmap",
+            "🚚 Vehicle Tracking & Fleet Dispatch",
+            "🏭 Facility Processing Nodes",
+        ]
+    )
 
     with tab_map:
         map_module.render_map_page(palette)
@@ -542,12 +625,14 @@ elif current_nav_key in ["map", "operations"]:
 # PAGE 4: ANALYTICS & 7-DAY FORECAST
 # =========================================================================
 elif current_nav_key == "analytics":
-    tab_trends, tab_fc, tab_esg, tab_perf = st.tabs([
-        "📈 Waste Generation Trends",
-        "🔮 7-Day ML Forecast",
-        "🌱 Carbon & ESG Scorecard",
-        "🏆 Municipal SLA Performance",
-    ])
+    tab_trends, tab_fc, tab_esg, tab_perf = st.tabs(
+        [
+            "📈 Waste Generation Trends",
+            "🔮 7-Day ML Forecast",
+            "🌱 Carbon & ESG Scorecard",
+            "🏆 Municipal SLA Performance",
+        ]
+    )
 
     with tab_trends:
         analytics_dashboards.render_waste_analytics_page(palette)
@@ -555,10 +640,10 @@ elif current_nav_key == "analytics":
     with tab_fc:
         st.markdown(
             f"""
-            <div style="background:{palette['card_bg']}; border:1px solid {palette['border']}; border-left:4px solid {palette['purple']};
+            <div style="background:{palette["card_bg"]}; border:1px solid {palette["border"]}; border-left:4px solid {palette["purple"]};
                         border-radius:8px; padding:18px 22px; margin-bottom:20px;">
-                <div style="font-size:1.15rem; font-weight:800; color:{palette['text']};">🔮 7-Day Predictive Waste Forecast & Capacity Ceilings</div>
-                <div style="font-size:0.75rem; color:{palette['muted']}; margin-top:4px;">
+                <div style="font-size:1.15rem; font-weight:800; color:{palette["text"]};">🔮 7-Day Predictive Waste Forecast & Capacity Ceilings</div>
+                <div style="font-size:0.75rem; color:{palette["muted"]}; margin-top:4px;">
                     Calibrated on day-of-week commercial activity, residential weekend multipliers, and holiday event surges.
                 </div>
             </div>
@@ -573,12 +658,12 @@ elif current_nav_key == "analytics":
             )
         with col_fc2:
             st.markdown(
-                f"""<div class="m-card"><div class="m-label">⚡ Peak Demand Surge Day</div><div class="m-value">Saturday (Weekend Peak)</div></div>""",
+                """<div class="m-card"><div class="m-label">⚡ Peak Demand Surge Day</div><div class="m-value">Saturday (Weekend Peak)</div></div>""",
                 unsafe_allow_html=True,
             )
         with col_fc3:
             st.markdown(
-                f"""<div class="m-card green"><div class="m-label">🛡️ Minimum Reserve Margin</div><div class="m-value">{max(0, total_capacity - total_waste)/1000:.2f} T Buffer</div></div>""",
+                f"""<div class="m-card green"><div class="m-label">🛡️ Minimum Reserve Margin</div><div class="m-value">{max(0, total_capacity - total_waste) / 1000:.2f} T Buffer</div></div>""",
                 unsafe_allow_html=True,
             )
 
@@ -586,13 +671,26 @@ elif current_nav_key == "analytics":
         forecast_df = pd.DataFrame(forecast_rows)
         components.forecast_section(forecast_df, palette)
 
-        st.markdown(f'<div class="sec-title">📊 WARD-LEVEL PREDICTED GENERATION DYNAMICS</div>', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="sec-title">📊 WARD-LEVEL PREDICTED GENERATION DYNAMICS</div>',
+            unsafe_allow_html=True,
+        )
         ward_fcs = []
         days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
         for s in sources:
             for d in days:
-                mult = 1.25 if d in ["Sat", "Sun"] and "house" in s["id"] else (0.4 if d in ["Sat", "Sun"] and "office" in s["id"] else 1.0)
-                ward_fcs.append({"Source": s["id"].upper(), "Day": d, "Waste (kg)": round(s["baseline_kg"] * mult)})
+                mult = (
+                    1.25
+                    if d in ["Sat", "Sun"] and "house" in s["id"]
+                    else (0.4 if d in ["Sat", "Sun"] and "office" in s["id"] else 1.0)
+                )
+                ward_fcs.append(
+                    {
+                        "Source": s["id"].upper(),
+                        "Day": d,
+                        "Waste (kg)": round(s["baseline_kg"] * mult),
+                    }
+                )
         df_wf = pd.DataFrame(ward_fcs)
 
         fig_w = px.bar(
@@ -614,9 +712,13 @@ elif current_nav_key == "analytics":
         st.plotly_chart(fig_w, use_container_width=True)
 
     with tab_esg:
-        wet_alloc = allocations.get("A", 0) + allocations.get("B", 0) + allocations.get("E", 0)
+        wet_alloc = (
+            allocations.get("A", 0) + allocations.get("B", 0) + allocations.get("E", 0)
+        )
         dry_alloc = allocations.get("C", 0) + allocations.get("D", 0)
-        analytics_module.render_carbon_scorecard(wet_alloc, dry_alloc, total_overflow, total_waste, palette)
+        analytics_module.render_carbon_scorecard(
+            wet_alloc, dry_alloc, total_overflow, total_waste, palette
+        )
 
     with tab_perf:
         analytics_dashboards.render_performance_dashboard_page(palette)
@@ -625,10 +727,12 @@ elif current_nav_key == "analytics":
 # PAGE 5: ALERTS & CITIZEN GRIEVANCES
 # =========================================================================
 elif current_nav_key in ["alerts", "alerts_citizen"]:
-    tab_alerts, tab_citizen = st.tabs([
-        "🚨 Predictive Overflow Alerts",
-        "📢 Citizen Grievance Portal & File Ticket",
-    ])
+    tab_alerts, tab_citizen = st.tabs(
+        [
+            "🚨 Predictive Overflow Alerts",
+            "📢 Citizen Grievance Portal & File Ticket",
+        ]
+    )
 
     with tab_alerts:
         alert_engine.render_alerts_dashboard(palette)
@@ -640,11 +744,13 @@ elif current_nav_key in ["alerts", "alerts_citizen"]:
 # PAGE 6: AUDITS, REPORTS & PERFORMANCE
 # =========================================================================
 elif current_nav_key in ["reports", "admin_reports"]:
-    tab_rep, tab_trends, tab_perf = st.tabs([
-        "📑 Executive Reports & Excel Export",
-        "📈 Waste Generation Trends & Analytics",
-        "🏆 Municipal SLA Performance",
-    ])
+    tab_rep, tab_trends, tab_perf = st.tabs(
+        [
+            "📑 Executive Reports & Excel Export",
+            "📈 Waste Generation Trends & Analytics",
+            "🏆 Municipal SLA Performance",
+        ]
+    )
 
     with tab_rep:
         reports_module.render_reports_page(palette)
@@ -692,9 +798,13 @@ elif current_nav_key == "driver_pass":
 
 elif current_nav_key == "state_policy":
     analytics_module.render_state_authority_view(palette)
-    wet_alloc = allocations.get("A", 0) + allocations.get("B", 0) + allocations.get("E", 0)
+    wet_alloc = (
+        allocations.get("A", 0) + allocations.get("B", 0) + allocations.get("E", 0)
+    )
     dry_alloc = allocations.get("C", 0) + allocations.get("D", 0)
-    analytics_module.render_carbon_scorecard(wet_alloc, dry_alloc, total_overflow, total_waste, palette)
+    analytics_module.render_carbon_scorecard(
+        wet_alloc, dry_alloc, total_overflow, total_waste, palette
+    )
 
 elif current_nav_key == "allocation_exec":
     optimizer.render_smart_allocation_page(palette, wet_total, dry_total)
@@ -716,7 +826,9 @@ elif current_nav_key == "plant_inflow":
     facility_module.render_facility_management_page(palette)
 
 elif current_nav_key == "recycling_ops":
-    analytics_module.render_recycling_facility_view(active_facilities, allocations, palette)
+    analytics_module.render_recycling_facility_view(
+        active_facilities, allocations, palette
+    )
 
 elif current_nav_key == "users":
     analytics_dashboards.render_user_management_page(palette)

@@ -9,25 +9,26 @@ Supports dynamic facilities, compatibility verification, route costing,
 before-and-after impact analytics, and administrative approval workflows.
 """
 
-from scipy.optimize import linprog
 import numpy as np
-import pandas as pd
-import streamlit as st
-import plotly.express as px
 import plotly.graph_objects as go
-from wastegrid import db
+import streamlit as st
+from scipy.optimize import linprog
 
+from wastegrid import db
 
 # =========================================================================
 # CORE LINEAR PROGRAMMING SOLVER (BACKWARD COMPATIBLE & EXTENDED)
 # =========================================================================
+
 
 def optimize(facilities, wet_total, dry_total, use_lp=True, objective="balanced"):
     """
     Allocate waste streams to compatible facilities.
     Backward-compatible wrapper returning (allocations_dict, overflow_dict).
     """
-    res = optimize_multi_objective(facilities, wet_total, dry_total, objective=objective)
+    res = optimize_multi_objective(
+        facilities, wet_total, dry_total, objective=objective
+    )
     return res["allocations"], res["overflow"]
 
 
@@ -42,7 +43,10 @@ def optimize_multi_objective(facilities, wet_total, dry_total, objective="balanc
     pairs = []
     for fi, f in enumerate(facilities):
         # Ignore facilities with zero or negative capacity
-        if f.get("capacity_kg", 0) <= 0 or f.get("status") in ["offline", "maintenance"]:
+        if f.get("capacity_kg", 0) <= 0 or f.get("status") in [
+            "offline",
+            "maintenance",
+        ]:
             continue
         accepts = f.get("accepts", "wet").lower()
         for stream, total in streams:
@@ -110,7 +114,9 @@ def optimize_multi_objective(facilities, wet_total, dry_total, objective="balanc
     bounds = [(0, None)] * n_vars
 
     try:
-        res = linprog(c, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq, b_eq=b_eq, bounds=bounds, method="highs")
+        res = linprog(
+            c, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq, b_eq=b_eq, bounds=bounds, method="highs"
+        )
         if not res.success:
             return _optimize_greedy_extended(facilities, wet_total, dry_total)
     except Exception:
@@ -128,7 +134,9 @@ def optimize_multi_objective(facilities, wet_total, dry_total, objective="balanc
         if ovf > 0.1:
             overflow[stream] = ovf
 
-    return _build_result_summary(facilities, allocations, overflow, streams, pairs, res.x[:n_alloc])
+    return _build_result_summary(
+        facilities, allocations, overflow, streams, pairs, res.x[:n_alloc]
+    )
 
 
 def _optimize_greedy_extended(facilities, wet_total, dry_total):
@@ -139,7 +147,12 @@ def _optimize_greedy_extended(facilities, wet_total, dry_total):
 
     for wtype, total in streams:
         compat = sorted(
-            [f for f in facilities if (f.get("accepts") == wtype or f.get("accepts") == "mixed") and f.get("status") == "online"],
+            [
+                f
+                for f in facilities
+                if (f.get("accepts") == wtype or f.get("accepts") == "mixed")
+                and f.get("status") == "online"
+            ],
             key=lambda f: f.get("distance_km", 10.0),
         )
         remaining = total
@@ -182,14 +195,16 @@ def _build_result_summary(facilities, allocations, overflow, streams, pairs, x_a
             transport_cost += t_cost
             carbon_emissions += c_kg
 
-            routes.append({
-                "facility_id": fid,
-                "facility_name": f.get("name", fid),
-                "allocated_kg": alloc_kg,
-                "distance_km": dist,
-                "cost_inr": t_cost,
-                "carbon_kg": c_kg,
-            })
+            routes.append(
+                {
+                    "facility_id": fid,
+                    "facility_name": f.get("name", fid),
+                    "allocated_kg": alloc_kg,
+                    "distance_km": dist,
+                    "cost_inr": t_cost,
+                    "carbon_kg": c_kg,
+                }
+            )
 
     # Static baseline estimation for comparison
     static_overflow = max(0.0, total_waste - total_cap)
@@ -235,6 +250,7 @@ def reduction_pct(fixed_overflow, optimized_overflow):
 # SMART ALLOCATION DASHBOARD UI
 # =========================================================================
 
+
 def render_smart_allocation_page(palette, wet_total, dry_total):
     """Render the full interactive Smart Waste Reallocation Console."""
     p = palette
@@ -242,10 +258,10 @@ def render_smart_allocation_page(palette, wet_total, dry_total):
 
     st.markdown(
         f"""
-        <div style="background:{p['card_bg']}; border:1px solid {p['border']}; border-left:4px solid {p['accent']};
+        <div style="background:{p["card_bg"]}; border:1px solid {p["border"]}; border-left:4px solid {p["accent"]};
                     border-radius:8px; padding:18px 22px; margin-bottom:20px;">
-            <div style="font-size:1.15rem; font-weight:800; color:{p['text']};">⚡ Multi-Objective Dynamic Waste Reallocation Solver</div>
-            <div style="font-size:0.75rem; color:{p['muted']}; margin-top:4px;">
+            <div style="font-size:1.15rem; font-weight:800; color:{p["text"]};">⚡ Multi-Objective Dynamic Waste Reallocation Solver</div>
+            <div style="font-size:0.75rem; color:{p["muted"]}; margin-top:4px;">
                 High-performance linear programming (HiGHS LP) solver optimizing municipal waste routing across surviving plants in real-time.
             </div>
         </div>
@@ -268,19 +284,23 @@ def render_smart_allocation_page(palette, wet_total, dry_total):
         )
     with col_obj2:
         st.markdown("<div style='height:28px;'></div>", unsafe_allow_html=True)
-        run_solver = st.button("🚀 Run Dynamic Solver", key="btn_run_lp_solver", use_container_width=True)
+        run_solver = st.button(
+            "🚀 Run Dynamic Solver", key="btn_run_lp_solver", use_container_width=True
+        )
 
     # Execute Solver
-    res = optimize_multi_objective(facilities, wet_total, dry_total, objective=obj_choice)
+    res = optimize_multi_objective(
+        facilities, wet_total, dry_total, objective=obj_choice
+    )
 
     # 2. Before vs After Impact KPIs
     st.markdown(
         f"""
         <div class="metric-grid">
-            <div class="m-card"><div class="m-label">📊 Predicted Waste</div><div class="m-value">{res['total_waste']/1000:.2f} Tons</div></div>
-            <div class="m-card green"><div class="m-label">🏭 Active Capacity</div><div class="m-value">{res['total_capacity']/1000:.2f} Tons</div></div>
-            <div class="m-card hero"><div class="m-label">🚨 Optimized Overflow</div><div class="m-value {"red" if res['total_overflow'] > 0 else "green"}">{res['total_overflow']/1000:.2f} Tons</div></div>
-            <div class="m-card purple"><div class="m-label">💰 Estimated Cost</div><div class="m-value">{res['transport_cost_inr']:,.0f} ₹</div></div>
+            <div class="m-card"><div class="m-label">📊 Predicted Waste</div><div class="m-value">{res["total_waste"] / 1000:.2f} Tons</div></div>
+            <div class="m-card green"><div class="m-label">🏭 Active Capacity</div><div class="m-value">{res["total_capacity"] / 1000:.2f} Tons</div></div>
+            <div class="m-card hero"><div class="m-label">🚨 Optimized Overflow</div><div class="m-value {"red" if res["total_overflow"] > 0 else "green"}">{res["total_overflow"] / 1000:.2f} Tons</div></div>
+            <div class="m-card purple"><div class="m-label">💰 Estimated Cost</div><div class="m-value">{res["transport_cost_inr"]:,.0f} ₹</div></div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -290,36 +310,73 @@ def render_smart_allocation_page(palette, wet_total, dry_total):
     col_c1, col_c2 = st.columns([1, 1])
 
     with col_c1:
-        st.markdown(f'<div class="sec-title">🛑 Overflow Comparison: Fixed vs WasteGrid</div>', unsafe_allow_html=True)
-        fig_ovf = go.Figure(data=[
-            go.Bar(name="Static Fixed Routing", x=["Overflow"], y=[res["static_overflow"]/1000], marker_color=p["accent"]),
-            go.Bar(name="WasteGrid LP Solver", x=["Overflow"], y=[res["total_overflow"]/1000], marker_color=p["success"]),
-        ])
+        st.markdown(
+            '<div class="sec-title">🛑 Overflow Comparison: Fixed vs WasteGrid</div>',
+            unsafe_allow_html=True,
+        )
+        fig_ovf = go.Figure(
+            data=[
+                go.Bar(
+                    name="Static Fixed Routing",
+                    x=["Overflow"],
+                    y=[res["static_overflow"] / 1000],
+                    marker_color=p["accent"],
+                ),
+                go.Bar(
+                    name="WasteGrid LP Solver",
+                    x=["Overflow"],
+                    y=[res["total_overflow"] / 1000],
+                    marker_color=p["success"],
+                ),
+            ]
+        )
         fig_ovf.update_layout(
             barmode="group",
-            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-            font_color=p["text"], height=250, margin=dict(l=10, r=10, t=30, b=10),
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font_color=p["text"],
+            height=250,
+            margin=dict(l=10, r=10, t=30, b=10),
             yaxis_title="Tons (T)",
         )
         st.plotly_chart(fig_ovf, use_container_width=True)
 
     with col_c2:
-        st.markdown(f'<div class="sec-title">💰 Cost & Carbon Savings Comparison</div>', unsafe_allow_html=True)
-        fig_savings = go.Figure(data=[
-            go.Bar(name="Static Routing", x=["Cost (₹ x100)", "CO₂ (kg)"],
-                   y=[res["static_cost_inr"]/100, res["static_carbon_kg"]], marker_color=p["muted"]),
-            go.Bar(name="WasteGrid LP", x=["Cost (₹ x100)", "CO₂ (kg)"],
-                   y=[res["transport_cost_inr"]/100, res["carbon_emissions_kg"]], marker_color=p["blue"]),
-        ])
+        st.markdown(
+            '<div class="sec-title">💰 Cost & Carbon Savings Comparison</div>',
+            unsafe_allow_html=True,
+        )
+        fig_savings = go.Figure(
+            data=[
+                go.Bar(
+                    name="Static Routing",
+                    x=["Cost (₹ x100)", "CO₂ (kg)"],
+                    y=[res["static_cost_inr"] / 100, res["static_carbon_kg"]],
+                    marker_color=p["muted"],
+                ),
+                go.Bar(
+                    name="WasteGrid LP",
+                    x=["Cost (₹ x100)", "CO₂ (kg)"],
+                    y=[res["transport_cost_inr"] / 100, res["carbon_emissions_kg"]],
+                    marker_color=p["blue"],
+                ),
+            ]
+        )
         fig_savings.update_layout(
             barmode="group",
-            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-            font_color=p["text"], height=250, margin=dict(l=10, r=10, t=30, b=10),
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font_color=p["text"],
+            height=250,
+            margin=dict(l=10, r=10, t=30, b=10),
         )
         st.plotly_chart(fig_savings, use_container_width=True)
 
     # 4. Proposed Transfer Route Allocation Plan Table
-    st.markdown(f'<div class="sec-title">🚚 PROPOSED TRANSFER ROUTES & FACILITY INTAKE QUOTAS</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="sec-title">🚚 PROPOSED TRANSFER ROUTES & FACILITY INTAKE QUOTAS</div>',
+        unsafe_allow_html=True,
+    )
 
     route_rows = []
     for r in res["routes"]:
@@ -331,12 +388,12 @@ def render_smart_allocation_page(palette, wet_total, dry_total):
         route_rows.append(
             f"""<tr>
                 <td><b>Plant {fid}</b></td>
-                <td>{r['facility_name']}</td>
-                <td><b>{r['allocated_kg']:,.0f} kg</b></td>
+                <td>{r["facility_name"]}</td>
+                <td><b>{r["allocated_kg"]:,.0f} kg</b></td>
                 <td>{cap:,.0f} kg ({util:.1f}%)</td>
-                <td>{r['distance_km']} km</td>
-                <td>{r['cost_inr']:,.0f} ₹</td>
-                <td>{r['carbon_kg']:.1f} kg CO₂</td>
+                <td>{r["distance_km"]} km</td>
+                <td>{r["cost_inr"]:,.0f} ₹</td>
+                <td>{r["carbon_kg"]:.1f} kg CO₂</td>
                 <td><span class="fc-pill safe">✓ Approved Match</span></td>
             </tr>"""
         )
@@ -348,7 +405,7 @@ def render_smart_allocation_page(palette, wet_total, dry_total):
                     <th>Facility ID</th><th>Facility Name</th><th>Allocated Intake</th><th>Plant Capacity</th>
                     <th>Distance</th><th>Route Cost</th><th>Emissions</th><th>Feasibility</th>
                 </tr></thead>
-                <tbody>{''.join(route_rows)}</tbody>
+                <tbody>{"".join(route_rows)}</tbody>
             </table>
         </div>""",
         unsafe_allow_html=True,
@@ -359,26 +416,44 @@ def render_smart_allocation_page(palette, wet_total, dry_total):
     col_app1, col_app2 = st.columns([3, 1])
     with col_app1:
         st.markdown(
-            f"""<div style="font-size:0.75rem; color:{p['muted']};">
+            f"""<div style="font-size:0.75rem; color:{p["muted"]};">
                 Review the proposed allocation matrix above. Authorized municipal authorities can approve and commit
                 this allocation to update live plant hopper levels, vehicle dispatch targets, and audit ledgers.
             </div>""",
             unsafe_allow_html=True,
         )
     with col_app2:
-        if st.button("✅ Approve & Apply Allocation", key="btn_approve_allocation", use_container_width=True):
-            user = st.session_state.get("authenticated_user", {}).get("username", "municipality_admin")
+        if st.button(
+            "✅ Approve & Apply Allocation",
+            key="btn_approve_allocation",
+            use_container_width=True,
+        ):
+            user = st.session_state.get("authenticated_user", {}).get(
+                "username", "municipality_admin"
+            )
             # Update facility current load in DB
             for fid, alloc_kg in res["allocations"].items():
                 db.update_facility_load(fid, alloc_kg)
             # Save allocation run
             db.save_allocation_run(
-                obj_choice, res["total_waste"], res["total_capacity"], res["total_overflow"],
-                res["allocations"], user, res["transport_cost_inr"], res["carbon_saved_kg"]
+                obj_choice,
+                res["total_waste"],
+                res["total_capacity"],
+                res["total_overflow"],
+                res["allocations"],
+                user,
+                res["transport_cost_inr"],
+                res["carbon_saved_kg"],
             )
-            db.add_audit_log(user, "ALLOCATION_APPROVED", f"Approved {obj_choice} allocation for {res['total_waste']} kg waste")
+            db.add_audit_log(
+                user,
+                "ALLOCATION_APPROVED",
+                f"Approved {obj_choice} allocation for {res['total_waste']} kg waste",
+            )
             st.session_state.allocations = res["allocations"]
             st.session_state.overflow = res["overflow"]
             st.session_state.reoptimized = True
-            st.success("✅ Allocation plan officially approved and dispatched to live municipal grid!")
+            st.success(
+                "✅ Allocation plan officially approved and dispatched to live municipal grid!"
+            )
             st.rerun()

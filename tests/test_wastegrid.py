@@ -12,9 +12,12 @@ Verifies:
 """
 
 import os
-import pytest
+from datetime import datetime
+
 import pandas as pd
-from wastegrid import db, auth, optimizer, alert_engine, reports_module, forecast
+import pytest
+
+from wastegrid import alert_engine, auth, db, forecast, optimizer, reports_module
 
 
 @pytest.fixture(autouse=True)
@@ -28,6 +31,7 @@ def setup_test_db():
 # 1. AUTHENTICATION & SECURITY TESTS
 # =========================================================================
 
+
 def test_password_hashing_and_verification():
     """Test PBKDF2-HMAC-SHA256 password hashing with unique salt."""
     raw_pwd = "SecurePassword@2026"
@@ -35,7 +39,7 @@ def test_password_hashing_and_verification():
 
     assert hashed is not None
     assert len(hashed) == 64  # SHA256 hex digest length
-    assert len(salt) == 32    # 16 bytes hex salt length
+    assert len(salt) == 32  # 16 bytes hex salt length
     assert hashed != raw_pwd
 
     # Verification must succeed for correct password
@@ -62,7 +66,13 @@ def test_seeded_users_exist():
     assert len(users) >= 5
 
     usernames = {u["username"] for u in users}
-    expected = {"admin", "state_admin", "district_admin", "municipality_admin", "factory_admin"}
+    expected = {
+        "admin",
+        "state_admin",
+        "district_admin",
+        "municipality_admin",
+        "factory_admin",
+    }
     assert expected.issubset(usernames)
 
 
@@ -100,7 +110,9 @@ def test_six_authority_roles_login():
 def test_role_mismatch_validation():
     """Verify role mismatch is rejected with clean error message."""
     # Attempting to log into Recycling Facility with State Authority credentials
-    ok, msg = auth.login("state_authority", "Waste@123", selected_role="Recycling Facility")
+    ok, msg = auth.login(
+        "state_authority", "Waste@123", selected_role="Recycling Facility"
+    )
     assert ok is False
     assert "mismatch" in msg.lower()
 
@@ -115,7 +127,9 @@ def test_rbac_permission_matrix():
     # Non-admin roles must NOT have user management access
     for r in ["state", "district", "municipality", "factory"]:
         perms = auth.ROLE_PERMISSIONS.get(r, [])
-        assert "users" not in perms, f"Role {r} should not have access to user management"
+        assert "users" not in perms, (
+            f"Role {r} should not have access to user management"
+        )
 
     # Factory role should have targeted operational views
     fact_perms = auth.ROLE_PERMISSIONS.get("factory", [])
@@ -126,6 +140,7 @@ def test_rbac_permission_matrix():
 # =========================================================================
 # 2. DYNAMIC FACILITY MANAGEMENT & DB CRUD TESTS
 # =========================================================================
+
 
 def test_facility_retrieval_and_creation():
     """Test dynamic facility retrieval and creation in SQLite."""
@@ -184,18 +199,39 @@ def test_facility_status_toggle():
 # 3. MULTI-OBJECTIVE LP OPTIMIZER TESTS
 # =========================================================================
 
+
 def test_optimizer_basic_allocation():
     """Test that optimizer allocates waste within facility capacity and stream compatibility."""
     facilities = [
-        {"id": "A", "accepts": "wet", "capacity_kg": 3000.0, "distance_km": 5.0, "status": "online"},
-        {"id": "B", "accepts": "wet", "capacity_kg": 2000.0, "distance_km": 8.0, "status": "online"},
-        {"id": "C", "accepts": "dry", "capacity_kg": 2500.0, "distance_km": 6.0, "status": "online"},
+        {
+            "id": "A",
+            "accepts": "wet",
+            "capacity_kg": 3000.0,
+            "distance_km": 5.0,
+            "status": "online",
+        },
+        {
+            "id": "B",
+            "accepts": "wet",
+            "capacity_kg": 2000.0,
+            "distance_km": 8.0,
+            "status": "online",
+        },
+        {
+            "id": "C",
+            "accepts": "dry",
+            "capacity_kg": 2500.0,
+            "distance_km": 6.0,
+            "status": "online",
+        },
     ]
 
     wet_total = 4000.0
     dry_total = 2000.0
 
-    allocs, overflow = optimizer.optimize(facilities, wet_total, dry_total, objective="balanced")
+    allocs, overflow = optimizer.optimize(
+        facilities, wet_total, dry_total, objective="balanced"
+    )
 
     # Check non-negativity
     assert allocs["A"] >= 0
@@ -217,8 +253,20 @@ def test_optimizer_basic_allocation():
 def test_optimizer_overflow_when_demand_exceeds_capacity():
     """Test optimizer reports correct overflow when demand exceeds total capacity."""
     facilities = [
-        {"id": "A", "accepts": "wet", "capacity_kg": 1000.0, "distance_km": 5.0, "status": "online"},
-        {"id": "C", "accepts": "dry", "capacity_kg": 1000.0, "distance_km": 6.0, "status": "online"},
+        {
+            "id": "A",
+            "accepts": "wet",
+            "capacity_kg": 1000.0,
+            "distance_km": 5.0,
+            "status": "online",
+        },
+        {
+            "id": "C",
+            "accepts": "dry",
+            "capacity_kg": 1000.0,
+            "distance_km": 6.0,
+            "status": "online",
+        },
     ]
 
     wet_total = 2500.0  # Exceeds 1000 by 1500
@@ -240,7 +288,9 @@ def test_multi_objective_variations():
     dry_total = 2000.0
 
     for obj in ["balanced", "min_overflow", "min_cost", "min_carbon"]:
-        res = optimizer.optimize_multi_objective(facilities, wet_total, dry_total, objective=obj)
+        res = optimizer.optimize_multi_objective(
+            facilities, wet_total, dry_total, objective=obj
+        )
         assert "allocations" in res
         assert "overflow" in res
         assert "transport_cost_inr" in res
@@ -252,6 +302,7 @@ def test_multi_objective_variations():
 # =========================================================================
 # 4. PREDICTIVE OVERFLOW ALERT ENGINE TESTS
 # =========================================================================
+
 
 def test_alert_engine_evaluation():
     """Verify alert engine generates alerts based on thresholds."""
@@ -290,6 +341,7 @@ def test_alert_engine_evaluation():
 # 5. SCENARIO SIMULATOR ISOLATION TEST
 # =========================================================================
 
+
 def test_simulator_does_not_mutate_operational_db():
     """Verify that simulating stress scenarios does not alter operational database records."""
     before_facilities = db.get_all_facilities(include_offline=True)
@@ -304,7 +356,9 @@ def test_simulator_does_not_mutate_operational_db():
             f["capacity_kg"] = 0
             f["status"] = "offline"
 
-    sim_res = optimizer.optimize_multi_objective(sim_facs, hypothetical_wet, hypothetical_dry)
+    sim_res = optimizer.optimize_multi_objective(
+        sim_facs, hypothetical_wet, hypothetical_dry
+    )
     assert sim_res is not None
 
     # Verify operational DB records are completely untouched
@@ -320,6 +374,7 @@ def test_simulator_does_not_mutate_operational_db():
 # =========================================================================
 # 6. CITIZEN GRIEVANCE MODULE TESTS
 # =========================================================================
+
 
 def test_citizen_report_lifecycle():
     """Verify citizen report creation, unique ticket generation, and status updates."""
@@ -342,13 +397,20 @@ def test_citizen_report_lifecycle():
     assert report["status"] == "pending"
 
     # Update status to in_progress with assigned vehicle
-    db.update_citizen_report_status(ticket_id, "in_progress", assigned_vehicle="KA-04-TR-101", resolution_notes="Dispatched compactor unit")
+    db.update_citizen_report_status(
+        ticket_id,
+        "in_progress",
+        assigned_vehicle="KA-04-TR-101",
+        resolution_notes="Dispatched compactor unit",
+    )
     updated = db.get_citizen_report_by_ticket(ticket_id)
     assert updated["status"] == "in_progress"
     assert updated["assigned_to"] == "KA-04-TR-101"
 
     # Resolve report
-    db.update_citizen_report_status(ticket_id, "resolved", resolution_notes="Area cleared and disinfected")
+    db.update_citizen_report_status(
+        ticket_id, "resolved", resolution_notes="Area cleared and disinfected"
+    )
     resolved = db.get_citizen_report_by_ticket(ticket_id)
     assert resolved["status"] == "resolved"
 
@@ -356,6 +418,7 @@ def test_citizen_report_lifecycle():
 # =========================================================================
 # 7. REPORTS & EXPORTS TESTS
 # =========================================================================
+
 
 def test_excel_export_generation():
     """Test multi-sheet Excel export generation."""
@@ -400,7 +463,11 @@ def test_five_tenant_authority_roles():
 
 def test_truck_driver_role_and_logistics_auth():
     """Verify truck driver role authentication, RBAC permissions, and email recovery."""
-    success, msg = auth.login("driver_ramesh", "Driver@123", selected_role="Municipal Truck Driver (In-Cab Logistics)")
+    success, msg = auth.login(
+        "driver_ramesh",
+        "Driver@123",
+        selected_role="Municipal Truck Driver (In-Cab Logistics)",
+    )
     assert success is True, f"Truck driver login failed: {msg}"
 
     # Verify driver user properties
@@ -411,7 +478,77 @@ def test_truck_driver_role_and_logistics_auth():
     assert user["email"] == "driver.ramesh@wastegrid.gov.in"
 
     # Verify self-service password reset with email
-    reset_ok, reset_msg = auth.forgot_password_reset("driver_ramesh", "driver.ramesh@wastegrid.gov.in", "NewDriverPass@123", "NewDriverPass@123")
+    reset_ok, reset_msg = auth.forgot_password_reset(
+        "driver_ramesh",
+        "driver.ramesh@wastegrid.gov.in",
+        "NewDriverPass@123",
+        "NewDriverPass@123",
+    )
     assert reset_ok is True
     # Restore original password
-    auth.change_password("driver_ramesh", "NewDriverPass@123", "Driver@123", "Driver@123")
+    auth.change_password(
+        "driver_ramesh", "NewDriverPass@123", "Driver@123", "Driver@123"
+    )
+
+
+def test_facility_machines_and_capacity_expansion():
+    """Verify auxiliary machinery units can be added to plants and directly expand LP capacity."""
+    initial_facs = {
+        f["id"]: f["capacity_kg"] for f in db.get_all_facilities(include_offline=True)
+    }
+    init_cap_a = initial_facs.get("A", 4000.0)
+
+    # 1. Verify seeded machines exist
+    machines = db.get_facility_machines()
+    assert len(machines) >= 4, "Initial machines should be seeded"
+
+    # 2. Add an extra machine to Plant A (+1,500 kg/day)
+    ok, msg = db.add_facility_machine(
+        "A", "Hydro-Pulse Shredder Mk-V", "shredder", "HP-500", 1500.0, 60.0
+    )
+    assert ok is True
+
+    # 3. Verify Plant A's capacity automatically expanded in SQLite
+    updated_facs = {
+        f["id"]: f["capacity_kg"] for f in db.get_all_facilities(include_offline=True)
+    }
+    assert updated_facs["A"] == init_cap_a + 1500.0
+
+    # 4. Clean up test machine
+    all_m = db.get_facility_machines("A")
+    test_m = next(
+        (m for m in all_m if m["machine_name"] == "Hydro-Pulse Shredder Mk-V"), None
+    )
+    if test_m:
+        del_ok, _ = db.delete_facility_machine(test_m["id"])
+        assert del_ok is True
+
+
+def test_vehicle_commissioning_and_on_demand_dispatch():
+    """Verify vehicles can be added and free drivers can accept on-demand jobs."""
+    test_vid = f"KA-04-TEST-{datetime.now().strftime('%M%S')}"
+    ok, msg = db.add_vehicle(
+        test_vid,
+        "Suresh Babu",
+        "+91 98450 99887",
+        4500.0,
+        "wet",
+        "A",
+        "available",
+        "South",
+    )
+    assert ok is True
+
+    # Assign on-demand job to the newly created truck
+    job_ok, job_msg = db.assign_on_demand_job(
+        test_vid, "Ward 088 — Culinary District", "wet", 3800.0, "A"
+    )
+    assert job_ok is True
+
+    # Verify vehicle record is updated in DB
+    v_list = db.get_all_vehicles()
+    v = next((item for item in v_list if item["id"] == test_vid), None)
+    assert v is not None
+    assert v["status"] == "in_transit"
+    assert v["current_payload_kg"] == 3800.0
+    assert v["target_facility_id"] == "A"

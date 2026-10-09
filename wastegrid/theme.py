@@ -1,6 +1,7 @@
-import streamlit as st
 import base64
 from pathlib import Path
+
+import streamlit as st
 
 
 @st.cache_data
@@ -18,20 +19,20 @@ def get_palette(theme="light"):
     if theme == "dark":
         return {
             "name": "dark",
-            "bg": "#0d131d",             # Deep rich obsidian-slate (NOT pitch pure black)
-            "bg_soft": "#141c28",        # Subtle secondary surface
-            "card_bg": "#151e2b",        # Elevated card background
-            "card_hover": "#1c2738",     # Hover state
-            "border": "#223145",         # Crisp slate border
+            "bg": "#0d131d",  # Deep rich obsidian-slate (NOT pitch pure black)
+            "bg_soft": "#141c28",  # Subtle secondary surface
+            "card_bg": "#151e2b",  # Elevated card background
+            "card_hover": "#1c2738",  # Hover state
+            "border": "#223145",  # Crisp slate border
             "border_subtle": "#1a2636",
-            "text": "#f1f5f9",           # Soft porcelain white (NOT harsh glare)
-            "muted": "#94a3b8",          # Refined slate gray
-            "accent": "#ff3856",         # Luminous surgical red
+            "text": "#f1f5f9",  # Soft porcelain white (NOT harsh glare)
+            "muted": "#94a3b8",  # Refined slate gray
+            "accent": "#ff3856",  # Luminous surgical red
             "accent_bg": "rgba(255, 56, 86, 0.12)",
-            "success": "#22c55e",        # Luminous emerald
-            "warn": "#fbbf24",           # Warm radiant amber
-            "blue": "#38bdf8",           # Sky cyan
-            "purple": "#a855f7",         # Radiant purple
+            "success": "#22c55e",  # Luminous emerald
+            "warn": "#fbbf24",  # Warm radiant amber
+            "blue": "#38bdf8",  # Sky cyan
+            "purple": "#a855f7",  # Radiant purple
             "shadow": "0 2px 6px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3)",
             "divider": "#223145",
         }
@@ -39,27 +40,28 @@ def get_palette(theme="light"):
     # Light palette: Soft architectural zinc-slate (NOT blinding pure white)
     return {
         "name": "light",
-        "bg": "#eef2f6",                 # Balanced atmosphere slate (NOT stark #ffffff)
-        "bg_soft": "#e2e7ef",            # Subtle secondary surface
-        "card_bg": "#ffffff",            # Crisp elevated card
-        "card_hover": "#f8fafc",         # Hover state
-        "border": "#dbe3ec",             # Subtle crisp border
+        "bg": "#eef2f6",  # Balanced atmosphere slate (NOT stark #ffffff)
+        "bg_soft": "#e2e7ef",  # Subtle secondary surface
+        "card_bg": "#ffffff",  # Crisp elevated card
+        "card_hover": "#f8fafc",  # Hover state
+        "border": "#dbe3ec",  # Subtle crisp border
         "border_subtle": "#e8eef6",
-        "text": "#0f172a",               # Rich deep slate (NOT harsh jet black)
-        "muted": "#64748b",              # Elegant slate gray
-        "accent": "#d5001c",             # Porsche red
+        "text": "#0f172a",  # Rich deep slate (NOT harsh jet black)
+        "muted": "#64748b",  # Elegant slate gray
+        "accent": "#d5001c",  # Porsche red
         "accent_bg": "rgba(213, 0, 28, 0.08)",
-        "success": "#16a34a",            # Fresh emerald
-        "warn": "#d97706",               # Warm amber
-        "blue": "#0284c7",               # Vibrant ocean blue
-        "purple": "#7c3aed",             # Royal purple
+        "success": "#16a34a",  # Fresh emerald
+        "warn": "#d97706",  # Warm amber
+        "blue": "#0284c7",  # Vibrant ocean blue
+        "purple": "#7c3aed",  # Royal purple
         "shadow": "0 1px 3px rgba(15,23,42,0.06), 0 6px 16px rgba(15,23,42,0.04)",
         "divider": "#dbe3ec",
     }
 
 
 def inject_css(p):
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <style>
         html, body, [class*="css"], .stApp, button, input, textarea {{
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif !important;
@@ -73,12 +75,12 @@ def inject_css(p):
         [data-testid="stHeader"],
         [data-testid="stBottom"],
         .main {{
-            background: {p['bg']} !important;
-            background-color: {p['bg']} !important;
-            color: {p['text']} !important;
+            background: {p["bg"]} !important;
+            background-color: {p["bg"]} !important;
+            color: {p["text"]} !important;
         }}
 
-        h1, h2, h3, h4, p, span, label {{ color: {p['text']}; }}
+        h1, h2, h3, h4, p, span, label {{ color: {p["text"]}; }}
 
         [data-testid="stHeader"] {{
             height: 3rem !important;
@@ -86,11 +88,11 @@ def inject_css(p):
             z-index: 100 !important;
         }}
         [data-testid="stSidebar"] {{
-            background-color: {p['bg_soft']} !important;
-            border-right: 1px solid {p['border']} !important;
+            background-color: {p["bg_soft"]} !important;
+            border-right: 1px solid {p["border"]} !important;
         }}
         [data-testid="stSidebar"] * {{
-            color: {p['text']};
+            color: {p["text"]};
         }}
         /* Keep stToolbar visible for stExpandSidebarButton */
         [data-testid="stToolbar"] {{
@@ -116,11 +118,11 @@ def inject_css(p):
             top: 14px !important;
             left: 18px !important;
             z-index: 9999999 !important;
-            background: {p['card_bg']} !important;
-            border: 1.5px solid {p['border']} !important;
+            background: {p["card_bg"]} !important;
+            border: 1.5px solid {p["border"]} !important;
             border-radius: 8px !important;
             padding: 8px 12px !important;
-            box-shadow: {p['shadow']} !important;
+            box-shadow: {p["shadow"]} !important;
             cursor: pointer !important;
             align-items: center !important;
             justify-content: center !important;
@@ -128,8 +130,8 @@ def inject_css(p):
         }}
         [data-testid="stExpandSidebarButton"]:hover,
         [data-testid="stSidebarCollapsedControl"]:hover {{
-            border-color: {p['blue']} !important;
-            background: {p['card_hover']} !important;
+            border-color: {p["blue"]} !important;
+            background: {p["card_hover"]} !important;
             transform: translateY(-1px) !important;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
         }}
@@ -138,7 +140,7 @@ def inject_css(p):
             content: "☰" !important;
             font-size: 1.4rem !important;
             font-weight: 900 !important;
-            color: {p['text']} !important;
+            color: {p["text"]} !important;
             display: inline-block !important;
             line-height: 1 !important;
         }}
@@ -150,15 +152,15 @@ def inject_css(p):
         [data-testid="stSidebarCollapseButton"] {{
             display: flex !important;
             visibility: visible !important;
-            color: {p['text']} !important;
-            background: {p['card_bg']} !important;
-            border: 1px solid {p['border']} !important;
+            color: {p["text"]} !important;
+            background: {p["card_bg"]} !important;
+            border: 1px solid {p["border"]} !important;
             border-radius: 6px !important;
             padding: 4px 8px !important;
         }}
         [data-testid="stSidebarCollapseButton"]:hover {{
-            border-color: {p['accent']} !important;
-            color: {p['accent']} !important;
+            border-color: {p["accent"]} !important;
+            color: {p["accent"]} !important;
         }}
 
         .block-container {{
@@ -199,11 +201,11 @@ def inject_css(p):
             }}
         }}
         .service-card {{
-            background: {p['card_bg']};
-            border: 1px solid {p['border']};
+            background: {p["card_bg"]};
+            border: 1px solid {p["border"]};
             border-radius: 12px;
             padding: 20px;
-            box-shadow: {p['shadow']};
+            box-shadow: {p["shadow"]};
             transition: all 0.25s ease;
             display: flex;
             flex-direction: column;
@@ -212,15 +214,15 @@ def inject_css(p):
         .service-card:hover {{
             transform: translateY(-3px);
             box-shadow: 0 10px 25px rgba(0,0,0,0.12);
-            border-color: {p['blue']};
+            border-color: {p["blue"]};
         }}
 
         /* Professional Full Footer */
         .site-footer {{
             margin-top: 48px;
             padding-top: 32px;
-            border-top: 1px solid {p['border']};
-            color: {p['muted']};
+            border-top: 1px solid {p["border"]};
+            color: {p["muted"]};
             font-size: 0.82rem;
             line-height: 1.7;
         }}
@@ -241,7 +243,7 @@ def inject_css(p):
             font-weight: 800;
             letter-spacing: 0.12em;
             text-transform: uppercase;
-            color: {p['text']};
+            color: {p["text"]};
             margin-bottom: 12px;
             display: flex;
             align-items: center;
@@ -249,12 +251,12 @@ def inject_css(p):
         }}
         .footer-bottom {{
             padding-top: 18px;
-            border-top: 1px solid {p['border_subtle']};
+            border-top: 1px solid {p["border_subtle"]};
             display: flex;
             justify-content: space-between;
             align-items: center;
             font-size: 0.72rem;
-            color: {p['muted']};
+            color: {p["muted"]};
             flex-wrap: wrap;
             gap: 12px;
         }}
@@ -265,7 +267,7 @@ def inject_css(p):
             align-items: center;
             justify-content: space-between;
             padding-bottom: 20px;
-            border-bottom: 2px solid {p['border']};
+            border-bottom: 2px solid {p["border"]};
             margin-bottom: 24px;
         }}
         .wg-brand {{ display: flex; align-items: center; gap: 14px; }}
@@ -275,11 +277,11 @@ def inject_css(p):
             font-weight: 800;
             letter-spacing: -0.03em;
             line-height: 1;
-            color: {p['text']};
+            color: {p["text"]};
         }}
         .wg-tagline {{
             font-size: 0.68rem;
-            color: {p['muted']};
+            color: {p["muted"]};
             margin-top: 6px;
             letter-spacing: 0.22em;
             text-transform: uppercase;
@@ -302,14 +304,14 @@ def inject_css(p):
             font-weight: 700;
             letter-spacing: 0.14em;
             text-transform: uppercase;
-            background: {p['card_bg']};
-            border: 1px solid {p['border']};
-            box-shadow: {p['shadow']};
+            background: {p["card_bg"]};
+            border: 1px solid {p["border"]};
+            box-shadow: {p["shadow"]};
             transition: all 0.3s ease;
         }}
-        .hdr-badge.optimal {{ border-color: rgba(34, 197, 94, 0.4); color: {p['success']}; }}
-        .hdr-badge.warn {{ border-color: rgba(245, 158, 11, 0.5); color: {p['warn']}; }}
-        .hdr-badge.alert {{ border-color: rgba(255, 56, 86, 0.5); color: {p['accent']}; }}
+        .hdr-badge.optimal {{ border-color: rgba(34, 197, 94, 0.4); color: {p["success"]}; }}
+        .hdr-badge.warn {{ border-color: rgba(245, 158, 11, 0.5); color: {p["warn"]}; }}
+        .hdr-badge.alert {{ border-color: rgba(255, 56, 86, 0.5); color: {p["accent"]}; }}
         
         .pulse-dot {{
             width: 7px;
@@ -318,30 +320,30 @@ def inject_css(p):
             display: inline-block;
             animation: pulseBeacon 1.8s infinite ease-in-out;
         }}
-        .pulse-dot.green {{ background: {p['success']}; box-shadow: 0 0 8px {p['success']}; }}
-        .pulse-dot.yellow {{ background: {p['warn']}; box-shadow: 0 0 8px {p['warn']}; }}
-        .pulse-dot.red {{ background: {p['accent']}; box-shadow: 0 0 8px {p['accent']}; }}
+        .pulse-dot.green {{ background: {p["success"]}; box-shadow: 0 0 8px {p["success"]}; }}
+        .pulse-dot.yellow {{ background: {p["warn"]}; box-shadow: 0 0 8px {p["warn"]}; }}
+        .pulse-dot.red {{ background: {p["accent"]}; box-shadow: 0 0 8px {p["accent"]}; }}
 
         .theme-toggle-link {{
             display: inline-flex;
             align-items: center;
             gap: 8px;
             padding: 8px 16px;
-            background: {p['card_bg']};
-            border: 1px solid {p['border']};
+            background: {p["card_bg"]};
+            border: 1px solid {p["border"]};
             border-radius: 8px;
             font-size: 0.7rem;
             font-weight: 700;
             letter-spacing: 0.12em;
             text-transform: uppercase;
-            color: {p['text']} !important;
+            color: {p["text"]} !important;
             text-decoration: none !important;
-            box-shadow: {p['shadow']};
+            box-shadow: {p["shadow"]};
             transition: all 0.2s ease;
         }}
         .theme-toggle-link:hover {{
-            border-color: {p['accent']};
-            color: {p['accent']} !important;
+            border-color: {p["accent"]};
+            color: {p["accent"]} !important;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }}
@@ -354,27 +356,27 @@ def inject_css(p):
             margin-bottom: 22px;
         }}
         .m-card {{
-            background: {p['card_bg']};
-            border: 1px solid {p['border']};
-            border-top: 3px solid {p['blue']};
+            background: {p["card_bg"]};
+            border: 1px solid {p["border"]};
+            border-top: 3px solid {p["blue"]};
             border-radius: 8px;
             padding: 22px;
-            box-shadow: {p['shadow']};
+            box-shadow: {p["shadow"]};
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }}
         .m-card:hover {{
             transform: translateY(-3px);
-            border-color: {p['muted']};
+            border-color: {p["muted"]};
             box-shadow: 0 8px 24px rgba(0,0,0,0.18);
         }}
         .m-card.hero {{
-            border-top: 3px solid {p['accent']};
+            border-top: 3px solid {p["accent"]};
         }}
-        .m-card.green {{ border-top: 3px solid {p['success']}; }}
-        .m-card.purple {{ border-top: 3px solid {p['purple']}; }}
+        .m-card.green {{ border-top: 3px solid {p["success"]}; }}
+        .m-card.purple {{ border-top: 3px solid {p["purple"]}; }}
         .m-label {{
             font-size: 0.62rem;
-            color: {p['muted']};
+            color: {p["muted"]};
             text-transform: uppercase;
             letter-spacing: 0.18em;
             font-weight: 700;
@@ -388,40 +390,40 @@ def inject_css(p):
             font-weight: 600;
             letter-spacing: -0.03em;
             line-height: 1;
-            color: {p['text']};
+            color: {p["text"]};
             font-variant-numeric: tabular-nums;
         }}
         .m-card.hero .m-value {{ font-size: 3rem; }}
         .m-value.text {{ font-size: 1.5rem; font-weight: 600; }}
-        .m-value.red {{ color: {p['accent']} !important; }}
-        .m-value.green {{ color: {p['success']} !important; }}
+        .m-value.red {{ color: {p["accent"]} !important; }}
+        .m-value.green {{ color: {p["success"]} !important; }}
 
         /* Status Banner */
         .wg-status {{
-            background: {p['card_bg']};
-            border: 1px solid {p['border']};
-            border-left: 4px solid {p['success']};
+            background: {p["card_bg"]};
+            border: 1px solid {p["border"]};
+            border-left: 4px solid {p["success"]};
             border-radius: 6px;
             padding: 16px 22px;
             font-size: 0.85rem;
-            color: {p['text']};
+            color: {p["text"]};
             margin-bottom: 20px;
-            box-shadow: {p['shadow']};
+            box-shadow: {p["shadow"]};
             font-weight: 500;
             display: flex;
             align-items: center;
             gap: 10px;
         }}
         .wg-status.red {{
-            border-left-color: {p['accent']};
-            background: {p['accent_bg']};
-            color: {p['accent']} !important;
+            border-left-color: {p["accent"]};
+            background: {p["accent_bg"]};
+            color: {p["accent"]} !important;
             font-weight: 700;
         }}
         .wg-status.warn {{
-            border-left-color: {p['warn']};
+            border-left-color: {p["warn"]};
             background: rgba(245,158,11,0.08);
-            color: {p['warn']} !important;
+            color: {p["warn"]} !important;
             margin-top: -12px;
             margin-bottom: 20px;
             font-weight: 600;
@@ -441,28 +443,28 @@ def inject_css(p):
             gap: 8px;
             text-align: center;
             padding: 16px 12px;
-            background: {p['card_bg']};
-            border: 1px solid {p['border']};
+            background: {p["card_bg"]};
+            border: 1px solid {p["border"]};
             border-radius: 6px;
             font-size: 0.7rem;
             font-weight: 700;
             letter-spacing: 0.12em;
             text-transform: uppercase;
-            color: {p['text']} !important;
+            color: {p["text"]} !important;
             text-decoration: none !important;
-            box-shadow: {p['shadow']};
+            box-shadow: {p["shadow"]};
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }}
         .act-btn:hover {{
-            border-color: {p['accent']};
-            color: {p['accent']} !important;
+            border-color: {p["accent"]};
+            color: {p["accent"]} !important;
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(213,0,28,0.2);
         }}
         .act-btn.primary {{
-            background: {p['accent']};
+            background: {p["accent"]};
             color: #ffffff !important;
-            border-color: {p['accent']};
+            border-color: {p["accent"]};
         }}
         .act-btn.primary:hover {{
             background: #b00018;
@@ -473,12 +475,12 @@ def inject_css(p):
 
         /* Stream Breakdown Component */
         .breakdown-card {{
-            background: {p['card_bg']};
-            border: 1px solid {p['border']};
+            background: {p["card_bg"]};
+            border: 1px solid {p["border"]};
             border-radius: 8px;
             padding: 20px 24px;
             margin-bottom: 24px;
-            box-shadow: {p['shadow']};
+            box-shadow: {p["shadow"]};
         }}
         .breakdown-header {{
             display: flex;
@@ -491,7 +493,7 @@ def inject_css(p):
             font-weight: 700;
             letter-spacing: 0.18em;
             text-transform: uppercase;
-            color: {p['muted']};
+            color: {p["muted"]};
             display: flex;
             align-items: center;
             gap: 6px;
@@ -499,12 +501,12 @@ def inject_css(p):
         .breakdown-ratio {{
             font-size: 0.8rem;
             font-weight: 600;
-            color: {p['text']};
+            color: {p["text"]};
             font-variant-numeric: tabular-nums;
         }}
         .split-bar-wrap {{
             height: 10px;
-            background: {p['border']};
+            background: {p["border"]};
             border-radius: 5px;
             overflow: hidden;
             display: flex;
@@ -512,19 +514,19 @@ def inject_css(p):
         }}
         .split-bar-wet {{
             height: 100%;
-            background: {p['blue']};
+            background: {p["blue"]};
             transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
         }}
         .split-bar-dry {{
             height: 100%;
-            background: {p['purple']};
+            background: {p["purple"]};
             transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
         }}
         .breakdown-legend {{
             display: flex;
             justify-content: space-between;
             font-size: 0.75rem;
-            color: {p['muted']};
+            color: {p["muted"]};
         }}
         .legend-item {{
             display: flex;
@@ -541,12 +543,12 @@ def inject_css(p):
         .sec-title {{
             font-size: 0.72rem;
             font-weight: 800;
-            color: {p['text']};
+            color: {p["text"]};
             letter-spacing: 0.22em;
             text-transform: uppercase;
             margin: 18px 0 16px 0;
             padding-bottom: 8px;
-            border-bottom: 2px solid {p['accent']};
+            border-bottom: 2px solid {p["accent"]};
             display: inline-flex;
             align-items: center;
             gap: 8px;
@@ -560,16 +562,16 @@ def inject_css(p):
             margin-bottom: 32px;
         }}
         .fac-card {{
-            background: {p['card_bg']};
-            border: 1px solid {p['border']};
+            background: {p["card_bg"]};
+            border: 1px solid {p["border"]};
             border-radius: 8px;
             padding: 22px;
-            box-shadow: {p['shadow']};
+            box-shadow: {p["shadow"]};
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }}
         .fac-card:hover {{
             transform: translateY(-3px);
-            border-color: {p['muted']};
+            border-color: {p["muted"]};
             box-shadow: 0 8px 24px rgba(0,0,0,0.18);
         }}
         .fac-card.offline {{
@@ -584,7 +586,7 @@ def inject_css(p):
         .fac-name {{
             font-weight: 700;
             font-size: 0.98rem;
-            color: {p['text']};
+            color: {p["text"]};
         }}
         .fac-badge {{
             font-size: 0.6rem;
@@ -594,11 +596,11 @@ def inject_css(p):
             padding: 4px 10px;
             border-radius: 999px;
         }}
-        .fac-badge.active {{ background: rgba(34, 197, 94, 0.15); color: {p['success']}; border: 1px solid rgba(34, 197, 94, 0.3); }}
-        .fac-badge.offline {{ background: rgba(239, 68, 68, 0.15); color: {p['accent']}; border: 1px solid rgba(239, 68, 68, 0.3); }}
+        .fac-badge.active {{ background: rgba(34, 197, 94, 0.15); color: {p["success"]}; border: 1px solid rgba(34, 197, 94, 0.3); }}
+        .fac-badge.offline {{ background: rgba(239, 68, 68, 0.15); color: {p["accent"]}; border: 1px solid rgba(239, 68, 68, 0.3); }}
         .fac-type {{
             font-size: 0.6rem;
-            color: {p['muted']};
+            color: {p["muted"]};
             text-transform: uppercase;
             letter-spacing: 0.16em;
             font-weight: 600;
@@ -606,7 +608,7 @@ def inject_css(p):
         }}
         .fac-bar-wrap {{
             height: 8px;
-            background: {p['border']};
+            background: {p["border"]};
             border-radius: 4px;
             overflow: hidden;
             margin-top: 18px;
@@ -619,7 +621,7 @@ def inject_css(p):
         .fac-stat {{
             margin-top: 12px;
             font-size: 0.82rem;
-            color: {p['text']};
+            color: {p["text"]};
             font-weight: 500;
             font-variant-numeric: tabular-nums;
         }}
@@ -639,21 +641,21 @@ def inject_css(p):
             margin-bottom: 22px;
         }}
         .cmp-card {{
-            background: {p['card_bg']};
-            border: 1px solid {p['border']};
-            border-top: 3px solid {p['muted']};
+            background: {p["card_bg"]};
+            border: 1px solid {p["border"]};
+            border-top: 3px solid {p["muted"]};
             border-radius: 8px;
             padding: 24px;
-            box-shadow: {p['shadow']};
+            box-shadow: {p["shadow"]};
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }}
         .cmp-card:hover {{ transform: translateY(-3px); }}
         .cmp-card.win {{
-            border-top-color: {p['success']};
+            border-top-color: {p["success"]};
         }}
         .cmp-label {{
             font-size: 0.62rem;
-            color: {p['muted']};
+            color: {p["muted"]};
             text-transform: uppercase;
             letter-spacing: 0.18em;
             font-weight: 700;
@@ -664,22 +666,22 @@ def inject_css(p):
             font-weight: 600;
             letter-spacing: -0.03em;
             line-height: 1;
-            color: {p['text']};
+            color: {p["text"]};
             font-variant-numeric: tabular-nums;
         }}
-        .cmp-value.red {{ color: {p['accent']} !important; }}
-        .cmp-value.green {{ color: {p['success']} !important; }}
+        .cmp-value.red {{ color: {p["accent"]} !important; }}
+        .cmp-value.green {{ color: {p["success"]} !important; }}
 
         /* Success banner */
         .success-banner {{
-            border-left: 4px solid {p['success']};
+            border-left: 4px solid {p["success"]};
             background: rgba(22,163,74,0.08);
             border-radius: 6px;
             padding: 16px 22px;
             font-size: 0.85rem;
             font-weight: 700;
-            color: {p['success']};
-            box-shadow: {p['shadow']};
+            color: {p["success"]};
+            box-shadow: {p["shadow"]};
             margin-top: 14px;
             margin-bottom: 24px;
         }}
@@ -692,35 +694,35 @@ def inject_css(p):
             margin-bottom: 18px;
         }}
         .fc-day-card {{
-            background: {p['card_bg']};
-            border: 1px solid {p['border']};
+            background: {p["card_bg"]};
+            border: 1px solid {p["border"]};
             border-radius: 8px;
             padding: 16px 12px;
             text-align: center;
-            box-shadow: {p['shadow']};
+            box-shadow: {p["shadow"]};
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
         }}
         .fc-day-card:hover {{
             transform: translateY(-3px);
-            border-color: {p['muted']};
+            border-color: {p["muted"]};
         }}
         .fc-day-card.overflow {{
-            border-color: {p['accent']};
-            background: {p['accent_bg']};
+            border-color: {p["accent"]};
+            background: {p["accent_bg"]};
         }}
         .fc-day-name {{
             font-size: 0.72rem;
             font-weight: 800;
             letter-spacing: 0.14em;
             text-transform: uppercase;
-            color: {p['muted']};
+            color: {p["muted"]};
             margin-bottom: 8px;
         }}
         .fc-meter-wrap {{
             height: 90px;
             width: 14px;
-            background: {p['border']};
+            background: {p["border"]};
             border-radius: 7px;
             margin: 0 auto 12px auto;
             position: relative;
@@ -733,12 +735,12 @@ def inject_css(p):
             border-radius: 7px;
             transition: height 0.8s ease;
         }}
-        .fc-meter-fill.normal {{ background: {p['blue']}; }}
-        .fc-meter-fill.surge {{ background: {p['accent']}; }}
+        .fc-meter-fill.normal {{ background: {p["blue"]}; }}
+        .fc-meter-fill.surge {{ background: {p["accent"]}; }}
         .fc-day-val {{
             font-size: 1.05rem;
             font-weight: 700;
-            color: {p['text']};
+            color: {p["text"]};
             font-variant-numeric: tabular-nums;
             line-height: 1;
         }}
@@ -752,16 +754,16 @@ def inject_css(p):
             border-radius: 4px;
             display: inline-block;
         }}
-        .fc-day-badge.safe {{ background: rgba(34,197,94,0.15); color: {p['success']}; }}
-        .fc-day-badge.risk {{ background: rgba(255,56,86,0.2); color: {p['accent']}; }}
+        .fc-day-badge.safe {{ background: rgba(34,197,94,0.15); color: {p["success"]}; }}
+        .fc-day-badge.risk {{ background: rgba(255,56,86,0.2); color: {p["accent"]}; }}
 
         /* Executive HTML Forecast Table */
         .fc-table-wrap {{
-            background: {p['card_bg']};
-            border: 1px solid {p['border']};
+            background: {p["card_bg"]};
+            border: 1px solid {p["border"]};
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: {p['shadow']};
+            box-shadow: {p["shadow"]};
             margin-bottom: 28px;
         }}
         .fc-table {{
@@ -771,26 +773,26 @@ def inject_css(p):
             font-size: 0.82rem;
         }}
         .fc-table th {{
-            background: {p['bg_soft']};
-            color: {p['muted']};
+            background: {p["bg_soft"]};
+            color: {p["muted"]};
             font-size: 0.64rem;
             font-weight: 700;
             letter-spacing: 0.14em;
             text-transform: uppercase;
             padding: 14px 18px;
-            border-bottom: 1px solid {p['border']};
+            border-bottom: 1px solid {p["border"]};
         }}
         .fc-table td {{
             padding: 13px 18px;
-            border-bottom: 1px solid {p['border_subtle']};
-            color: {p['text']};
+            border-bottom: 1px solid {p["border_subtle"]};
+            color: {p["text"]};
             font-variant-numeric: tabular-nums;
         }}
         .fc-table tr:last-child td {{
             border-bottom: none;
         }}
         .fc-table tr:hover td {{
-            background: {p['bg_soft']};
+            background: {p["bg_soft"]};
         }}
         .fc-pill {{
             display: inline-flex;
@@ -803,57 +805,57 @@ def inject_css(p):
             letter-spacing: 0.06em;
             text-transform: uppercase;
         }}
-        .fc-pill.safe {{ background: rgba(34,197,94,0.12); color: {p['success']}; }}
-        .fc-pill.overflow {{ background: rgba(255,56,86,0.15); color: {p['accent']}; }}
+        .fc-pill.safe {{ background: rgba(34,197,94,0.12); color: {p["success"]}; }}
+        .fc-pill.overflow {{ background: rgba(255,56,86,0.15); color: {p["accent"]}; }}
 
         /* Data Ingestion Box */
         .data-source-card {{
-            background: {p['card_bg']};
-            border: 1px solid {p['border']};
+            background: {p["card_bg"]};
+            border: 1px solid {p["border"]};
             border-radius: 8px;
             padding: 20px 24px;
             margin-bottom: 28px;
-            box-shadow: {p['shadow']};
+            box-shadow: {p["shadow"]};
         }}
 
         /* Streamlit overrides */
         [data-testid="stExpander"],
         details[data-testid="stExpander"],
         [data-testid="stExpander"] details {{
-            background: {p['card_bg']} !important;
-            background-color: {p['card_bg']} !important;
-            border: 1px solid {p['border']} !important;
+            background: {p["card_bg"]} !important;
+            background-color: {p["card_bg"]} !important;
+            border: 1px solid {p["border"]} !important;
             border-radius: 8px !important;
             overflow: hidden !important;
-            box-shadow: {p['shadow']} !important;
+            box-shadow: {p["shadow"]} !important;
             margin-bottom: 24px !important;
         }}
         [data-testid="stExpander"] summary,
         details[data-testid="stExpander"] > summary,
         [data-testid="stExpander"] > summary {{
-            background: {p['card_bg']} !important;
-            background-color: {p['card_bg']} !important;
+            background: {p["card_bg"]} !important;
+            background-color: {p["card_bg"]} !important;
             font-weight: 700 !important;
             font-size: 0.72rem !important;
             letter-spacing: 0.14em !important;
             text-transform: uppercase !important;
             padding: 16px 22px !important;
-            color: {p['text']} !important;
-            border-bottom: 1px solid {p['border_subtle']} !important;
+            color: {p["text"]} !important;
+            border-bottom: 1px solid {p["border_subtle"]} !important;
         }}
         [data-testid="stExpander"] summary:hover,
         details[data-testid="stExpander"] > summary:hover {{
-            background: {p['bg_soft']} !important;
-            background-color: {p['bg_soft']} !important;
-            color: {p['accent']} !important;
+            background: {p["bg_soft"]} !important;
+            background-color: {p["bg_soft"]} !important;
+            color: {p["accent"]} !important;
         }}
         [data-testid="stExpander"] summary *,
         details[data-testid="stExpander"] > summary * {{
-            color: {p['text']} !important;
+            color: {p["text"]} !important;
         }}
         [data-testid="stExpanderDetails"] {{
-            background: {p['card_bg']} !important;
-            background-color: {p['card_bg']} !important;
+            background: {p["card_bg"]} !important;
+            background-color: {p["card_bg"]} !important;
             padding: 16px 22px !important;
         }}
 
@@ -863,60 +865,60 @@ def inject_css(p):
             padding: 4px 0 !important;
         }}
         [data-testid="stFileUploaderDropzone"] {{
-            background: {p['bg_soft']} !important;
-            border: 1px dashed {p['muted']} !important;
+            background: {p["bg_soft"]} !important;
+            border: 1px dashed {p["muted"]} !important;
             border-radius: 8px !important;
             padding: 16px !important;
             transition: all 0.2s ease !important;
         }}
         [data-testid="stFileUploaderDropzone"]:hover {{
-            border-color: {p['accent']} !important;
-            background: {p['accent_bg']} !important;
+            border-color: {p["accent"]} !important;
+            background: {p["accent_bg"]} !important;
         }}
         [data-testid="stFileUploaderDropzone"] * {{
-            color: {p['text']} !important;
+            color: {p["text"]} !important;
         }}
         [data-testid="stFileUploaderDropzone"] button {{
-            background: {p['card_bg']} !important;
-            border: 1px solid {p['border']} !important;
-            color: {p['text']} !important;
+            background: {p["card_bg"]} !important;
+            border: 1px solid {p["border"]} !important;
+            color: {p["text"]} !important;
             font-weight: 700 !important;
             font-size: 0.72rem !important;
             letter-spacing: 0.08em !important;
             border-radius: 6px !important;
-            box-shadow: {p['shadow']} !important;
+            box-shadow: {p["shadow"]} !important;
             transition: all 0.2s ease !important;
         }}
         [data-testid="stFileUploaderDropzone"] button:hover {{
-            border-color: {p['accent']} !important;
-            color: {p['accent']} !important;
+            border-color: {p["accent"]} !important;
+            color: {p["accent"]} !important;
             transform: translateY(-1px) !important;
         }}
         [data-testid="stFileUploaderDropzone"] button * {{
-            color: {p['text']} !important;
+            color: {p["text"]} !important;
         }}
 
         /* Streamlit Native Buttons (Used for 4 Actions Grid) */
         [data-testid="stBaseButton-secondary"] {{
-            background: {p['card_bg']} !important;
-            border: 1px solid {p['border']} !important;
+            background: {p["card_bg"]} !important;
+            border: 1px solid {p["border"]} !important;
             border-radius: 6px !important;
             padding: 14px 12px !important;
-            color: {p['text']} !important;
-            box-shadow: {p['shadow']} !important;
+            color: {p["text"]} !important;
+            box-shadow: {p["shadow"]} !important;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
             width: 100% !important;
         }}
         [data-testid="stBaseButton-secondary"]:hover {{
-            border-color: {p['accent']} !important;
-            color: {p['accent']} !important;
+            border-color: {p["accent"]} !important;
+            color: {p["accent"]} !important;
             transform: translateY(-2px) !important;
             box-shadow: 0 6px 16px rgba(213,0,28,0.2) !important;
         }}
         [data-testid="stBaseButton-secondary"] p,
         [data-testid="stBaseButton-secondary"] span,
         [data-testid="stBaseButton-secondary"] div {{
-            color: {p['text']} !important;
+            color: {p["text"]} !important;
             font-size: 0.72rem !important;
             font-weight: 700 !important;
             letter-spacing: 0.12em !important;
@@ -925,12 +927,12 @@ def inject_css(p):
         [data-testid="stBaseButton-secondary"]:hover p,
         [data-testid="stBaseButton-secondary"]:hover span,
         [data-testid="stBaseButton-secondary"]:hover div {{
-            color: {p['accent']} !important;
+            color: {p["accent"]} !important;
         }}
 
         [data-testid="stBaseButton-primary"] {{
-            background: {p['accent']} !important;
-            border: 1px solid {p['accent']} !important;
+            background: {p["accent"]} !important;
+            border: 1px solid {p["accent"]} !important;
             border-radius: 6px !important;
             padding: 14px 12px !important;
             color: #ffffff !important;
@@ -961,13 +963,13 @@ def inject_css(p):
         }}
         .stDownloadButton > button,
         [data-testid="stDownloadButton"] > button {{
-            background: {p['accent']} !important;
+            background: {p["accent"]} !important;
             color: #ffffff !important;
             font-weight: 700 !important;
             font-size: 0.74rem !important;
             letter-spacing: 0.12em !important;
             text-transform: uppercase !important;
-            border: 1px solid {p['accent']} !important;
+            border: 1px solid {p["accent"]} !important;
             border-radius: 6px !important;
             padding: 12px 24px !important;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -1007,11 +1009,11 @@ def inject_css(p):
             margin: 20px auto 30px auto;
         }}
         .login-card {{
-            background: {p['card_bg']};
-            border: 1px solid {p['border']};
+            background: {p["card_bg"]};
+            border: 1px solid {p["border"]};
             border-radius: 12px;
             padding: 28px 32px;
-            box-shadow: {p['shadow']};
+            box-shadow: {p["shadow"]};
             margin-bottom: 24px;
         }}
         .login-header {{
@@ -1023,13 +1025,13 @@ def inject_css(p):
         .login-title {{
             font-size: 2rem;
             font-weight: 800;
-            color: {p['text']};
+            color: {p["text"]};
             letter-spacing: -0.03em;
             line-height: 1;
         }}
         .login-sub {{
             font-size: 0.72rem;
-            color: {p['muted']};
+            color: {p["muted"]};
             letter-spacing: 0.16em;
             text-transform: uppercase;
             font-weight: 600;
@@ -1037,7 +1039,7 @@ def inject_css(p):
         }}
         .login-notice {{
             font-size: 0.85rem;
-            color: {p['text']};
+            color: {p["text"]};
             opacity: 0.85;
             line-height: 1.5;
         }}
@@ -1046,46 +1048,46 @@ def inject_css(p):
             font-weight: 800;
             letter-spacing: 0.14em;
             text-transform: uppercase;
-            color: {p['text']};
+            color: {p["text"]};
             margin-bottom: 16px;
             padding-bottom: 6px;
-            border-bottom: 2px solid {p['accent']};
+            border-bottom: 2px solid {p["accent"]};
         }}
         .quick-role-row {{
-            background: {p['card_bg']};
-            border: 1px solid {p['border']};
+            background: {p["card_bg"]};
+            border: 1px solid {p["border"]};
             border-radius: 8px;
             padding: 10px 14px;
             margin-bottom: 10px;
             transition: all 0.2s ease;
         }}
         .quick-role-row:hover {{
-            border-color: {p['accent']};
+            border-color: {p["accent"]};
             transform: translateX(4px);
         }}
         .quick-role-title {{
             font-size: 0.82rem;
             font-weight: 700;
-            color: {p['text']};
+            color: {p["text"]};
         }}
         .quick-role-sub {{
             font-size: 0.68rem;
-            color: {p['muted']};
+            color: {p["muted"]};
             margin-top: 2px;
         }}
         .creds-card {{
-            background: {p['card_bg']};
-            border: 1px solid {p['border']};
+            background: {p["card_bg"]};
+            border: 1px solid {p["border"]};
             border-radius: 8px;
             padding: 20px 24px;
-            box-shadow: {p['shadow']};
+            box-shadow: {p["shadow"]};
         }}
         .creds-title {{
             font-size: 0.75rem;
             font-weight: 800;
             letter-spacing: 0.15em;
             text-transform: uppercase;
-            color: {p['text']};
+            color: {p["text"]};
             margin-bottom: 14px;
         }}
 
@@ -1100,14 +1102,14 @@ def inject_css(p):
             font-weight: 700;
             letter-spacing: 0.08em;
             text-transform: uppercase;
-            background: {p['card_bg']};
-            border: 1px solid {p['border']};
-            color: {p['text']};
-            box-shadow: {p['shadow']};
+            background: {p["card_bg"]};
+            border: 1px solid {p["border"]};
+            color: {p["text"]};
+            box-shadow: {p["shadow"]};
         }}
         .user-pill .badge {{
-            background: {p['accent_bg']};
-            color: {p['accent']};
+            background: {p["accent_bg"]};
+            color: {p["accent"]};
             padding: 2px 7px;
             border-radius: 4px;
             font-size: 0.6rem;
@@ -1115,35 +1117,35 @@ def inject_css(p):
 
         /* =================== ROLE HERO BANNER =================== */
         .role-view-hero {{
-            background: {p['card_bg']};
-            border: 1px solid {p['border']};
-            border-left: 5px solid {p['blue']};
+            background: {p["card_bg"]};
+            border: 1px solid {p["border"]};
+            border-left: 5px solid {p["blue"]};
             border-radius: 8px;
             padding: 20px 24px;
             margin-bottom: 24px;
-            box-shadow: {p['shadow']};
+            box-shadow: {p["shadow"]};
         }}
         .role-hero-title {{
             font-size: 1.15rem;
             font-weight: 800;
-            color: {p['text']};
+            color: {p["text"]};
             letter-spacing: -0.01em;
             margin-bottom: 6px;
         }}
         .role-hero-sub {{
             font-size: 0.76rem;
-            color: {p['muted']};
+            color: {p["muted"]};
             line-height: 1.4;
         }}
 
         /* =================== PREDICTIVE CALENDAR =================== */
         .cal-header-card {{
-            background: {p['card_bg']};
-            border: 1px solid {p['border']};
+            background: {p["card_bg"]};
+            border: 1px solid {p["border"]};
             border-radius: 8px;
             padding: 20px 24px;
             margin-bottom: 22px;
-            box-shadow: {p['shadow']};
+            box-shadow: {p["shadow"]};
         }}
         .cal-title-row {{
             display: flex;
@@ -1153,12 +1155,12 @@ def inject_css(p):
         .cal-title {{
             font-size: 1.1rem;
             font-weight: 800;
-            color: {p['text']};
+            color: {p["text"]};
             letter-spacing: -0.01em;
         }}
         .cal-sub {{
             font-size: 0.75rem;
-            color: {p['muted']};
+            color: {p["muted"]};
             margin-top: 4px;
         }}
         .cal-timeline-grid {{
@@ -1171,25 +1173,25 @@ def inject_css(p):
             .cal-timeline-grid {{ grid-template-columns: repeat(4, 1fr); }}
         }}
         .cal-date-card {{
-            background: {p['card_bg']};
-            border: 1px solid {p['border']};
+            background: {p["card_bg"]};
+            border: 1px solid {p["border"]};
             border-radius: 8px;
             padding: 12px 10px;
             text-align: center;
-            box-shadow: {p['shadow']};
+            box-shadow: {p["shadow"]};
             transition: all 0.25s ease;
             position: relative;
         }}
         .cal-date-card:hover {{
             transform: translateY(-3px);
-            border-color: {p['muted']};
+            border-color: {p["muted"]};
         }}
         .cal-date-card.danger {{
-            border-color: {p['accent']};
-            background: {p['accent_bg']};
+            border-color: {p["accent"]};
+            background: {p["accent_bg"]};
         }}
         .cal-date-card.warn {{
-            border-color: {p['warn']};
+            border-color: {p["warn"]};
         }}
         .cal-date-top {{
             display: flex;
@@ -1200,17 +1202,17 @@ def inject_css(p):
         }}
         .cal-day-num {{
             font-weight: 800;
-            color: {p['text']};
+            color: {p["text"]};
         }}
         .cal-day-name {{
             font-weight: 600;
-            color: {p['muted']};
+            color: {p["muted"]};
             text-transform: uppercase;
         }}
         .cal-event-name {{
             font-size: 0.65rem;
             font-weight: 700;
-            color: {p['text']};
+            color: {p["text"]};
             height: 28px;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -1225,13 +1227,13 @@ def inject_css(p):
             display: inline-block;
             text-transform: uppercase;
         }}
-        .cal-badge.normal {{ background: {p['bg_soft']}; color: {p['muted']}; }}
-        .cal-badge.weekend {{ background: rgba(59,130,246,0.15); color: {p['blue']}; }}
-        .cal-badge.festival {{ background: rgba(245,158,11,0.2); color: {p['warn']}; }}
+        .cal-badge.normal {{ background: {p["bg_soft"]}; color: {p["muted"]}; }}
+        .cal-badge.weekend {{ background: rgba(59,130,246,0.15); color: {p["blue"]}; }}
+        .cal-badge.festival {{ background: rgba(245,158,11,0.2); color: {p["warn"]}; }}
         .cal-demand-val {{
             font-size: 0.95rem;
             font-weight: 800;
-            color: {p['text']};
+            color: {p["text"]};
             margin-top: 6px;
             font-variant-numeric: tabular-nums;
         }}
@@ -1239,29 +1241,29 @@ def inject_css(p):
             font-size: 0.58rem;
             font-weight: 700;
             margin-top: 4px;
-            color: {p['muted']};
+            color: {p["muted"]};
         }}
-        .cal-date-card.danger .cal-status-text {{ color: {p['accent']}; }}
-        .cal-date-card.normal .cal-status-text {{ color: {p['success']}; }}
+        .cal-date-card.danger .cal-status-text {{ color: {p["accent"]}; }}
+        .cal-date-card.normal .cal-status-text {{ color: {p["success"]}; }}
 
         /* =================== TRUCK FLEET BRIDGE =================== */
         .truck-header-card {{
-            background: {p['card_bg']};
-            border: 1px solid {p['border']};
+            background: {p["card_bg"]};
+            border: 1px solid {p["border"]};
             border-radius: 8px;
             padding: 20px 24px;
             margin-bottom: 22px;
-            box-shadow: {p['shadow']};
+            box-shadow: {p["shadow"]};
         }}
         .truck-title {{
             font-size: 1.1rem;
             font-weight: 800;
-            color: {p['text']};
+            color: {p["text"]};
             letter-spacing: -0.01em;
         }}
         .truck-sub {{
             font-size: 0.75rem;
-            color: {p['muted']};
+            color: {p["muted"]};
             margin-top: 4px;
         }}
         .bridge-flow-wrap {{
@@ -1269,8 +1271,8 @@ def inject_css(p):
             grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr auto 1.2fr;
             gap: 10px;
             align-items: center;
-            background: {p['bg_soft']};
-            border: 1px solid {p['border']};
+            background: {p["bg_soft"]};
+            border: 1px solid {p["border"]};
             border-radius: 8px;
             padding: 18px 20px;
             margin: 12px 0 20px 0;
@@ -1280,22 +1282,22 @@ def inject_css(p):
             .bridge-arrow {{ display: none; }}
         }}
         .bridge-step {{
-            background: {p['card_bg']};
-            border: 1px solid {p['border']};
+            background: {p["card_bg"]};
+            border: 1px solid {p["border"]};
             border-radius: 6px;
             padding: 12px 14px;
             text-align: left;
-            box-shadow: {p['shadow']};
+            box-shadow: {p["shadow"]};
         }}
         .bridge-step.highlight {{
-            border-color: {p['accent']};
-            background: {p['accent_bg']};
+            border-color: {p["accent"]};
+            background: {p["accent_bg"]};
         }}
         .bridge-step-num {{
             width: 22px;
             height: 22px;
             border-radius: 50%;
-            background: {p['blue']};
+            background: {p["blue"]};
             color: #ffffff;
             font-size: 0.68rem;
             font-weight: 800;
@@ -1305,34 +1307,34 @@ def inject_css(p):
             margin-bottom: 8px;
         }}
         .bridge-step.highlight .bridge-step-num {{
-            background: {p['accent']};
+            background: {p["accent"]};
         }}
         .bridge-step-title {{
             font-size: 0.75rem;
             font-weight: 800;
-            color: {p['text']};
+            color: {p["text"]};
             margin-bottom: 4px;
         }}
         .bridge-step-body {{
             font-size: 0.65rem;
-            color: {p['muted']};
+            color: {p["muted"]};
             line-height: 1.35;
         }}
         .bridge-arrow {{
-            color: {p['muted']};
+            color: {p["muted"]};
             font-size: 1.2rem;
             font-weight: 800;
         }}
 
         /* =================== CARBON SCORECARD =================== */
         .carbon-card {{
-            background: {p['card_bg']};
-            border: 1px solid {p['border']};
-            border-top: 3px solid {p['success']};
+            background: {p["card_bg"]};
+            border: 1px solid {p["border"]};
+            border-top: 3px solid {p["success"]};
             border-radius: 8px;
             padding: 22px 26px;
             margin-bottom: 26px;
-            box-shadow: {p['shadow']};
+            box-shadow: {p["shadow"]};
         }}
         .carbon-title-row {{
             display: flex;
@@ -1343,12 +1345,12 @@ def inject_css(p):
         .carbon-title {{
             font-size: 1rem;
             font-weight: 800;
-            color: {p['text']};
+            color: {p["text"]};
             letter-spacing: -0.01em;
         }}
         .carbon-sub {{
             font-size: 0.72rem;
-            color: {p['muted']};
+            color: {p["muted"]};
             margin-top: 3px;
         }}
         .carbon-badge {{
@@ -1359,7 +1361,7 @@ def inject_css(p):
             padding: 5px 12px;
             border-radius: 999px;
             background: rgba(34,197,94,0.12);
-            color: {p['success']};
+            color: {p["success"]};
             border: 1px solid rgba(34,197,94,0.3);
         }}
         .carbon-grid {{
@@ -1368,8 +1370,8 @@ def inject_css(p):
             gap: 14px;
         }}
         .c-stat-box {{
-            background: {p['bg_soft']};
-            border: 1px solid {p['border_subtle']};
+            background: {p["bg_soft"]};
+            border: 1px solid {p["border_subtle"]};
             border-radius: 6px;
             padding: 16px 14px;
             text-align: left;
@@ -1379,29 +1381,29 @@ def inject_css(p):
             font-weight: 700;
             letter-spacing: 0.12em;
             text-transform: uppercase;
-            color: {p['muted']};
+            color: {p["muted"]};
             margin-bottom: 8px;
         }}
         .c-stat-val {{
             font-size: 1.7rem;
             font-weight: 800;
             letter-spacing: -0.02em;
-            color: {p['text']};
+            color: {p["text"]};
             line-height: 1;
             font-variant-numeric: tabular-nums;
         }}
-        .c-stat-val.green {{ color: {p['success']}; }}
-        .c-stat-val.blue {{ color: {p['blue']}; }}
-        .c-stat-val.purple {{ color: {p['purple']}; }}
-        .c-stat-val.warn {{ color: {p['warn']}; }}
+        .c-stat-val.green {{ color: {p["success"]}; }}
+        .c-stat-val.blue {{ color: {p["blue"]}; }}
+        .c-stat-val.purple {{ color: {p["purple"]}; }}
+        .c-stat-val.warn {{ color: {p["warn"]}; }}
         .c-unit {{
             font-size: 0.8rem;
             font-weight: 600;
-            color: {p['muted']};
+            color: {p["muted"]};
         }}
         .c-stat-sub {{
             font-size: 0.62rem;
-            color: {p['muted']};
+            color: {p["muted"]};
             margin-top: 6px;
         }}
 
@@ -1411,4 +1413,6 @@ def inject_css(p):
             50% {{ transform: scale(1.3); opacity: 0.6; }}
         }}
     </style>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )

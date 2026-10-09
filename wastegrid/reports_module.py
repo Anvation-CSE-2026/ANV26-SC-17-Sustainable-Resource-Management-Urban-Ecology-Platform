@@ -11,9 +11,11 @@ Generates audit-ready CSV, Excel (.xlsx), and JSON reports with date and ward fi
 """
 
 import io
-import streamlit as st
+from datetime import datetime
+
 import pandas as pd
-from datetime import datetime, timezone
+import streamlit as st
+
 from wastegrid import db
 
 
@@ -33,10 +35,10 @@ def render_reports_page(palette):
 
     st.markdown(
         f"""
-        <div style="background:{p['card_bg']}; border:1px solid {p['border']}; border-left:4px solid {p['blue']};
+        <div style="background:{p["card_bg"]}; border:1px solid {p["border"]}; border-left:4px solid {p["blue"]};
                     border-radius:8px; padding:18px 22px; margin-bottom:20px;">
-            <div style="font-size:1.15rem; font-weight:800; color:{p['text']};">📑 Municipal Reports & Data Exports Engine</div>
-            <div style="font-size:0.75rem; color:{p['muted']}; margin-top:4px;">
+            <div style="font-size:1.15rem; font-weight:800; color:{p["text"]};">📑 Municipal Reports & Data Exports Engine</div>
+            <div style="font-size:0.75rem; color:{p["muted"]}; margin-top:4px;">
                 Export verified municipal waste manifests, facility audit compliance reports, vehicle logs, and ESG data in CSV and Excel formats.
             </div>
         </div>
@@ -60,7 +62,9 @@ def render_reports_page(palette):
             ],
         )
     with col_r2:
-        export_format = st.selectbox("Export File Format", ["Excel Workbook (.xlsx)", "Standard CSV (.csv)"])
+        export_format = st.selectbox(
+            "Export File Format", ["Excel Workbook (.xlsx)", "Standard CSV (.csv)"]
+        )
 
     # Load DataFrames
     facilities = db.get_all_facilities(include_offline=True)
@@ -76,7 +80,10 @@ def render_reports_page(palette):
     df_citizens = pd.DataFrame(citizen_reports)
 
     # Preview and Download Package
-    st.markdown(f'<div class="sec-title">📋 REPORT PREVIEW & AUDIT DOWNLOAD</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="sec-title">📋 REPORT PREVIEW & AUDIT DOWNLOAD</div>',
+        unsafe_allow_html=True,
+    )
 
     if report_cat == "Waste Generation by Ward":
         preview_df = df_sources
@@ -103,13 +110,15 @@ def render_reports_page(palette):
     now_tag = datetime.now().strftime("%Y%m%d_%H%M")
     if export_format == "Excel Workbook (.xlsx)":
         if report_cat == "All Datasets (Full Audit Package)":
-            excel_data = generate_excel_bytes({
-                "Facilities": df_facilities,
-                "Waste_Sources": df_sources,
-                "Vehicles": df_vehicles,
-                "Alerts": df_alerts,
-                "Citizen_Grievances": df_citizens,
-            })
+            excel_data = generate_excel_bytes(
+                {
+                    "Facilities": df_facilities,
+                    "Waste_Sources": df_sources,
+                    "Vehicles": df_vehicles,
+                    "Alerts": df_alerts,
+                    "Citizen_Grievances": df_citizens,
+                }
+            )
             file_name = f"WasteGrid_Master_Audit_Report_{now_tag}.xlsx"
         else:
             excel_data = generate_excel_bytes({sheet_name: preview_df})

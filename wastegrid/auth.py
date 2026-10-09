@@ -7,8 +7,10 @@ Secure Database-Backed Authentication and Role-Based Access Control (RBAC) for W
 - Admin user management hooks
 """
 
-import streamlit as st
 from datetime import datetime, timezone
+
+import streamlit as st
+
 from wastegrid import db
 
 # Official 5 Tenant Authority Roles
@@ -34,21 +36,65 @@ OFFICIAL_ROLES = [
 
 # Canonical role matching dictionary
 ROLE_CANONICAL = {
-    "State Waste Management Authority": ["state", "state_authority", "State Waste Management Authority"],
-    "Municipal Commissioner": ["commissioner", "municipality", "Municipal Commissioner"],
-    "Municipal Waste Officer": ["waste_officer", "municipality", "Municipal Waste Officer"],
+    "State Waste Management Authority": [
+        "state",
+        "state_authority",
+        "State Waste Management Authority",
+    ],
+    "Municipal Commissioner": [
+        "commissioner",
+        "municipality",
+        "Municipal Commissioner",
+    ],
+    "Municipal Waste Officer": [
+        "waste_officer",
+        "municipality",
+        "Municipal Waste Officer",
+    ],
     "Zonal Officer": ["zonal_officer", "district", "Zonal Officer"],
-    "Waste Processing & Recycling Facility": ["processing_facility", "recycling_facility", "factory", "Waste Processing & Recycling Facility", "Waste Processing Facility", "Recycling Facility"],
-    "Waste Processing Facility": ["processing_facility", "factory", "Waste Processing Facility"],
+    "Waste Processing & Recycling Facility": [
+        "processing_facility",
+        "recycling_facility",
+        "factory",
+        "Waste Processing & Recycling Facility",
+        "Waste Processing Facility",
+        "Recycling Facility",
+    ],
+    "Waste Processing Facility": [
+        "processing_facility",
+        "factory",
+        "Waste Processing Facility",
+    ],
     "Recycling Facility": ["recycling_facility", "factory", "Recycling Facility"],
-    "Municipal Truck Driver (In-Cab Logistics)": ["truck_driver", "driver_ramesh", "Municipal Truck Driver (In-Cab Logistics)", "Compactor Truck Driver (In-Cab Logistics)"],
+    "Municipal Truck Driver (In-Cab Logistics)": [
+        "truck_driver",
+        "driver_ramesh",
+        "Municipal Truck Driver (In-Cab Logistics)",
+        "Compactor Truck Driver (In-Cab Logistics)",
+    ],
 }
 
 # Page-level role permissions matrix
 BASE_PERMS = [
-    "home", "services", "events", "map", "alerts", "reports", "settings", "logout",
-    "overview", "operations", "allocation", "analytics", "alerts_citizen", "admin_reports",
-    "facilities", "vehicles", "calendar", "carbon", "profile"
+    "home",
+    "services",
+    "events",
+    "map",
+    "alerts",
+    "reports",
+    "settings",
+    "logout",
+    "overview",
+    "operations",
+    "allocation",
+    "analytics",
+    "alerts_citizen",
+    "admin_reports",
+    "facilities",
+    "vehicles",
+    "calendar",
+    "carbon",
+    "profile",
 ]
 
 ROLE_PERMISSIONS = {
@@ -63,7 +109,16 @@ ROLE_PERMISSIONS = {
     "processing_facility": BASE_PERMS,
     "factory": BASE_PERMS,
     "recycling_facility": BASE_PERMS,
-    "truck_driver": ["home", "driver_in_cab", "driver_route", "driver_pass", "alerts", "settings", "logout", "profile"],
+    "truck_driver": [
+        "home",
+        "driver_in_cab",
+        "driver_route",
+        "driver_pass",
+        "alerts",
+        "settings",
+        "logout",
+        "profile",
+    ],
 }
 
 
@@ -92,25 +147,37 @@ def login(username, password, selected_role=None):
         return False, "Invalid Authority ID / Username or Password."
 
     if not user.get("is_active"):
-        return False, "This authority account has been deactivated by the system administrator."
+        return (
+            False,
+            "This authority account has been deactivated by the system administrator.",
+        )
 
     if not db.verify_password(password, user["password_hash"], user["salt"]):
         db.add_audit_log(username, "LOGIN_FAILED", "Incorrect password attempt")
         return False, "Invalid Authority ID / Username or Password."
 
     # Validate role if specified (and not auto-detect)
-    if selected_role and not selected_role.startswith("--") and user.get("role") != "admin":
+    if (
+        selected_role
+        and not selected_role.startswith("--")
+        and user.get("role") != "admin"
+    ):
         allowed_keys = ROLE_CANONICAL.get(selected_role, [selected_role])
         u_role = user.get("role", "")
         u_title = user.get("authority_title", "")
         if u_role not in allowed_keys and u_title != selected_role:
-            return False, f"Role Mismatch: Account '{username}' is registered as '{u_title}', not '{selected_role}'. Please select your assigned authority role."
+            return (
+                False,
+                f"Role Mismatch: Account '{username}' is registered as '{u_title}', not '{selected_role}'. Please select your assigned authority role.",
+            )
 
     st.session_state["authenticated_user"] = user
     if selected_role and not selected_role.startswith("--"):
         st.session_state["active_role_title"] = selected_role
     else:
-        st.session_state["active_role_title"] = user.get("authority_title", "Authorized Officer")
+        st.session_state["active_role_title"] = user.get(
+            "authority_title", "Authorized Officer"
+        )
 
     # Update last login timestamp in DB
     now_str = datetime.now(timezone.utc).isoformat()
@@ -119,16 +186,24 @@ def login(username, password, selected_role=None):
     c.execute("UPDATE users SET last_login = ? WHERE id = ?", (now_str, user["id"]))
     conn.commit()
     conn.close()
-    db.add_audit_log(user["username"], "LOGIN_SUCCESS", f"User logged in with role {user['role']} ({user.get('authority_title')})")
+    db.add_audit_log(
+        user["username"],
+        "LOGIN_SUCCESS",
+        f"User logged in with role {user['role']} ({user.get('authority_title')})",
+    )
     return True, "Login successful."
 
 
 def logout():
-    """Terminate the authenticated session."""
+    """Terminate the authenticated session and redirect directly to Home Dashboard."""
     user = get_current_user()
     if user:
         db.add_audit_log(user["username"], "LOGOUT", "User logged out")
     st.session_state.pop("authenticated_user", None)
+    st.session_state["nav_selection"] = "home"
+    st.session_state["show_auth_modal"] = False
+    if "logout" in st.query_params:
+        del st.query_params["logout"]
     st.rerun()
 
 
@@ -149,7 +224,10 @@ def change_password(username, current_password, new_password, confirm_password):
 
     db.update_user_password(username, new_password)
     db.add_audit_log(username, "PASSWORD_CHANGED", "User successfully changed password")
-    return True, "Password updated successfully. Please use your new password next time."
+    return (
+        True,
+        "Password updated successfully. Please use your new password next time.",
+    )
 
 
 def forgot_password_reset(username, verified_email, new_password, confirm_password):
@@ -168,7 +246,9 @@ def forgot_password_reset(username, verified_email, new_password, confirm_passwo
         return False, "Provided email address does not match official records on file."
 
     db.update_user_password(username, new_password)
-    db.add_audit_log(username, "PASSWORD_RESET", "Password reset via verified email match")
+    db.add_audit_log(
+        username, "PASSWORD_RESET", "Password reset via verified email match"
+    )
     return True, "Password reset successfully! You can now log in."
 
 
@@ -206,10 +286,10 @@ def render_sidebar_auth_widget():
             f'<div style="overflow:hidden;">'
             f'<div style="font-size:0.85rem; font-weight:700; text-overflow:ellipsis; white-space:nowrap;">{user["full_name"]}</div>'
             f'<div style="font-size:0.68rem; color:#8ba3c7; text-transform:uppercase; letter-spacing:0.08em;">{user["authority_title"]}</div>'
-            f'</div></div>'
+            f"</div></div>"
             f'<div style="margin-top:8px; font-size:0.68rem; color:#8ba3c7; border-top:1px solid rgba(255,255,255,0.06); padding-top:6px;">'
-            f'<b>Scope:</b> {user["jurisdiction"]}'
-            f'</div></div>'
+            f"<b>Scope:</b> {user['jurisdiction']}"
+            f"</div></div>"
         )
         st.sidebar.markdown(card_html, unsafe_allow_html=True)
 
@@ -250,13 +330,18 @@ def render_sidebar_auth_widget():
                     st.warning("Please enter both username and password.")
 
         with st.sidebar.expander("❓ Forgot Password", expanded=False):
-            st.markdown("<small style='color:#8ba3c7;'>Official account recovery via verified email:</small>", unsafe_allow_html=True)
+            st.markdown(
+                "<small style='color:#8ba3c7;'>Official account recovery via verified email:</small>",
+                unsafe_allow_html=True,
+            )
             with st.form("sb_forgot_form"):
                 f_user = st.text_input("Account Username")
                 f_mail = st.text_input("Registered Official Email")
                 f_p1 = st.text_input("New Password", type="password")
                 f_p2 = st.text_input("Confirm New Password", type="password")
-                f_sub = st.form_submit_button("Reset Password", use_container_width=True)
+                f_sub = st.form_submit_button(
+                    "Reset Password", use_container_width=True
+                )
                 if f_sub:
                     s, m = forgot_password_reset(f_user, f_mail, f_p1, f_p2)
                     if s:
@@ -265,7 +350,15 @@ def render_sidebar_auth_widget():
                         st.error(m)
 
 
-def register_account(username, password, full_name, email, role="municipality", jurisdiction="City Ward Operations", authority_title=None):
+def register_account(
+    username,
+    password,
+    full_name,
+    email,
+    role="municipality",
+    jurisdiction="City Ward Operations",
+    authority_title=None,
+):
     """Register a new user account and log in immediately."""
     if len(username.strip()) < 3:
         return False, "Username must be at least 3 characters."
@@ -296,15 +389,20 @@ def register_account(username, password, full_name, email, role="municipality", 
         h, s = db.hash_password(password)
         conn = db.get_connection()
         c = conn.cursor()
-        c.execute("""
+        c.execute(
+            """
             UPDATE users 
             SET password_hash = ?, salt = ?, role = ?, authority_title = ?, jurisdiction = ?, full_name = ?, email = ?
             WHERE username = ?
-        """, (h, s, role, title, jurisdiction, full_name, email, clean_un))
+        """,
+            (h, s, role, title, jurisdiction, full_name, email, clean_un),
+        )
         conn.commit()
         conn.close()
     else:
-        success, msg = db.create_user(clean_un, password, role, title, jurisdiction, full_name, email)
+        success, msg = db.create_user(
+            clean_un, password, role, title, jurisdiction, full_name, email
+        )
         if not success:
             return False, msg
 
@@ -313,7 +411,11 @@ def register_account(username, password, full_name, email, role="municipality", 
     if user:
         st.session_state["authenticated_user"] = user
         st.session_state["active_role_title"] = title
-        db.add_audit_log(clean_un, "USER_REGISTERED", f"User registered/updated and logged in with role {role} ({title})")
+        db.add_audit_log(
+            clean_un,
+            "USER_REGISTERED",
+            f"User registered/updated and logged in with role {role} ({title})",
+        )
         return True, f"Account configured successfully! Logged in as {title}."
     return True, "Account created successfully."
 
@@ -344,27 +446,29 @@ def show_auth_dialog(palette):
             "recycling_facility": "#10b981",
         }
         r_col = role_colors.get(user["role"], "#3b82f6")
-        full_name = user.get("full_name") or user.get("username") or "Authorized Officer"
+        full_name = (
+            user.get("full_name") or user.get("username") or "Authorized Officer"
+        )
         initial_char = full_name[:1].upper()
 
         st.markdown(
             f"""
-            <div style="background:{p['bg_soft']}; border:1px solid {p['border']}; border-radius:12px; padding:20px; line-height:1.8; font-size:0.88rem; margin-bottom:16px;">
+            <div style="background:{p["bg_soft"]}; border:1px solid {p["border"]}; border-radius:12px; padding:20px; line-height:1.8; font-size:0.88rem; margin-bottom:16px;">
                 <div style="display:flex; align-items:center; gap:14px; margin-bottom:14px;">
                     <div style="width:48px; height:48px; border-radius:50%; background:{r_col}; color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.4rem; font-weight:800; box-shadow:0 2px 8px rgba(0,0,0,0.25);">
                         {initial_char}
                     </div>
                     <div>
-                        <div style="font-size:1.15rem; font-weight:800; color:{p['text']};">{full_name}</div>
+                        <div style="font-size:1.15rem; font-weight:800; color:{p["text"]};">{full_name}</div>
                         <span style="background:{r_col}; color:#fff; padding:3px 10px; border-radius:999px; font-size:0.72rem; font-weight:700; text-transform:uppercase;">
-                            {user.get('authority_title', user.get('role', 'Authority'))}
+                            {user.get("authority_title", user.get("role", "Authority"))}
                         </span>
                     </div>
                 </div>
-                <div><b>Username / Authority ID:</b> <code>{user.get('username')}</code></div>
-                <div><b>Designated Authority Role:</b> {user.get('authority_title')}</div>
-                <div><b>Jurisdiction Scope:</b> {user.get('jurisdiction')}</div>
-                <div><b>Official Email:</b> {user.get('email')}</div>
+                <div><b>Username / Authority ID:</b> <code>{user.get("username")}</code></div>
+                <div><b>Designated Authority Role:</b> {user.get("authority_title")}</div>
+                <div><b>Jurisdiction Scope:</b> {user.get("jurisdiction")}</div>
+                <div><b>Official Email:</b> {user.get("email")}</div>
                 <div><b>Account Verification:</b> <span style="color:#10b981; font-weight:700;">● Active Verified Official</span></div>
             </div>
             """,
@@ -373,10 +477,23 @@ def show_auth_dialog(palette):
 
         with st.expander("🔄 Switch / Update Authority Role", expanded=True):
             current_title = user.get("authority_title") or "Municipal Waste Officer"
-            idx = TENANT_ROLES_5.index(current_title) if current_title in TENANT_ROLES_5 else 0
+            idx = (
+                TENANT_ROLES_5.index(current_title)
+                if current_title in TENANT_ROLES_5
+                else 0
+            )
             with st.form("dlg_switch_role_form"):
-                new_title = st.selectbox("Designated Authority Role", TENANT_ROLES_5, index=idx, key="dlg_switch_role_sel")
-                btn_sw = st.form_submit_button("⚡ Update My Role & Switch View", type="primary", use_container_width=True)
+                new_title = st.selectbox(
+                    "Designated Authority Role",
+                    TENANT_ROLES_5,
+                    index=idx,
+                    key="dlg_switch_role_sel",
+                )
+                btn_sw = st.form_submit_button(
+                    "⚡ Update My Role & Switch View",
+                    type="primary",
+                    use_container_width=True,
+                )
                 if btn_sw:
                     role_key_map = {
                         "State Waste Management Authority": "state_authority",
@@ -389,10 +506,15 @@ def show_auth_dialog(palette):
                     new_internal = role_key_map.get(new_title, "waste_officer")
                     conn = db.get_connection()
                     c = conn.cursor()
-                    c.execute("UPDATE users SET role = ?, authority_title = ? WHERE id = ?", (new_internal, new_title, user["id"]))
+                    c.execute(
+                        "UPDATE users SET role = ?, authority_title = ? WHERE id = ?",
+                        (new_internal, new_title, user["id"]),
+                    )
                     conn.commit()
                     conn.close()
-                    st.session_state["authenticated_user"] = db.get_user_by_username(user["username"])
+                    st.session_state["authenticated_user"] = db.get_user_by_username(
+                        user["username"]
+                    )
                     st.session_state["active_role_title"] = new_title
                     st.session_state["show_auth_modal"] = False
                     if new_internal == "truck_driver":
@@ -407,7 +529,9 @@ def show_auth_dialog(palette):
                 cur_p = st.text_input("Current Password", type="password")
                 new_p = st.text_input("New Secure Password", type="password")
                 cfm_p = st.text_input("Confirm New Password", type="password")
-                sub_pwd = st.form_submit_button("Update Password ➔", use_container_width=True)
+                sub_pwd = st.form_submit_button(
+                    "Update Password ➔", use_container_width=True
+                )
                 if sub_pwd:
                     s, m = change_password(user["username"], cur_p, new_p, cfm_p)
                     if s:
@@ -417,24 +541,32 @@ def show_auth_dialog(palette):
 
         col_b1, col_b2 = st.columns(2)
         with col_b1:
-            if st.button("🚪 Logout of Account", key="btn_dlg_logout_action", type="primary", use_container_width=True):
+            if st.button(
+                "🚪 Logout of Account",
+                key="btn_dlg_logout_action",
+                type="primary",
+                use_container_width=True,
+            ):
                 st.session_state["show_auth_modal"] = False
                 logout()
         with col_b2:
-            if st.button("✖️ Close Profile", key="btn_dlg_close_action", use_container_width=True):
+            if st.button(
+                "✖️ Close Profile", key="btn_dlg_close_action", use_container_width=True
+            ):
                 st.session_state["show_auth_modal"] = False
                 st.rerun()
 
     else:
         from wastegrid import theme as theme_module
+
         logo_uri = theme_module.get_logo_data_uri()
         st.markdown(
             f"""
-            <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px; padding-bottom:8px; border-bottom:1px solid {p['border']};">
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px; padding-bottom:8px; border-bottom:1px solid {p["border"]};">
                 <img src="{logo_uri}" alt="WasteGrid Logo" style="width:36px; height:36px; object-fit:contain;" />
                 <div>
-                    <div style="font-size:1.05rem; font-weight:800; color:{p['text']};">WasteGrid Authority Portal</div>
-                    <div style="font-size:0.68rem; color:{p['muted']}; font-weight:600; text-transform:uppercase; letter-spacing:0.08em;">Predict. Detect. Allocate.</div>
+                    <div style="font-size:1.05rem; font-weight:800; color:{p["text"]};">WasteGrid Authority Portal</div>
+                    <div style="font-size:0.68rem; color:{p["muted"]}; font-weight:600; text-transform:uppercase; letter-spacing:0.08em;">Predict. Detect. Allocate.</div>
                 </div>
             </div>
             """,
@@ -442,36 +574,58 @@ def show_auth_dialog(palette):
         )
 
         # User is NOT signed in: Sign In, Sign Up, or 1-Click Fast Presets across 5 Tenants
-        tab_login, tab_register, tab_forgot = st.tabs([
-            "🔑 Sign In (5 Tenants)",
-            "📝 Sign Up (Create Account)",
-            "❓ Forgot Password",
-        ])
+        tab_login, tab_register, tab_forgot = st.tabs(
+            [
+                "🔑 Sign In (5 Tenants)",
+                "📝 Sign Up (Create Account)",
+                "❓ Forgot Password",
+            ]
+        )
 
         with tab_login:
             col_form, col_quick = st.columns([1.1, 1], gap="large")
             with col_form:
-                st.markdown(f'<div style="font-weight:700; color:{p["text"]}; margin-bottom:8px;">Authority Sign-In</div>', unsafe_allow_html=True)
+                st.markdown(
+                    f'<div style="font-weight:700; color:{p["text"]}; margin-bottom:8px;">Authority Sign-In</div>',
+                    unsafe_allow_html=True,
+                )
                 with st.form("dlg_login_form"):
                     selected_role = st.selectbox(
                         "Authority Tenant Role",
                         ["-- Auto-Detect From Account --"] + TENANT_ROLES_5,
                         key="dlg_role_sel",
                     )
-                    u_in = st.text_input("Authority ID / Username", placeholder="e.g. commissioner, state_authority", key="dlg_u_in")
-                    p_in = st.text_input("Password", type="password", placeholder="••••••••", key="dlg_p_in")
+                    u_in = st.text_input(
+                        "Authority ID / Username",
+                        placeholder="e.g. commissioner, state_authority",
+                        key="dlg_u_in",
+                    )
+                    p_in = st.text_input(
+                        "Password",
+                        type="password",
+                        placeholder="••••••••",
+                        key="dlg_p_in",
+                    )
                     st.checkbox("Remember me", value=True, key="dlg_rem_me")
 
-                    btn_login = st.form_submit_button("🔐 Sign In to Tenant Dashboard", type="primary", use_container_width=True)
+                    btn_login = st.form_submit_button(
+                        "🔐 Sign In to Tenant Dashboard",
+                        type="primary",
+                        use_container_width=True,
+                    )
                     if btn_login:
                         if u_in and p_in:
-                            role_lookup = None if selected_role.startswith("--") else selected_role
+                            role_lookup = (
+                                None
+                                if selected_role.startswith("--")
+                                else selected_role
+                            )
                             if role_lookup == "Waste Processing & Recycling Facility":
                                 role_lookup = "Waste Processing Facility"
                             ok, msg = login(u_in, p_in, selected_role=role_lookup)
                             if ok:
                                 st.session_state["show_auth_modal"] = False
-                                st.toast(f"✅ Signed in successfully!")
+                                st.toast("✅ Signed in successfully!")
                                 st.rerun()
                             else:
                                 st.error(msg)
@@ -481,61 +635,158 @@ def show_auth_dialog(palette):
             with col_quick:
                 st.markdown(
                     f"""
-                    <div style="font-weight:800; color:{p['blue']}; margin-bottom:4px; display:flex; align-items:center; gap:8px;">
+                    <div style="font-weight:800; color:{p["blue"]}; margin-bottom:4px; display:flex; align-items:center; gap:8px;">
                         <span>⚡ 1-Click Fast Tenant Logins</span>
                         <span style="background:rgba(239, 68, 68, 0.12); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.3); font-size:0.65rem; padding:1px 7px; border-radius:999px; font-weight:800;">HACKATHON DEMO ONLY</span>
                     </div>
-                    <div style="font-size:0.75rem; color:{p['muted']}; margin-bottom:12px;">
+                    <div style="font-size:0.75rem; color:{p["muted"]}; margin-bottom:12px;">
                         Provided exclusively for hackathon judging convenience: Click any authority below to instantly review their dedicated dashboard and features without manual entry:
                     </div>
                     """,
                     unsafe_allow_html=True,
                 )
-                if st.button("🏛️ State Authority", use_container_width=True, key="btn_quick_t1"):
-                    login("state_authority", "Waste@123", selected_role="State Waste Management Authority")
+                if st.button(
+                    "🏛️ State Authority", use_container_width=True, key="btn_quick_t1"
+                ):
+                    login(
+                        "state_authority",
+                        "Waste@123",
+                        selected_role="State Waste Management Authority",
+                    )
                     st.session_state["show_auth_modal"] = False
                     st.rerun()
-                if st.button("🏢 Municipal Commissioner", use_container_width=True, key="btn_quick_t2"):
-                    login("commissioner", "Waste@123", selected_role="Municipal Commissioner")
+                if st.button(
+                    "🏢 Municipal Commissioner",
+                    use_container_width=True,
+                    key="btn_quick_t2",
+                ):
+                    login(
+                        "commissioner",
+                        "Waste@123",
+                        selected_role="Municipal Commissioner",
+                    )
                     st.session_state["show_auth_modal"] = False
                     st.rerun()
-                if st.button("🏙️ Municipal Waste Officer", use_container_width=True, key="btn_quick_t3"):
-                    login("waste_officer", "Waste@123", selected_role="Municipal Waste Officer")
+                if st.button(
+                    "🏙️ Municipal Waste Officer",
+                    use_container_width=True,
+                    key="btn_quick_t3",
+                ):
+                    login(
+                        "waste_officer",
+                        "Waste@123",
+                        selected_role="Municipal Waste Officer",
+                    )
                     st.session_state["show_auth_modal"] = False
                     st.rerun()
-                if st.button("📍 Zonal Officer", use_container_width=True, key="btn_quick_t4"):
+                if st.button(
+                    "📍 Zonal Officer", use_container_width=True, key="btn_quick_t4"
+                ):
                     login("zonal_officer", "Waste@123", selected_role="Zonal Officer")
                     st.session_state["show_auth_modal"] = False
                     st.rerun()
-                if st.button("🏭 Processing & Recycling Plant", use_container_width=True, key="btn_quick_t5"):
-                    login("processing_facility", "Waste@123", selected_role="Waste Processing Facility")
+                if st.button(
+                    "🏭 Processing & Recycling Plant",
+                    use_container_width=True,
+                    key="btn_quick_t5",
+                ):
+                    login(
+                        "processing_facility",
+                        "Waste@123",
+                        selected_role="Waste Processing Facility",
+                    )
                     st.session_state["show_auth_modal"] = False
                     st.rerun()
-                if st.button("🚚 Truck Driver (Ramesh Kumar · KA-01-EA-101)", use_container_width=True, key="btn_quick_t6"):
-                    login("driver_ramesh", "Driver@123", selected_role="Municipal Truck Driver (In-Cab Logistics)")
+                if st.button(
+                    "🚚 Truck Driver (Ramesh Kumar · KA-01-EA-101)",
+                    use_container_width=True,
+                    key="btn_quick_t6",
+                ):
+                    login(
+                        "driver_ramesh",
+                        "Driver@123",
+                        selected_role="Municipal Truck Driver (In-Cab Logistics)",
+                    )
                     st.session_state["show_auth_modal"] = False
                     st.session_state["nav_selection"] = "driver_in_cab"
                     st.rerun()
 
         with tab_register:
-            st.markdown(f'<div style="font-weight:700; color:{p["text"]}; margin-bottom:8px;">Register Official Municipal Authority Account</div>', unsafe_allow_html=True)
+            st.markdown(
+                f'<div style="font-weight:700; color:{p["text"]}; margin-bottom:8px;">Register Official Municipal Authority Account</div>',
+                unsafe_allow_html=True,
+            )
             with st.form("dlg_signup_form"):
                 rc1, rc2 = st.columns(2)
                 with rc1:
-                    reg_fname = st.text_input("Full Official Name", placeholder="e.g. Smt. Vandana Sharma", key="reg_fn")
-                    reg_uname = st.text_input("Desired Authority ID", placeholder="e.g. vandana_officer", key="reg_un")
-                    reg_email = st.text_input("Official Email", placeholder="officer@smartcity.gov.in", key="reg_em")
+                    reg_fname = st.text_input(
+                        "Full Official Name",
+                        placeholder="e.g. Smt. Vandana Sharma",
+                        key="reg_fn",
+                    )
+                    reg_uname = st.text_input(
+                        "Desired Authority ID",
+                        placeholder="e.g. vandana_officer",
+                        key="reg_un",
+                    )
+                    reg_email = st.text_input(
+                        "Official Email",
+                        placeholder="officer@smartcity.gov.in",
+                        key="reg_em",
+                    )
                 with rc2:
                     reg_role = st.selectbox(
                         "Authority Tenant Category",
                         TENANT_ROLES_5,
                         key="reg_role_sel",
                     )
-                    reg_juris = st.text_input("Jurisdiction Scope / Ward", placeholder="e.g. Central Zone Wards 101-120", key="reg_ju")
-                    reg_pwd1 = st.text_input("Password (min 6 chars)", type="password", key="reg_p1")
-                    reg_pwd2 = st.text_input("Confirm Password", type="password", key="reg_p2")
+                    reg_juris = st.text_input(
+                        "Jurisdiction Scope / Ward",
+                        placeholder="e.g. Central Zone Wards 101-120",
+                        key="reg_ju",
+                    )
+                    reg_pwd1 = st.text_input(
+                        "Password (min 6 chars)", type="password", key="reg_p1"
+                    )
+                    reg_pwd2 = st.text_input(
+                        "Confirm Password", type="password", key="reg_p2"
+                    )
 
-                btn_signup = st.form_submit_button("📝 Create Account & Enter Dashboard", type="primary", use_container_width=True)
+                st.markdown(
+                    f'<div style="font-size:0.75rem; color:{p["muted"]}; margin:8px 0 4px 0; font-weight:700;">🏭 NEW PROCESSING FACTORY COMMISSIONING (OPTIONAL — IF CONSTRUCTING NEW PLANT)</div>',
+                    unsafe_allow_html=True,
+                )
+                fac_col1, fac_col2, fac_col3 = st.columns(3)
+                with fac_col1:
+                    new_fac_name = st.text_input(
+                        "Factory / Plant Name",
+                        placeholder="e.g. East Metro Bio-Methanation",
+                        key="reg_fac_name",
+                    )
+                with fac_col2:
+                    new_fac_type = st.selectbox(
+                        "Plant Technology",
+                        ["biocompost", "anaerobic_digester", "mrf", "waste_to_energy"],
+                        key="reg_fac_type",
+                    )
+                    new_fac_stream = st.selectbox(
+                        "Stream Intake", ["wet", "dry", "mixed"], key="reg_fac_stream"
+                    )
+                with fac_col3:
+                    new_fac_cap = st.number_input(
+                        "Design Capacity (kg/day)",
+                        min_value=500.0,
+                        max_value=50000.0,
+                        value=3500.0,
+                        step=500.0,
+                        key="reg_fac_cap",
+                    )
+
+                btn_signup = st.form_submit_button(
+                    "📝 Create Account & Commission Facility ➔",
+                    type="primary",
+                    use_container_width=True,
+                )
                 if btn_signup:
                     if not reg_uname or not reg_pwd1:
                         st.warning("Please fill in the required fields.")
@@ -551,27 +802,91 @@ def show_auth_dialog(palette):
                             "Municipal Truck Driver (In-Cab Logistics)": "truck_driver",
                         }
                         internal_role = role_map.get(reg_role, "waste_officer")
+
+                        # If a new facility is being constructed, commission it to the database
+                        final_juris = reg_juris or "City Operations"
+                        if new_fac_name.strip():
+                            existing_facs = db.get_all_facilities(include_offline=True)
+                            existing_ids = [f["id"] for f in existing_facs]
+                            # Auto-pick next available alphabet ID
+                            next_id = "D"
+                            for letter in ["D", "E", "F", "G", "H", "K"]:
+                                if letter not in existing_ids:
+                                    next_id = letter
+                                    break
+                            db.add_facility(
+                                next_id,
+                                new_fac_name.strip(),
+                                new_fac_type,
+                                new_fac_stream,
+                                float(new_fac_cap),
+                                11.2,
+                                12.9350,
+                                77.6100,
+                                "06:00 - 22:00",
+                                96.0,
+                                320.0,
+                                0.04,
+                            )
+                            final_juris = f"Plant {next_id} ({new_fac_name.strip()})"
+                            db.add_audit_log(
+                                reg_uname,
+                                "FACILITY_ONBOARDED",
+                                f"Commissioned new Plant {next_id} ({new_fac_name.strip()}) with capacity {new_fac_cap} kg",
+                            )
+
                         ok, msg = register_account(
-                            reg_uname, reg_pwd1, reg_fname or reg_uname, reg_email,
-                            role=internal_role, jurisdiction=reg_juris or "City Operations",
+                            reg_uname,
+                            reg_pwd1,
+                            reg_fname or reg_uname,
+                            reg_email,
+                            role=internal_role,
+                            jurisdiction=final_juris,
                             authority_title=reg_role,
                         )
                         if ok:
                             st.session_state["show_auth_modal"] = False
-                            st.toast("🎉 Account registered successfully and logged in!")
+                            st.session_state["nav_selection"] = "home"
+                            if new_fac_name.strip():
+                                st.toast(
+                                    f"🎉 Account registered and Plant {next_id} commissioned to WasteGrid!"
+                                )
+                            else:
+                                st.toast(
+                                    "🎉 Account registered successfully and logged in!"
+                                )
                             st.rerun()
                         else:
                             st.error(msg)
 
         with tab_forgot:
-            st.markdown(f'<div style="font-weight:700; color:{p["text"]}; margin-bottom:8px;">Self-Service Password Recovery</div>', unsafe_allow_html=True)
-            st.caption("Hint for demo accounts: `commissioner@bbmp.gov.in`, `driver.ramesh@wastegrid.gov.in`, `waste.officer@bbmp.gov.in`, `state.authority@wastegrid.gov.in`")
+            st.markdown(
+                f'<div style="font-weight:700; color:{p["text"]}; margin-bottom:8px;">Self-Service Password Recovery</div>',
+                unsafe_allow_html=True,
+            )
+            st.caption(
+                "Hint for demo accounts: `commissioner@bbmp.gov.in`, `driver.ramesh@wastegrid.gov.in`, `waste.officer@bbmp.gov.in`, `state.authority@wastegrid.gov.in`"
+            )
             with st.form("dlg_forgot_form"):
-                f_u = st.text_input("Account Authority ID / Username", placeholder="e.g. driver_ramesh, commissioner", key="f_un")
-                f_e = st.text_input("Registered Official Email", placeholder="e.g. driver.ramesh@wastegrid.gov.in", key="f_em")
-                f_p = st.text_input("New Password (min 8 chars)", type="password", key="f_np")
-                f_cp = st.text_input("Confirm New Password", type="password", key="f_ncp")
-                btn_f = st.form_submit_button("Reset Password ➔", use_container_width=True)
+                f_u = st.text_input(
+                    "Account Authority ID / Username",
+                    placeholder="e.g. driver_ramesh, commissioner",
+                    key="f_un",
+                )
+                f_e = st.text_input(
+                    "Registered Official Email",
+                    placeholder="e.g. driver.ramesh@wastegrid.gov.in",
+                    key="f_em",
+                )
+                f_p = st.text_input(
+                    "New Password (min 8 chars)", type="password", key="f_np"
+                )
+                f_cp = st.text_input(
+                    "Confirm New Password", type="password", key="f_ncp"
+                )
+                btn_f = st.form_submit_button(
+                    "Reset Password ➔", use_container_width=True
+                )
                 if btn_f:
                     s, m = forgot_password_reset(f_u, f_e, f_p, f_cp)
                     if s:
@@ -596,11 +911,11 @@ def render_access_restricted_view(page_name):
         f'<div style="font-size: 2.8rem; margin-bottom: 12px;">🛡️</div>'
         f'<div style="font-size: 1.3rem; font-weight: 800; color: #ff3856; margin-bottom: 8px;">Jurisdictional Access Restricted</div>'
         f'<div style="font-size: 0.85rem; color: #8ba3c7; margin-bottom: 20px; line-height: 1.6;">'
-        f'Your logged-in role as <b>{role_title}</b> does not have administrative clearance to access the <b>{page_name}</b> view.'
-        f'</div>'
+        f"Your logged-in role as <b>{role_title}</b> does not have administrative clearance to access the <b>{page_name}</b> view."
+        f"</div>"
         f'<div style="font-size: 0.75rem; color: #8ba3c7; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px;">'
-        f'Please contact the State Urban Development IT Administrator if you require elevated clearance.'
-        f'</div></div>'
+        f"Please contact the State Urban Development IT Administrator if you require elevated clearance."
+        f"</div></div>"
     )
     st.markdown(msg_html, unsafe_allow_html=True)
 
@@ -693,6 +1008,7 @@ def render_full_login_page(palette):
     )
 
     from wastegrid import theme as theme_module
+
     logo_uri = theme_module.get_logo_data_uri()
 
     # 1. Top Brand Header: WasteGrid Logo & Tagline
@@ -714,11 +1030,11 @@ def render_full_login_page(palette):
     with col_c:
         st.markdown(
             f"""
-            <div style="background:{p['card_bg']}; border:1px solid {p['border']}; border-radius:14px; padding:24px 28px; box-shadow:{p['shadow']}; margin-bottom:18px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid {p['border']}; padding-bottom:12px; margin-bottom:18px;">
+            <div style="background:{p["card_bg"]}; border:1px solid {p["border"]}; border-radius:14px; padding:24px 28px; box-shadow:{p["shadow"]}; margin-bottom:18px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid {p["border"]}; padding-bottom:12px; margin-bottom:18px;">
                     <div>
-                        <div style="font-size:1.15rem; font-weight:800; color:{p['text']};">🏛️ Authority Sign-In</div>
-                        <div style="font-size:0.75rem; color:{p['muted']};">Enter your municipal credentials to access the grid</div>
+                        <div style="font-size:1.15rem; font-weight:800; color:{p["text"]};">🏛️ Authority Sign-In</div>
+                        <div style="font-size:0.75rem; color:{p["muted"]};">Enter your municipal credentials to access the grid</div>
                     </div>
                     <span style="font-size:0.68rem; font-weight:700; color:#10b981; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); padding:2px 8px; border-radius:4px;">
                         256-bit PBKDF2
@@ -776,7 +1092,9 @@ def render_full_login_page(palette):
                 else:
                     success, message = login(auth_user, auth_pwd, auth_role)
                     if success:
-                        st.toast("✅ Authorized access granted. Redirecting to WasteGrid...")
+                        st.toast(
+                            "✅ Authorized access granted. Redirecting to WasteGrid..."
+                        )
                         st.session_state["nav_selection"] = "home"
                         st.rerun()
                     else:
@@ -793,14 +1111,22 @@ def render_full_login_page(palette):
             with st.form("login_page_forgot_form"):
                 fgt_user = st.text_input("Account Authority ID / Username", key="fgt_u")
                 fgt_email = st.text_input("Registered Official Email", key="fgt_e")
-                fgt_p1 = st.text_input("New Secure Password", type="password", key="fgt_p1")
-                fgt_p2 = st.text_input("Confirm New Password", type="password", key="fgt_p2")
-                fgt_sub = st.form_submit_button("Reset Password", use_container_width=True)
+                fgt_p1 = st.text_input(
+                    "New Secure Password", type="password", key="fgt_p1"
+                )
+                fgt_p2 = st.text_input(
+                    "Confirm New Password", type="password", key="fgt_p2"
+                )
+                fgt_sub = st.form_submit_button(
+                    "Reset Password", use_container_width=True
+                )
                 if fgt_sub:
                     if not fgt_user or not fgt_email or not fgt_p1:
                         st.warning("Please fill out all fields.")
                     else:
-                        ok, msg = forgot_password_reset(fgt_user, fgt_email, fgt_p1, fgt_p2)
+                        ok, msg = forgot_password_reset(
+                            fgt_user, fgt_email, fgt_p1, fgt_p2
+                        )
                         if ok:
                             st.success(f"✅ {msg}")
                         else:
@@ -809,7 +1135,7 @@ def render_full_login_page(palette):
         # Restricted Registration Notice (No Public Registration)
         st.markdown(
             f"""
-            <div style="margin-top:14px; padding-top:12px; border-top:1px solid {p['border']}; font-size:0.72rem; color:{p['muted']}; text-align:center; line-height:1.5;">
+            <div style="margin-top:14px; padding-top:12px; border-top:1px solid {p["border"]}; font-size:0.72rem; color:{p["muted"]}; text-align:center; line-height:1.5;">
                 🔒 <b>Restricted Authority Dashboard:</b> Public registration is disabled under Municipal Solid-Waste Regulations. 
                 Accounts are provisioned solely to verified urban authorities, municipal commissioners, zonal officers, and facility directors.
             </div>
@@ -819,7 +1145,9 @@ def render_full_login_page(palette):
         )
 
         # Evaluator & Auditor Fast Access Presets (1-Click Login for All 6 Roles)
-        with st.expander("⚡ Evaluator Quick-Login (1-Click Demo Presets)", expanded=True):
+        with st.expander(
+            "⚡ Evaluator Quick-Login (1-Click Demo Presets)", expanded=True
+        ):
             st.markdown(
                 f"<div style='font-size:0.75rem; color:{p['muted']}; margin-bottom:10px;'>"
                 "Click any designated authority below to sign in instantly with calibrated sample data:"
@@ -829,33 +1157,57 @@ def render_full_login_page(palette):
 
             col_q1, col_q2 = st.columns(2)
             with col_q1:
-                if st.button("🏛️ State Authority", use_container_width=True, key="quick_state_btn"):
-                    login("state_authority", "Waste@123", "State Waste Management Authority")
+                if st.button(
+                    "🏛️ State Authority", use_container_width=True, key="quick_state_btn"
+                ):
+                    login(
+                        "state_authority",
+                        "Waste@123",
+                        "State Waste Management Authority",
+                    )
                     st.session_state["nav_selection"] = "home"
                     st.rerun()
 
-                if st.button("🏙️ Municipal Commissioner", use_container_width=True, key="quick_comm_btn"):
+                if st.button(
+                    "🏙️ Municipal Commissioner",
+                    use_container_width=True,
+                    key="quick_comm_btn",
+                ):
                     login("commissioner", "Waste@123", "Municipal Commissioner")
                     st.session_state["nav_selection"] = "home"
                     st.rerun()
 
-                if st.button("📋 Municipal Waste Officer", use_container_width=True, key="quick_wo_btn"):
+                if st.button(
+                    "📋 Municipal Waste Officer",
+                    use_container_width=True,
+                    key="quick_wo_btn",
+                ):
                     login("waste_officer", "Waste@123", "Municipal Waste Officer")
                     st.session_state["nav_selection"] = "home"
                     st.rerun()
 
             with col_q2:
-                if st.button("📍 Zonal Officer", use_container_width=True, key="quick_zo_btn"):
+                if st.button(
+                    "📍 Zonal Officer", use_container_width=True, key="quick_zo_btn"
+                ):
                     login("zonal_officer", "Waste@123", "Zonal Officer")
                     st.session_state["nav_selection"] = "home"
                     st.rerun()
 
-                if st.button("🏭 Waste Processing Facility", use_container_width=True, key="quick_pf_btn"):
-                    login("processing_facility", "Waste@123", "Waste Processing Facility")
+                if st.button(
+                    "🏭 Waste Processing Facility",
+                    use_container_width=True,
+                    key="quick_pf_btn",
+                ):
+                    login(
+                        "processing_facility", "Waste@123", "Waste Processing Facility"
+                    )
                     st.session_state["nav_selection"] = "home"
                     st.rerun()
 
-                if st.button("♻️ Recycling Facility", use_container_width=True, key="quick_rf_btn"):
+                if st.button(
+                    "♻️ Recycling Facility", use_container_width=True, key="quick_rf_btn"
+                ):
                     login("recycling_facility", "Waste@123", "Recycling Facility")
                     st.session_state["nav_selection"] = "home"
                     st.rerun()
@@ -863,12 +1215,9 @@ def render_full_login_page(palette):
     # Subtle Footer for Login Page
     st.markdown(
         f"""
-        <div style="text-align:center; font-size:0.73rem; color:{p['muted']}; margin-top:32px;">
+        <div style="text-align:center; font-size:0.73rem; color:{p["muted"]}; margin-top:32px;">
             WasteGrid · Predict. Detect. Allocate. · © 2026 Municipal SWM Directorate. All rights reserved.
         </div>
         """,
         unsafe_allow_html=True,
     )
-
-
-
