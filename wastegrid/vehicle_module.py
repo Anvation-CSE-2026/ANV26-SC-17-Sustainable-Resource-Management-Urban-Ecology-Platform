@@ -432,39 +432,44 @@ def render_vehicle_tracking_page(palette):
 
     col_cab_left, col_cab_right = st.columns([1.3, 1], gap="large")
     with col_cab_left:
+        mdt_card_bg = p["card_bg"]
+        mdt_text = p["text"]
+        mdt_muted = p["muted"]
+        mdt_border = p["border"]
+        mdt_soft = p["bg_soft"]
         cab_html = f"""
-<div style="background:#090d16; border:3px solid #10b981; border-radius:16px; padding:20px; color:#ffffff; font-family:monospace; box-shadow:0 8px 30px rgba(0,0,0,0.6);">
-<div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:10px; margin-bottom:14px;">
+<div style="background:{mdt_card_bg}; border:2px solid #10b981; border-radius:16px; padding:20px; color:{mdt_text}; font-family:monospace; box-shadow:{p["shadow"]};">
+<div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid {mdt_border}; padding-bottom:10px; margin-bottom:14px;">
 <span style="font-size:0.9rem; font-weight:800; color:#10b981;">📶 4G LTE CONNECTED · GPS LOCK</span>
-<span style="font-size:0.8rem; background:rgba(16,185,129,0.2); padding:3px 10px; border-radius:6px; color:#10b981;">IN-CAB MDT v2.4</span>
+<span style="font-size:0.8rem; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); padding:3px 10px; border-radius:6px; color:#10b981; font-weight:700;">IN-CAB MDT v2.4</span>
 </div>
-<div style="font-size:1.4rem; font-weight:900; margin-bottom:4px; letter-spacing:-0.02em;">
+<div style="font-size:1.4rem; font-weight:900; margin-bottom:4px; letter-spacing:-0.02em; color:{mdt_text};">
 {matched_v["id"]} · {matched_v["driver_name"]}
 </div>
-<div style="font-size:0.85rem; color:#94a3b8; margin-bottom:16px;">
+<div style="font-size:0.85rem; color:{mdt_muted}; margin-bottom:16px;">
 Assigned Collection Zone: <b>{matched_v["assigned_zone"]}</b>
 </div>
-<div style="background:rgba(255,255,255,0.05); border-radius:10px; padding:14px; margin-bottom:14px;">
-<div style="font-size:0.75rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em;">CURRENT ROUTE DESTINATION</div>
-<div style="font-size:1.2rem; font-weight:800; color:#38bdf8; margin:4px 0;">
+<div style="background:{mdt_soft}; border:1px solid {mdt_border}; border-radius:10px; padding:14px; margin-bottom:14px;">
+<div style="font-size:0.75rem; color:{mdt_muted}; text-transform:uppercase; letter-spacing:0.1em; font-weight:700;">CURRENT ROUTE DESTINATION</div>
+<div style="font-size:1.2rem; font-weight:800; color:{p["blue"]}; margin:4px 0;">
 ➔ {target_fac.get("name", "Facility A")}
 </div>
-<div style="font-size:0.8rem; color:#cbd5e1;">
+<div style="font-size:0.8rem; color:{mdt_text};">
 Stream: <b style="text-transform:uppercase; color:#10b981;">{matched_v["waste_type"]} WASTE</b> · Current Payload: <b>{matched_v["current_payload_kg"]:,.0f} kg</b>
 </div>
 </div>
 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
-<div style="background:rgba(255,255,255,0.04); padding:10px; border-radius:8px; text-align:center;">
-<div style="font-size:0.7rem; color:#94a3b8;">TRANSIT SPEED</div>
-<div style="font-size:1.3rem; font-weight:800;">{matched_v.get("speed_kmh", 34)} km/h</div>
+<div style="background:{mdt_soft}; border:1px solid {mdt_border}; padding:10px; border-radius:8px; text-align:center;">
+<div style="font-size:0.7rem; color:{mdt_muted}; font-weight:700;">TRANSIT SPEED</div>
+<div style="font-size:1.3rem; font-weight:800; color:{mdt_text};">{matched_v.get("speed_kmh", 34)} km/h</div>
 </div>
-<div style="background:rgba(255,255,255,0.04); padding:10px; border-radius:8px; text-align:center;">
-<div style="font-size:0.7rem; color:#94a3b8;">PLANT GATE ETA</div>
+<div style="background:{mdt_soft}; border:1px solid {mdt_border}; padding:10px; border-radius:8px; text-align:center;">
+<div style="font-size:0.7rem; color:{mdt_muted}; font-weight:700;">PLANT GATE ETA</div>
 <div style="font-size:1.3rem; font-weight:800; color:#f59e0b;">{matched_v.get("eta_mins", 12)} Mins</div>
 </div>
 </div>
-<div style="background:rgba(16,185,129,0.1); border:1px dashed #10b981; border-radius:8px; padding:10px; text-align:center; font-size:0.78rem;">
-<b>DIGITAL WEIGHBRIDGE GATE PASS:</b> <code>WG-PASS-2026-{matched_v["id"][-4:]}</code>
+<div style="background:rgba(16,185,129,0.1); border:1.5px dashed #10b981; border-radius:8px; padding:10px; text-align:center; font-size:0.78rem; color:{mdt_text};">
+<b>DIGITAL WEIGHBRIDGE GATE PASS:</b> <code style="color:{p["blue"]}; font-weight:800;">WG-PASS-2026-{matched_v["id"][-4:]}</code>
 </div>
 </div>
 """

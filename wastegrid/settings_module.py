@@ -150,6 +150,24 @@ def render_settings_page(palette):
 
     with col1:
         st.markdown(
+            '<div class="sec-title">🎨 DISPLAY THEME & APPEARANCE</div>',
+            unsafe_allow_html=True,
+        )
+        curr_theme = st.session_state.get("theme", "light")
+        chosen_theme = st.radio(
+            "System Theme Mode",
+            ["☀️ Light Theme", "🌙 Dark Theme"],
+            index=0 if curr_theme == "light" else 1,
+            key="settings_theme_radio",
+            horizontal=True,
+        )
+        sel_theme_val = "light" if "Light" in chosen_theme else "dark"
+        if sel_theme_val != curr_theme:
+            st.session_state.theme = sel_theme_val
+            st.query_params["theme"] = sel_theme_val
+            st.rerun()
+
+        st.markdown(
             '<div class="sec-title">🔔 ALERT THRESHOLD PARAMETERS</div>',
             unsafe_allow_html=True,
         )

@@ -34,12 +34,19 @@ def header(theme="light", status="optimal", logo_path="logo.png", p=None, user=N
     toggle_icon = "🌙" if theme == "light" else "☀️"
     toggle_label = "Dark" if theme == "light" else "Light"
 
+    active_nav = (
+        st.session_state.get("nav_selection", "home")
+        if hasattr(st, "session_state")
+        else "home"
+    )
+
     user_html = ""
+    u_param = f"&u={user['username']}" if (user and isinstance(user, dict) and "username" in user) else ""
     if user:
         user_html = (
             f'<div class="user-pill">{user["icon"]} <span><b>{user["title"]}</b></span>'
             f'<span class="badge">{user["badge"]}</span></div>'
-            f'<a class="theme-toggle-link" href="?logout=1&theme={theme}" target="_self" style="border-color:rgba(255,56,86,0.3);">'
+            f'<a class="theme-toggle-link" href="?logout=1&nav=home&theme={theme}" target="_self" style="border-color:rgba(255,56,86,0.3);">'
             f"<span>🚪</span><span>Logout</span></a>"
         )
 
@@ -49,7 +56,7 @@ def header(theme="light", status="optimal", logo_path="logo.png", p=None, user=N
         f'<div class="hdr-controls">'
         f"{user_html}"
         f'<div class="hdr-badge {badge_cls}"><span class="pulse-dot {badge_dot}"></span>{badge_text}</div>'
-        f'<a class="theme-toggle-link" href="?theme={next_theme}" target="_self"><span>{toggle_icon}</span><span>{toggle_label}</span></a>'
+        f'<a class="theme-toggle-link" href="?nav={active_nav}&theme={next_theme}{u_param}" target="_self"><span>{toggle_icon}</span><span>{toggle_label}</span></a>'
         f"</div>"
         f"</div>",
         unsafe_allow_html=True,
@@ -76,6 +83,11 @@ def top_nav_bar(*args, **kwargs):
             theme_val if isinstance(theme_val, str) else "light"
         )
 
+    active_nav = kwargs.get("active_nav") or (
+        st.session_state.get("nav_selection", "home")
+        if hasattr(st, "session_state")
+        else "home"
+    )
     next_theme = "dark" if theme_val == "light" else "light"
     toggle_icon = "🌙" if theme_val == "light" else "☀️"
     toggle_label = "Dark" if theme_val == "light" else "Light"
@@ -108,7 +120,7 @@ def top_nav_bar(*args, **kwargs):
 
     alert_badge_html = (
         (
-            f'<a class="theme-toggle-link" href="?alert_nav=1" target="_self" title="{alert_count} Active System Alerts" '
+            f'<a class="theme-toggle-link" href="?alert_nav=1&nav=alerts&theme={theme_val}" target="_self" title="{alert_count} Active System Alerts" '
             f'style="background:rgba(239, 68, 68, 0.12); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.3); font-weight:700;">'
             f"🚨 {alert_count} Alerts</a>"
         )
@@ -125,7 +137,7 @@ def top_nav_bar(*args, **kwargs):
     )
 
     profile_btn_html = (
-        f'<a class="theme-toggle-link" href="?profile=1" target="_self" title="{profile_title}" '
+        f'<a class="theme-toggle-link" href="?profile=1&nav={active_nav}&theme={theme_val}" target="_self" title="{profile_title}" '
         f'style="display:inline-flex; align-items:center; gap:8px; padding:4px 12px; border-radius:999px; '
         f"border:1.5px solid {p_circle_bg}; background:{card_bg}; text-decoration:none; cursor:pointer; "
         f'box-shadow:0 2px 6px rgba(0,0,0,0.06); transition:all 0.2s ease;">'
@@ -137,9 +149,9 @@ def top_nav_bar(*args, **kwargs):
 
     logout_btn_html = (
         (
-            '<a class="theme-toggle-link" href="?logout=1" target="_self" title="Sign out of WasteGrid session" '
-            'style="background:rgba(239, 68, 68, 0.08); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.25); font-weight:700;">'
-            "<span>🚪</span><span>LOGOUT</span></a>"
+            f'<a class="theme-toggle-link" href="?logout=1&nav=home&theme={theme_val}" target="_self" title="Sign out of WasteGrid session" '
+            f'style="background:rgba(239, 68, 68, 0.08); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.25); font-weight:700;">'
+            f"<span>🚪</span><span>LOGOUT</span></a>"
         )
         if (user and isinstance(user, dict))
         else ""
@@ -148,6 +160,7 @@ def top_nav_bar(*args, **kwargs):
     from wastegrid import theme as theme_module
 
     logo_uri = theme_module.get_logo_data_uri()
+    u_param = f"&u={user['username']}" if (user and isinstance(user, dict) and "username" in user) else ""
 
     nav_html = (
         f'<div style="display:flex; justify-content:space-between; align-items:center; background:{card_bg}; '
@@ -164,7 +177,7 @@ def top_nav_bar(*args, **kwargs):
         f'<div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; flex-shrink:0;">'
         f"{alert_badge_html}"
         f"{profile_btn_html}"
-        f'<a class="theme-toggle-link" href="?theme={next_theme}" target="_self"><span>{toggle_icon}</span><span>{toggle_label}</span></a>'
+        f'<a class="theme-toggle-link" href="?nav={active_nav}&theme={next_theme}{u_param}" target="_self"><span>{toggle_icon}</span><span>{toggle_label}</span></a>'
         f"{logout_btn_html}"
         f"</div>"
         f"</div>"
@@ -178,22 +191,23 @@ def website_footer(p):
     Services | Events | Live Maps | Alerts | Help | About | Contact
     © 2026 WasteGrid. All rights reserved.
     """
+    theme_val = p.get("name", "light")
     footer_html = f"""
     <footer style="margin-top:48px; padding:22px 0 16px 0; border-top:1px solid {p["border"]}; width:100%; text-align:center;">
         <div style="font-size:0.84rem; font-weight:600; color:{p["muted"]}; margin-bottom:8px; display:flex; justify-content:center; align-items:center; gap:16px; flex-wrap:wrap;">
-            <a href="?nav=services" target="_self" style="color:{p["muted"]}; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='{p["blue"]}'" onmouseout="this.style.color='{p["muted"]}'">Services</a>
+            <a href="?nav=services&theme={theme_val}" target="_self" style="color:{p["muted"]}; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='{p["blue"]}'" onmouseout="this.style.color='{p["muted"]}'">Services</a>
             <span style="color:{p["border"]};">|</span>
-            <a href="?nav=events" target="_self" style="color:{p["muted"]}; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='{p["blue"]}'" onmouseout="this.style.color='{p["muted"]}'">Events</a>
+            <a href="?nav=events&theme={theme_val}" target="_self" style="color:{p["muted"]}; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='{p["blue"]}'" onmouseout="this.style.color='{p["muted"]}'">Events</a>
             <span style="color:{p["border"]};">|</span>
-            <a href="?nav=map" target="_self" style="color:{p["muted"]}; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='{p["blue"]}'" onmouseout="this.style.color='{p["muted"]}'">Live Maps</a>
+            <a href="?nav=map&theme={theme_val}" target="_self" style="color:{p["muted"]}; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='{p["blue"]}'" onmouseout="this.style.color='{p["muted"]}'">Live Maps</a>
             <span style="color:{p["border"]};">|</span>
-            <a href="?nav=alerts" target="_self" style="color:{p["muted"]}; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='{p["blue"]}'" onmouseout="this.style.color='{p["muted"]}'">Alerts</a>
+            <a href="?nav=alerts&theme={theme_val}" target="_self" style="color:{p["muted"]}; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='{p["blue"]}'" onmouseout="this.style.color='{p["muted"]}'">Alerts</a>
             <span style="color:{p["border"]};">|</span>
-            <a href="?help=1" target="_self" style="color:{p["muted"]}; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='{p["blue"]}'" onmouseout="this.style.color='{p["muted"]}'">Help</a>
+            <a href="?help=1&theme={theme_val}" target="_self" style="color:{p["muted"]}; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='{p["blue"]}'" onmouseout="this.style.color='{p["muted"]}'">Help</a>
             <span style="color:{p["border"]};">|</span>
-            <a href="?footer_info=about" target="_self" style="color:{p["muted"]}; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='{p["blue"]}'" onmouseout="this.style.color='{p["muted"]}'">About</a>
+            <a href="?footer_info=about&theme={theme_val}" target="_self" style="color:{p["muted"]}; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='{p["blue"]}'" onmouseout="this.style.color='{p["muted"]}'">About</a>
             <span style="color:{p["border"]};">|</span>
-            <a href="?footer_info=contact" target="_self" style="color:{p["muted"]}; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='{p["blue"]}'" onmouseout="this.style.color='{p["muted"]}'">Contact</a>
+            <a href="?footer_info=contact&theme={theme_val}" target="_self" style="color:{p["muted"]}; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='{p["blue"]}'" onmouseout="this.style.color='{p["muted"]}'">Contact</a>
         </div>
         <div style="font-size:0.75rem; color:{p["muted"]}; letter-spacing:0.04em;">
             © 2026 WasteGrid. All rights reserved.

@@ -65,14 +65,29 @@ def render_map_page(palette):
     elif sel_stream == "Dry / Recyclable":
         filtered_sources = [s for s in filtered_sources if s.get("waste_type") == "dry"]
 
-    # Base Folium Map centered on Bengaluru (Using OpenStreetMap & Esri - 100% Free, No Watermark, No API Key Required)
+    # Base Folium Map centered on Bengaluru (Using OpenStreetMap, CartoDB Dark Matter & Esri)
     center_lat, center_lon = 12.9650, 77.6050
+    is_dark = p.get("name") == "dark"
+    default_tiles = "CartoDB dark_matter" if is_dark else "OpenStreetMap"
     m = folium.Map(
         location=[center_lat, center_lon],
         zoom_start=12,
-        tiles="OpenStreetMap",
+        tiles=default_tiles,
         prefer_canvas=True,
     )
+
+    if is_dark:
+        folium.TileLayer(
+            tiles="OpenStreetMap",
+            name="OpenStreetMap (Light)",
+            control=True,
+        ).add_to(m)
+    else:
+        folium.TileLayer(
+            tiles="CartoDB dark_matter",
+            name="CartoDB Dark Matter",
+            control=True,
+        ).add_to(m)
 
     # Add Esri World Street Map Layer as an alternate clean basemap
     folium.TileLayer(

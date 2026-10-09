@@ -110,41 +110,114 @@ def inject_css(p):
             color: {p["text"]};
         }}
 
-        /* Modal Input Fields */
+        /* Universal Input Fields & Form Controls across Modals and Dashboards */
         div[data-baseweb="modal"] input,
         div[data-baseweb="modal"] textarea,
         div[data-testid="stDialog"] input,
         div[data-testid="stDialog"] textarea,
+        [data-testid="stTextInput"] input,
+        [data-testid="stNumberInput"] input,
+        [data-testid="stTextArea"] textarea,
+        [data-baseweb="input"] > div,
+        [data-testid="stSelectbox"] [data-baseweb="select"] > div,
         div[data-testid="stDialog"] [data-baseweb="select"] > div,
         div[data-baseweb="modal"] [data-baseweb="select"] > div {{
-            background-color: {p["bg_soft"]} !important;
+            background-color: {p["card_bg"]} !important;
             color: {p["text"]} !important;
             border: 1px solid {p["border"]} !important;
             border-radius: 8px !important;
         }}
 
-        /* Modal Tabs */
-        div[data-baseweb="modal"] [data-baseweb="tab-list"],
-        div[data-testid="stDialog"] [data-baseweb="tab-list"] {{
-            border-bottom: 1.5px solid {p["border"]} !important;
+        /* Universal Select Dropdowns & Popovers */
+        [data-baseweb="popover"],
+        [data-baseweb="menu"],
+        div[role="listbox"] {{
+            background-color: {p["card_bg"]} !important;
+            background: {p["card_bg"]} !important;
+            color: {p["text"]} !important;
+            border: 1px solid {p["border"]} !important;
+            box-shadow: {p["shadow"]} !important;
+            border-radius: 8px !important;
+        }}
+        div[role="option"] {{
+            color: {p["text"]} !important;
+            background-color: {p["card_bg"]} !important;
+        }}
+        div[role="option"]:hover,
+        div[role="option"][aria-selected="true"] {{
+            background-color: {p["bg_soft"]} !important;
+            color: {p["blue"]} !important;
         }}
 
-        div[data-baseweb="modal"] button[data-baseweb="tab"],
-        div[data-testid="stDialog"] button[data-baseweb="tab"] {{
-            color: {p["muted"]} !important;
-            font-weight: 700 !important;
+        /* Universal Main Page & Modal Tabs */
+        div[data-baseweb="modal"] [data-baseweb="tab-list"],
+        div[data-testid="stDialog"] [data-baseweb="tab-list"],
+        [data-testid="stTabs"] [data-baseweb="tab-list"],
+        div[data-baseweb="tab-list"] {{
+            border-bottom: 2px solid {p["border"]} !important;
             background: transparent !important;
         }}
 
+        div[data-baseweb="modal"] button[data-baseweb="tab"],
+        div[data-testid="stDialog"] button[data-baseweb="tab"],
+        [data-testid="stTabs"] button[data-baseweb="tab"],
+        div[data-baseweb="tab-list"] button[data-baseweb="tab"] {{
+            color: {p["muted"]} !important;
+            font-weight: 700 !important;
+            background: transparent !important;
+            border: none !important;
+            border-bottom: 2.5px solid transparent !important;
+        }}
+
+        div[data-baseweb="modal"] button[data-baseweb="tab"]:hover,
+        div[data-testid="stDialog"] button[data-baseweb="tab"]:hover,
+        [data-testid="stTabs"] button[data-baseweb="tab"]:hover,
+        div[data-baseweb="tab-list"] button[data-baseweb="tab"]:hover {{
+            color: {p["blue"]} !important;
+            background: {p["card_hover"]} !important;
+        }}
+
         div[data-baseweb="modal"] button[data-baseweb="tab"][aria-selected="true"],
-        div[data-testid="stDialog"] button[data-baseweb="tab"][aria-selected="true"] {{
+        div[data-testid="stDialog"] button[data-baseweb="tab"][aria-selected="true"],
+        [data-testid="stTabs"] button[data-baseweb="tab"][aria-selected="true"],
+        div[data-baseweb="tab-list"] button[data-baseweb="tab"][aria-selected="true"] {{
             color: {p["accent"]} !important;
+            font-weight: 800 !important;
             border-bottom: 2.5px solid {p["accent"]} !important;
+            background: transparent !important;
         }}
 
         div[data-baseweb="modal"] button[data-baseweb="tab"] p,
-        div[data-testid="stDialog"] button[data-baseweb="tab"] p {{
+        div[data-testid="stDialog"] button[data-baseweb="tab"] p,
+        [data-testid="stTabs"] button[data-baseweb="tab"] p,
+        div[data-baseweb="tab-list"] button[data-baseweb="tab"] p {{
             color: inherit !important;
+        }}
+
+        /* Streamlit Metric Cards */
+        [data-testid="stMetric"] {{
+            background: {p["card_bg"]} !important;
+            border: 1px solid {p["border"]} !important;
+            border-radius: 8px !important;
+            padding: 12px 16px !important;
+            box-shadow: {p["shadow"]} !important;
+        }}
+        [data-testid="stMetricLabel"] * {{
+            color: {p["muted"]} !important;
+        }}
+        [data-testid="stMetricValue"] * {{
+            color: {p["text"]} !important;
+        }}
+
+        /* Streamlit Alert Callouts */
+        [data-testid="stAlert"] {{
+            border-radius: 8px !important;
+            border: 1px solid {p["border"]} !important;
+            background-color: {p["card_bg"]} !important;
+            color: {p["text"]} !important;
+        }}
+        [data-testid="stAlert"] * {{
+            color: {p["text"]} !important;
         }}
 
         /* Modal Buttons */

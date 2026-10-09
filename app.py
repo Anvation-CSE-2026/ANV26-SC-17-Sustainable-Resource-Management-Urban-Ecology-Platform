@@ -62,8 +62,6 @@ if st.query_params.get("profile") == "1":
 # Handle navigation via query params (e.g. ?nav=maps, ?nav=services, ?nav=settings)
 req_nav = st.query_params.get("nav")
 if req_nav:
-    if "nav" in st.query_params:
-        del st.query_params["nav"]
     nav_map_aliases = {
         "maps": "map",
         "gis": "map",
@@ -97,7 +95,9 @@ if param_theme in ["light", "dark"]:
 elif "theme" not in st.session_state or st.session_state.theme not in ["light", "dark"]:
     st.session_state.theme = "light"
 
+# Always keep active theme and current dashboard in query params for reload persistence
 st.query_params["theme"] = st.session_state.theme
+st.query_params["nav"] = st.session_state.get("nav_selection", "home")
 palette = theme.get_palette(st.session_state.theme)
 theme.inject_css(palette)
 
@@ -316,6 +316,7 @@ with st.sidebar:
             use_container_width=True,
         ):
             st.session_state.nav_selection = nav_key
+            st.query_params["nav"] = nav_key
             st.rerun()
 
     # Bottom of Sidebar: When logged in, show Logout Icon with Logout under it, and NOTHING ELSE AFTER IT!
@@ -348,6 +349,7 @@ components.top_nav_bar(
     theme=st.session_state.theme,
     p=palette,
     alert_count=pending_alert_count,
+    active_nav=st.session_state.nav_selection,
 )
 
 current_nav_key = st.session_state.get("nav_selection", "home")
@@ -364,6 +366,7 @@ if not current_user and current_nav_key not in [
 ]:
     current_nav_key = "home"
     st.session_state["nav_selection"] = "home"
+    st.query_params["nav"] = "home"
 
 # =========================================================================
 # PAGE 1: HOME AUTHORITY DASHBOARD (INSPIRED BY WIREFRAME LAYOUT)

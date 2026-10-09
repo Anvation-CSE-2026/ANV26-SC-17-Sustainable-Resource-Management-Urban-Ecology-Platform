@@ -124,12 +124,21 @@ ROLE_PERMISSIONS = {
 
 
 def get_current_user():
-    """Retrieve the current authenticated user record from session state, synced with SQLite."""
+    """Retrieve the current authenticated user record from session state or query param, synced with SQLite."""
     user = st.session_state.get("authenticated_user")
+    if not user and hasattr(st, "query_params") and "u" in st.query_params:
+        u_param = st.query_params.get("u")
+        if u_param:
+            db_user = db.get_user_by_username(str(u_param).strip().lower())
+            if db_user and db_user.get("is_active"):
+                st.session_state["authenticated_user"] = db_user
+                user = db_user
     if user and isinstance(user, dict) and "username" in user:
         db_user = db.get_user_by_username(user["username"])
         if db_user:
             st.session_state["authenticated_user"] = db_user
+            if hasattr(st, "query_params"):
+                st.query_params["u"] = user["username"]
             return db_user
     return user
 
@@ -173,6 +182,8 @@ def login(username, password, selected_role=None):
             )
 
     st.session_state["authenticated_user"] = user
+    if hasattr(st, "query_params"):
+        st.query_params["u"] = user["username"]
     if selected_role and not selected_role.startswith("--"):
         st.session_state["active_role_title"] = selected_role
     else:
@@ -203,8 +214,12 @@ def logout():
     st.session_state.pop("authenticated_user", None)
     st.session_state["nav_selection"] = "home"
     st.session_state["show_auth_modal"] = False
-    if "logout" in st.query_params:
-        del st.query_params["logout"]
+    if hasattr(st, "query_params"):
+        if "logout" in st.query_params:
+            del st.query_params["logout"]
+        if "u" in st.query_params:
+            del st.query_params["u"]
+        st.query_params["nav"] = "home"
     st.rerun()
 
 
