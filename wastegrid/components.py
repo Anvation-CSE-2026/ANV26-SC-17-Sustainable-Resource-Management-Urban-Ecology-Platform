@@ -111,6 +111,12 @@ def top_nav_bar(*args, **kwargs):
         f'<span style="font-size:0.82rem; font-weight:700; color:{text_col};">{user_display}</span>{role_badge}</a>'
     )
 
+    logout_btn_html = (
+        f'<a class="theme-toggle-link" href="?logout=1" target="_self" title="Sign out of WasteGrid session" '
+        f'style="background:rgba(239, 68, 68, 0.08); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.25); font-weight:700;">'
+        f'<span>🚪</span><span>LOGOUT</span></a>'
+    ) if (user and isinstance(user, dict)) else ""
+
     from wastegrid import theme as theme_module
     logo_uri = theme_module.get_logo_data_uri()
 
@@ -125,11 +131,12 @@ def top_nav_bar(*args, **kwargs):
         f'<div style="font-size:0.68rem; color:{muted_col}; letter-spacing:0.18em; text-transform:uppercase; margin-top:2px; font-weight:700;">Predict. Detect. Allocate.</div>'
         f'</div>'
         f'</div>'
-        # 2. Right Actions: Alerts Badge, Profile Icon (P), and Theme toggle (Logout kept cleanly at bottom of sidebar only)
+        # 2. Right Actions: Alerts Badge, Profile Icon (P), Theme toggle, and Quick Logout
         f'<div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; flex-shrink:0;">'
         f'{alert_badge_html}'
         f'{profile_btn_html}'
         f'<a class="theme-toggle-link" href="?theme={next_theme}" target="_self"><span>{toggle_icon}</span><span>{toggle_label}</span></a>'
+        f'{logout_btn_html}'
         f'</div>'
         f'</div>'
     )

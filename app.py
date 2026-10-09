@@ -302,7 +302,7 @@ with st.sidebar:
     # Bottom of Sidebar: When logged in, show Logout Icon with Logout under it, and NOTHING ELSE AFTER IT!
     if current_user:
         st.markdown(
-            f"<div style='margin-top:42px; padding-top:16px; border-top:1px solid {palette['border']}; text-align:center;'></div>",
+            f"<div style='margin-top:18px; padding-top:12px; border-top:1px solid {palette['border']}; text-align:center;'></div>",
             unsafe_allow_html=True,
         )
         if st.button("🚪\n\nLogout", key="btn_sb_logout_bottom", use_container_width=True, help="Sign out of WasteGrid"):
