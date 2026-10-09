@@ -12,7 +12,6 @@ affecting live operational data:
 - Scenario saving and cataloging
 """
 
-
 import plotly.graph_objects as go
 import streamlit as st
 
@@ -273,9 +272,12 @@ def render_scenario_simulator_page(palette, baseline_wet, baseline_dry):
 
     # 5. Save Scenario to Database
     st.markdown("<br>", unsafe_allow_html=True)
-    with st.expander(
-        "💾 ARCHIVE SCENARIO TO MUNICIPAL CONTINGENCY DATABASE", expanded=False
-    ), st.form("save_scenario_form"):
+    with (
+        st.expander(
+            "💾 ARCHIVE SCENARIO TO MUNICIPAL CONTINGENCY DATABASE", expanded=False
+        ),
+        st.form("save_scenario_form"),
+    ):
         scen_name = st.text_input(
             "Scenario Name",
             placeholder="e.g. Dasara Festival Surge + Plant B Major Overhaul",
@@ -307,9 +309,7 @@ def render_scenario_simulator_page(palette, baseline_wet, baseline_dry):
                     "sim_carbon": sim_res["carbon_emissions_kg"],
                 }
                 db.save_scenario(scen_name, scen_desc, params, results, curr_u)
-                st.success(
-                    f"Scenario '{scen_name}' permanently archived in database!"
-                )
+                st.success(f"Scenario '{scen_name}' permanently archived in database!")
             else:
                 st.warning("Please provide a name for the scenario.")
 

@@ -348,9 +348,12 @@ def render_factory_authority_view(active_facilities, allocations, palette):
             unsafe_allow_html=True,
         )
 
-    with st.expander(
-        "➕ Install Extra Machine / Expand Factory Processing Unit (Click to Open)"
-    ), st.form("fac_view_add_machine_form"):
+    with (
+        st.expander(
+            "➕ Install Extra Machine / Expand Factory Processing Unit (Click to Open)"
+        ),
+        st.form("fac_view_add_machine_form"),
+    ):
         fac_ids = [f["id"] for f in active_facilities] or ["A", "B", "C"]
         t_fid = st.selectbox(
             "Assign Machine to Plant", fac_ids, format_func=lambda x: f"Plant {x}"

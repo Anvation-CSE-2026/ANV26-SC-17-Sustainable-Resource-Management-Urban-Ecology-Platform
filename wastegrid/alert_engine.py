@@ -8,7 +8,6 @@ Monitors live facility loads and forecast projections against calibrated thresho
 Provides an interactive alerts console with severity filters and Acknowledge/Resolve workflows.
 """
 
-
 import pandas as pd
 import plotly.express as px
 import streamlit as st

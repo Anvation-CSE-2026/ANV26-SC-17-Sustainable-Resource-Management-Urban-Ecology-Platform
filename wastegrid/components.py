@@ -5,6 +5,17 @@ import pandas as pd
 import streamlit as st
 
 
+def render_html(content):
+    """Safely render HTML without Markdown converting indented lines to code blocks."""
+    clean = "\n".join(
+        line.strip() for line in str(content).strip().splitlines() if line.strip()
+    )
+    if hasattr(st, "html"):
+        st.html(clean)
+    else:
+        st.markdown(clean, unsafe_allow_html=True)
+
+
 def header(theme="light", status="optimal", logo_path="logo.png", p=None, user=None):
     logo_html = ""
     if os.path.exists(logo_path):

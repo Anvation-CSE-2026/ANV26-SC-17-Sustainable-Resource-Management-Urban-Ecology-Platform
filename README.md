@@ -1,6 +1,7 @@
 # ♻️ WasteGrid 2.0 — Smart Municipal Operations Dashboard
 
 [![Tests](https://img.shields.io/badge/Tests-21%20Passed-brightgreen.svg)](tests/test_wastegrid.py)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-wastegrid--v09cd65.streamlit.app-FF4B4B.svg)](https://wastegrid-v09cd65.streamlit.app)
 [![Streamlit](https://img.shields.io/badge/Framework-Streamlit-FF4B4B.svg)](https://streamlit.io/)
 [![Optimization](https://img.shields.io/badge/Engine-HiGHS%20Linear%20Programming-0284C7.svg)](https://scipy.org/)
 [![License](https://img.shields.io/badge/Compliance-Urban%20Local%20Bodies%20(ULB)-10B981.svg)](#license)
@@ -12,11 +13,11 @@
 
 ## 🌐 Live Web Deployment
 
-WasteGrid 2.0 is designed for high-availability cloud deployment via **Streamlit Community Cloud** with continuous synchronization to this GitHub repository.
+WasteGrid 2.0 is deployed and continuously synchronized on **Streamlit Community Cloud**:
 
 - **Official Live Application Link:**  
-  👉 **[Launch WasteGrid 2.0 Live Cloud Dashboard](https://anv26-sc-17-wastegrid.streamlit.app)**  
-  *(Alternate Mirror: [https://wastegrid-demo.streamlit.app](https://wastegrid-demo.streamlit.app))*
+  👉 **[Launch WasteGrid 2.0 Live Cloud Dashboard](https://wastegrid-v09cd65.streamlit.app)**  
+  *(Direct URL: `https://wastegrid-v09cd65.streamlit.app`)*
 
 ### 🚀 1-Click Cloud Deployment Steps:
 1. Log in to [Streamlit Community Cloud](https://share.streamlit.io/) with your GitHub account.

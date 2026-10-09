@@ -82,6 +82,14 @@ def inject_css(p):
 
         h1, h2, h3, h4, p, span, label {{ color: {p["text"]}; }}
 
+        /* Ensure pre, code, and code containers match active palette with zero dark glitches in light mode */
+        pre, code, .stCodeBlock, [data-testid="stCodeBlock"] {{
+            background-color: {p["bg_soft"]} !important;
+            color: {p["text"]} !important;
+            border: 1px solid {p["border"]} !important;
+            border-radius: 6px !important;
+        }}
+
         [data-testid="stHeader"] {{
             height: 3rem !important;
             background: transparent !important;

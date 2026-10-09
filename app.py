@@ -1,4 +1,3 @@
-
 import pandas as pd
 import plotly.express as px
 import streamlit as st
@@ -104,8 +103,13 @@ theme.inject_css(palette)
 
 
 def render_html(content):
-    clean = "\n".join(line.strip() for line in str(content).strip().splitlines())
-    st.markdown(clean, unsafe_allow_html=True)
+    clean = "\n".join(
+        line.strip() for line in str(content).strip().splitlines() if line.strip()
+    )
+    if hasattr(st, "html"):
+        st.html(clean)
+    else:
+        st.markdown(clean, unsafe_allow_html=True)
 
 
 # =========================================================================

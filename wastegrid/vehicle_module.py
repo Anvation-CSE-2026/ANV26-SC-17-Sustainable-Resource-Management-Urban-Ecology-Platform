@@ -7,7 +7,6 @@ Features:
 - Vehicle CRUD and status management (Available, Assigned, In Transit, Diverted, Maintenance)
 """
 
-import textwrap
 
 import folium
 import streamlit as st
@@ -18,14 +17,20 @@ from wastegrid import db
 
 def render_html(html_str):
     """Safely render HTML without Markdown converting indented lines to code blocks."""
-    st.markdown(textwrap.dedent(html_str).strip(), unsafe_allow_html=True)
+    clean = "\n".join(
+        line.strip() for line in str(html_str).strip().splitlines() if line.strip()
+    )
+    if hasattr(st, "html"):
+        st.html(clean)
+    else:
+        st.markdown(clean, unsafe_allow_html=True)
 
 
 def render_vehicle_tracking_page(palette):
     """Render the full interactive Vehicle Tracking & Dispatch console."""
     p = palette
 
-    st.markdown(
+    render_html(
         f"""
         <div style="background:{p["card_bg"]}; border:1px solid {p["border"]}; border-left:4px solid {p["blue"]};
                     border-radius:8px; padding:18px 22px; margin-bottom:20px;">
@@ -37,8 +42,7 @@ def render_vehicle_tracking_page(palette):
                 <b>Notice:</b> Telemetry represents real-time cellular transponder streaming combined with municipal simulation test feeds.
             </div>
         </div>
-        """,
-        unsafe_allow_html=True,
+        """
     )
 
     vehicles = db.get_all_vehicles()
@@ -58,7 +62,7 @@ def render_vehicle_tracking_page(palette):
     tot_capacity = sum(v["capacity_kg"] for v in vehicles)
     fleet_util = (tot_payload / tot_capacity * 100) if tot_capacity > 0 else 0
 
-    st.markdown(
+    render_html(
         f"""
         <div class="metric-grid">
             <div class="m-card"><div class="m-label">🚛 Active Fleet</div><div class="m-value">{total_trucks} Trucks</div></div>
@@ -66,8 +70,7 @@ def render_vehicle_tracking_page(palette):
             <div class="m-card hero"><div class="m-label">⚖️ In-Transit Payload</div><div class="m-value">{tot_payload / 1000:.2f} Tons</div></div>
             <div class="m-card purple"><div class="m-label">📊 Fleet Load %</div><div class="m-value">{fleet_util:.1f}%</div></div>
         </div>
-        """,
-        unsafe_allow_html=True,
+        """
     )
 
     # 2. Interactive Vehicle Tracking Map (Folium)
@@ -169,12 +172,11 @@ def render_vehicle_tracking_page(palette):
                 divert_candidates.append(v)
 
     if divert_candidates:
-        st.markdown(
+        render_html(
             f"""<div class="wg-status red">
                 🚨 <b>Bottleneck Alert:</b> {len(divert_candidates)} vehicle(s) currently dispatched to offline
                 or overloaded facilities. WasteGrid dynamic turnaround diversion recommended below!
-            </div>""",
-            unsafe_allow_html=True,
+            </div>"""
         )
 
         for dv in divert_candidates:
@@ -203,11 +205,10 @@ def render_vehicle_tracking_page(palette):
                     )
                     st.rerun()
     else:
-        st.markdown(
+        render_html(
             """<div class="wg-status">
                 ✅ <b>All Dispatch Routes Nominal:</b> All active trucks are routed to online facilities with available capacity.
-            </div>""",
-            unsafe_allow_html=True,
+            </div>"""
         )
 
     # 4. Fleet Telemetry Register Table & Adding Trucks
@@ -245,9 +246,10 @@ def render_vehicle_tracking_page(palette):
             unsafe_allow_html=True,
         )
 
-    with st.expander(
-        "➕ Commission & Add New Compactor Truck to Fleet (Click to Open)"
-    ), st.form("form_add_truck"):
+    with (
+        st.expander("➕ Commission & Add New Compactor Truck to Fleet (Click to Open)"),
+        st.form("form_add_truck"),
+    ):
         tc1, tc2, tc3 = st.columns(3)
         with tc1:
             new_vid = (
@@ -301,9 +303,7 @@ def render_vehicle_tracking_page(palette):
                 else:
                     st.error(msg)
             else:
-                st.warning(
-                    "Please provide both registration plate and driver name."
-                )
+                st.warning("Please provide both registration plate and driver name.")
 
     # Filter vehicles based on selected status
     filtered_vehicles = vehicles
@@ -356,7 +356,7 @@ def render_vehicle_tracking_page(palette):
             </tr>"""
         )
 
-    st.markdown(
+    render_html(
         f"""<div class="fc-table-wrap">
             <table class="fc-table">
                 <thead><tr>
@@ -365,8 +365,7 @@ def render_vehicle_tracking_page(palette):
                 </tr></thead>
                 <tbody>{"".join(v_rows)}</tbody>
             </table>
-        </div>""",
-        unsafe_allow_html=True,
+        </div>"""
     )
 
     # 4. Tri-Party Medium: How Driver, Commissioner, and Plant Synchronize
@@ -375,7 +374,7 @@ def render_vehicle_tracking_page(palette):
         '<div class="sec-title">📡 THE TRI-PARTY SYNCHRONIZATION MEDIUM (COMMISSIONER ➔ DRIVER ➔ PLANT)</div>',
         unsafe_allow_html=True,
     )
-    st.markdown(
+    render_html(
         f"""
         <div style="background:{p["card_bg"]}; border:1.5px solid {p["blue"]}; border-radius:12px; padding:20px 24px; margin-bottom:20px; box-shadow:{p["shadow"]};">
             <div style="font-size:1.1rem; font-weight:800; color:{p["text"]}; margin-bottom:8px;">
@@ -409,8 +408,7 @@ def render_vehicle_tracking_page(palette):
                 </div>
             </div>
         </div>
-        """,
-        unsafe_allow_html=True,
+        """
     )
 
     # 5. Interactive In-Cab Mobile Driver Terminal Simulator
@@ -470,10 +468,10 @@ Stream: <b style="text-transform:uppercase; color:#10b981;">{matched_v["waste_ty
 </div>
 </div>
 """
-        st.markdown(cab_html.strip(), unsafe_allow_html=True)
+        render_html(cab_html)
 
     with col_cab_right:
-        st.markdown(
+        render_html(
             f"""
             <div style="background:{p["card_bg"]}; border:1px solid {p["border"]}; border-radius:14px; padding:20px; box-shadow:{p["shadow"]};">
                 <div style="font-size:1.05rem; font-weight:800; color:{p["text"]}; margin-bottom:8px;">
@@ -483,8 +481,7 @@ Stream: <b style="text-transform:uppercase; color:#10b981;">{matched_v["waste_ty
                     When a facility queues beyond 85% or enters unexpected maintenance, Central Command pushes an instant audible diversion command to the driver's cab.
                 </div>
             </div>
-            """,
-            unsafe_allow_html=True,
+            """
         )
         if st.button(
             "📢 Simulate Emergency In-Cab Reroute Alert",
@@ -581,7 +578,7 @@ def render_truck_driver_dashboard(palette, driver_user=None):
 </div>
 </div>
 """
-    st.markdown(banner_html.strip(), unsafe_allow_html=True)
+    render_html(banner_html)
 
     q_col1, q_col2, q_col3, q_col4, q_col5 = st.columns([1, 1, 1.1, 1.2, 1.2])
     with q_col1:
