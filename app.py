@@ -681,8 +681,14 @@ elif current_nav_key == "settings":
 # =========================================================================
 # TENANT-SPECIFIC CONSOLES
 # =========================================================================
-elif current_nav_key in ["driver_in_cab", "driver_route", "driver_pass"]:
+elif current_nav_key == "driver_in_cab":
     vehicle_module.render_truck_driver_dashboard(palette, current_user)
+
+elif current_nav_key == "driver_route":
+    vehicle_module.render_truck_driver_gps_route(palette, current_user)
+
+elif current_nav_key == "driver_pass":
+    vehicle_module.render_truck_driver_weighbridge_pass(palette, current_user)
 
 elif current_nav_key == "state_policy":
     analytics_module.render_state_authority_view(palette)

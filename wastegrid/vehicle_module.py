@@ -638,3 +638,328 @@ WG-PASS-2026-101
                     st.session_state.driver_blackspot_cleared = False
                     st.session_state.driver_weighbridge_done = False
                     st.rerun()
+
+
+def render_truck_driver_gps_route(palette, driver_user=None):
+    """
+    Dedicated Full-Screen GPS Navigation Console for Truck Driver.
+    Features:
+    - Active turn-by-turn guidance HUD
+    - Interactive Folium Live GPS Route map with real-time route path
+    - Speedometer, heading, ETA, and distance remaining
+    - Divert reroute visualization
+    - 1-Click quick jump to Weighbridge Pass when arriving
+    """
+    p = palette
+    is_light = (p.get("name") == "light")
+    card_surface = p.get("card_bg", "#ffffff")
+    inner_surface = p.get("bg_soft", "#e2e7ef") if is_light else "rgba(255,255,255,0.04)"
+    border_col = p.get("border", "#dbe3ec")
+    text_main = p.get("text", "#0f172a")
+    text_muted = p.get("muted", "#64748b")
+    blue_accent = p.get("blue", "#0284c7")
+    success_accent = p.get("success", "#16a34a")
+    warn_accent = p.get("warn", "#d97706")
+    shadow_effect = p.get("shadow", "0 2px 8px rgba(0,0,0,0.06)")
+
+    driver_name = driver_user.get("full_name") if driver_user else "Ramesh Kumar"
+    vehicle_reg = "KA-01-EA-101"
+
+    if "driver_rerouted" not in st.session_state:
+        st.session_state.driver_rerouted = False
+
+    target_name = "Facility B: Anaerobic Digester & Biogas (Koramangala)" if st.session_state.driver_rerouted else "Facility A: Organic Biocompost Plant (Dock #2)"
+    target_coords = (12.9280, 77.6270) if st.session_state.driver_rerouted else (12.9350, 77.6180)
+    truck_coords = (12.9450, 77.6120)
+    origin_coords = (12.9610, 77.6380)
+
+    curr_eta = "14 Mins" if st.session_state.driver_rerouted else "9 Mins"
+    curr_dist = "5.2 km" if st.session_state.driver_rerouted else "3.6 km"
+    route_color = "#ef4444" if st.session_state.driver_rerouted else "#10b981"
+
+    # 1. Driver GPS HUD Header
+    hud_html = f"""
+    <div style="background:{card_surface}; border:1.5px solid {border_col}; border-radius:12px; padding:16px 20px; margin-bottom:18px; box-shadow:{shadow_effect};">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <span style="font-size:1.8rem;">🗺️</span>
+                <div>
+                    <div style="font-size:1.15rem; font-weight:800; color:{text_main};">
+                        Live Route GPS Navigation · {vehicle_reg} ({driver_name})
+                    </div>
+                    <div style="font-size:0.75rem; color:{text_muted}; margin-top:2px;">
+                        Active Target: <b style="color:{blue_accent};">{target_name}</b> · Corridor: Ward 112 ➔ Processing Grid
+                    </div>
+                </div>
+            </div>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <div style="background:{inner_surface}; border:1px solid {border_col}; border-radius:8px; padding:6px 14px; text-align:center;">
+                    <div style="font-size:0.65rem; color:{text_muted}; font-weight:700;">REMAINING</div>
+                    <div style="font-size:1.05rem; font-weight:900; color:{text_main};">{curr_dist}</div>
+                </div>
+                <div style="background:{inner_surface}; border:1px solid {border_col}; border-radius:8px; padding:6px 14px; text-align:center;">
+                    <div style="font-size:0.65rem; color:{text_muted}; font-weight:700;">GATE ETA</div>
+                    <div style="font-size:1.05rem; font-weight:900; color:{warn_accent};">{curr_eta}</div>
+                </div>
+                <div style="background:{inner_surface}; border:1px solid {border_col}; border-radius:8px; padding:6px 14px; text-align:center;">
+                    <div style="font-size:0.65rem; color:{text_muted}; font-weight:700;">SPEED</div>
+                    <div style="font-size:1.05rem; font-weight:900; color:{success_accent};">34 km/h</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    """
+    st.markdown(hud_html, unsafe_allow_html=True)
+
+    # 2. Main Map + Next Turn Guidance
+    m_col, g_col = st.columns([2, 1], gap="medium")
+
+    with m_col:
+        st.markdown(f'<div class="sec-title">📍 REAL-TIME VEHICLE TELEMATICS MAP</div>', unsafe_allow_html=True)
+        m = folium.Map(
+            location=[12.9400, 77.6200],
+            zoom_start=13,
+            tiles="OpenStreetMap",
+            prefer_canvas=True,
+        )
+
+        folium.Marker(
+            location=origin_coords,
+            icon=folium.Icon(color="blue", icon="home", prefix="fa"),
+            tooltip="Origin: Ward 112 Domlur Micro-Collection Hub",
+        ).add_to(m)
+
+        folium.Marker(
+            location=target_coords,
+            icon=folium.Icon(color="green", icon="industry", prefix="fa"),
+            tooltip=f"Destination: {target_name}",
+        ).add_to(m)
+
+        folium.Circle(
+            location=target_coords,
+            radius=300,
+            color="#10b981",
+            fill=True,
+            fill_opacity=0.15,
+            tooltip="Weighbridge Automated RFID / Sensor Arrival Geofence (300m)",
+        ).add_to(m)
+
+        folium.Marker(
+            location=truck_coords,
+            icon=folium.Icon(color="red" if st.session_state.driver_rerouted else "blue", icon="truck", prefix="fa"),
+            tooltip=f"{vehicle_reg} ({driver_name}) · 34 km/h · Heading 142° SE",
+        ).add_to(m)
+
+        if st.session_state.driver_rerouted:
+            route_pts = [origin_coords, (12.9520, 77.6250), truck_coords, (12.9380, 77.6200), target_coords]
+        else:
+            route_pts = [origin_coords, (12.9520, 77.6250), truck_coords, (12.9400, 77.6150), target_coords]
+
+        folium.PolyLine(
+            locations=route_pts,
+            color=route_color,
+            weight=5,
+            opacity=0.85,
+            tooltip=f"Active GPS Nav Vector: {curr_dist} ({curr_eta})",
+        ).add_to(m)
+
+        st_folium(m, use_container_width=True, height=440, returned_objects=[])
+
+    with g_col:
+        st.markdown(f'<div class="sec-title">➔ TURN-BY-TURN MANEUVER HUD</div>', unsafe_allow_html=True)
+        turn_banner_bg = "rgba(239,68,68,0.1)" if st.session_state.driver_rerouted else "rgba(2,132,199,0.08)"
+        turn_border = "#ef4444" if st.session_state.driver_rerouted else blue_accent
+        next_turn_txt = "In 350 meters: Keep RIGHT at Domlur Flyover onto 100ft Inner Ring Road" if not st.session_state.driver_rerouted else "In 200 meters: Divert RIGHT onto Domlur Link Road toward Facility B"
+
+        st.markdown(
+            f"""
+            <div style="background:{turn_banner_bg}; border:1.5px solid {turn_border}; border-radius:10px; padding:16px; margin-bottom:14px;">
+                <div style="font-size:0.7rem; color:{text_muted}; text-transform:uppercase; font-weight:800; letter-spacing:0.1em;">
+                    NEXT IMMEDIATE MANEUVER
+                </div>
+                <div style="font-size:1.05rem; font-weight:900; color:{text_main}; margin-top:4px;">
+                    ➔ {next_turn_txt}
+                </div>
+                <div style="font-size:0.75rem; color:{text_muted}; margin-top:6px;">
+                    Lane Guidance: <b>Use Right 2 Lanes</b> · Speed Limit: <b>40 km/h</b>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        st.markdown(
+            f"""
+            <div style="background:{card_surface}; border:1px solid {border_col}; border-radius:10px; padding:14px; margin-bottom:16px; font-size:0.8rem; line-height:1.8;">
+                <div style="font-weight:800; color:{text_main}; margin-bottom:8px; border-bottom:1px solid {border_col}; padding-bottom:6px;">
+                    ROUTE MILESTONES (TRIP #3 OF 4)
+                </div>
+                <div>✅ <b>0.0 km:</b> Departed Ward 112 Domlur Hub (07:15)</div>
+                <div>📍 <b>1.8 km:</b> Passed Indiranagar Commercial Junction</div>
+                <div>🔵 <b>Current:</b> Cruising 100ft Ring Road (34 km/h)</div>
+                <div>⏱️ <b>+2.4 km:</b> Merge into Koramangala Inflow Corridor</div>
+                <div>🏁 <b>+3.6 km:</b> Arrive at Dock Weighbridge Boom Barrier</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        b1, b2 = st.columns(2)
+        with b1:
+            if st.button("⚖️ Open Weighbridge Pass", type="primary", use_container_width=True, key="btn_jump_to_pass"):
+                st.session_state["nav_selection"] = "driver_pass"
+                st.rerun()
+        with b2:
+            if st.button("📱 In-Cab Terminal", use_container_width=True, key="btn_jump_to_terminal"):
+                st.session_state["nav_selection"] = "driver_in_cab"
+                st.rerun()
+
+
+def render_truck_driver_weighbridge_pass(palette, driver_user=None):
+    """
+    Dedicated Official Digital Weighbridge Gate Pass & Electronic Security Gate Console.
+    Features:
+    - Official Municipal Corporation Gate Pass Certificate with QR/Barcode
+    - Large Security OTP 7492
+    - Live Gross / Tare / Net Waste Audit Ledger
+    - Boom Barrier verification & Hopper payload discharge
+    - Print / Export Gate Manifest
+    """
+    p = palette
+    is_light = (p.get("name") == "light")
+    card_surface = p.get("card_bg", "#ffffff")
+    inner_surface = p.get("bg_soft", "#e2e7ef") if is_light else "rgba(255,255,255,0.04)"
+    border_col = p.get("border", "#dbe3ec")
+    text_main = p.get("text", "#0f172a")
+    text_muted = p.get("muted", "#64748b")
+    blue_accent = p.get("blue", "#0284c7")
+    success_accent = p.get("success", "#16a34a")
+    shadow_effect = p.get("shadow", "0 2px 8px rgba(0,0,0,0.06)")
+
+    driver_name = driver_user.get("full_name") if driver_user else "Ramesh Kumar"
+    vehicle_reg = "KA-01-EA-101"
+    gate_otp = "7492"
+
+    if "driver_weighbridge_done" not in st.session_state:
+        st.session_state.driver_weighbridge_done = False
+    if "driver_payload_kg" not in st.session_state:
+        st.session_state.driver_payload_kg = 4200.0
+    if "driver_runs_completed" not in st.session_state:
+        st.session_state.driver_runs_completed = 2
+
+    pass_col, info_col = st.columns([1.2, 1], gap="large")
+
+    with pass_col:
+        status_border = success_accent if st.session_state.driver_weighbridge_done else blue_accent
+        status_label = "GATE ENTRY APPROVED · BOOM BARRIER OPEN (BAY #2)" if st.session_state.driver_weighbridge_done else "READY FOR WEIGHBRIDGE SENSOR SCAN"
+
+        st.markdown(
+            f"""
+            <div style="background:{card_surface}; border:2px solid {status_border}; border-radius:16px; padding:24px; box-shadow:{shadow_effect};">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid {border_col}; padding-bottom:12px; margin-bottom:16px;">
+                    <div>
+                        <div style="font-size:0.7rem; font-weight:800; color:{text_muted}; letter-spacing:0.12em; text-transform:uppercase;">
+                            BBMP SOLID WASTE MANAGEMENT FLEET PASS
+                        </div>
+                        <div style="font-size:1.35rem; font-weight:900; color:{text_main}; margin-top:2px;">
+                            WG-PASS-2026-101
+                        </div>
+                    </div>
+                    <span style="background:rgba(16,185,129,0.12); color:{success_accent}; font-size:0.75rem; font-weight:800; padding:4px 10px; border-radius:999px;">
+                        ● RFID LINKED
+                    </span>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; font-size:0.82rem; margin-bottom:16px;">
+                    <div><span style="color:{text_muted};">Assigned Vehicle:</span><br><b>{vehicle_reg}</b></div>
+                    <div><span style="color:{text_muted};">Driver in Charge:</span><br><b>{driver_name}</b></div>
+                    <div><span style="color:{text_muted};">Intake Facility:</span><br><b>Biocompost Plant A</b></div>
+                    <div><span style="color:{text_muted};">Receiving Dock:</span><br><b>Bay #2 (Wet Biomass)</b></div>
+                </div>
+
+                <div style="background:{inner_surface}; border:1.5px solid {border_col}; border-radius:12px; padding:16px; text-align:center; margin-bottom:16px;">
+                    <div style="font-size:0.72rem; color:{text_muted}; font-weight:800; text-transform:uppercase; letter-spacing:0.1em;">
+                        DRIVER SECURITY ENTRY OTP (UBER-STYLE)
+                    </div>
+                    <div style="font-size:2.8rem; font-weight:900; letter-spacing:0.25em; color:{success_accent}; font-family:monospace; margin:4px 0;">
+                        {gate_otp}
+                    </div>
+                    <div style="font-size:0.72rem; color:{text_muted};">
+                        Show this OTP or speak it into the weighbridge gate intercom to open boom barrier.
+                    </div>
+                </div>
+
+                <div style="font-size:0.8rem; font-weight:800; color:{status_border}; text-align:center;">
+                    ● {status_label}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        btn_c1, btn_c2 = st.columns(2)
+        with btn_c1:
+            if not st.session_state.driver_weighbridge_done:
+                if st.button("⚖️ 1. Verify OTP & Check-In at Weighbridge", key="pass_pg_checkin", type="primary", use_container_width=True):
+                    st.session_state.driver_weighbridge_done = True
+                    st.toast("✅ Boom Barrier verified! Gate opened.")
+                    st.rerun()
+            else:
+                if st.session_state.driver_payload_kg > 0:
+                    if st.button("🚜 2. Unload Payload at Hopper & Complete", key="pass_pg_unload", type="primary", use_container_width=True):
+                        st.session_state.driver_payload_kg = 0.0
+                        st.session_state.driver_runs_completed += 1
+                        st.session_state.driver_weighbridge_done = False
+                        st.balloons()
+                        st.success("🎉 Payload successfully discharged into Biocompost Hopper!")
+                        st.rerun()
+                else:
+                    if st.button("🚚 Start Next Ward Collection Cycle", key="pass_pg_next", use_container_width=True):
+                        st.session_state.driver_payload_kg = 4200.0
+                        st.session_state.driver_rerouted = False
+                        st.session_state.driver_weighbridge_done = False
+                        st.rerun()
+        with btn_c2:
+            if st.button("🗺️ View Live Route GPS", use_container_width=True, key="pass_to_route_btn"):
+                st.session_state["nav_selection"] = "driver_route"
+                st.rerun()
+
+    with info_col:
+        st.markdown(f'<div class="sec-title">📊 WEIGHBRIDGE AUDIT LOG & SCALE CERTIFICATE</div>', unsafe_allow_html=True)
+        st.markdown(
+            f"""
+            <div style="background:{card_surface}; border:1px solid {border_col}; border-radius:12px; padding:18px; margin-bottom:16px; font-size:0.82rem; line-height:1.8; box-shadow:{shadow_effect};">
+                <div style="font-weight:800; color:{text_main}; border-bottom:1px solid {border_col}; padding-bottom:8px; margin-bottom:10px;">
+                    CALIBRATED LOAD CELL READINGS (SCALE #WB-04)
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="color:{text_muted};">Gross Vehicle Weight (Laden):</span>
+                    <b>8,420 kg</b>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="color:{text_muted};">Tare Weight (Unladen Truck):</span>
+                    <b>4,220 kg</b>
+                </div>
+                <div style="display:flex; justify-content:space-between; border-top:1px dashed {border_col}; padding-top:6px; margin-top:6px;">
+                    <span style="font-weight:800; color:{text_main};">Net Solid-Waste Accepted:</span>
+                    <b style="color:{success_accent}; font-size:1.05rem;">{st.session_state.driver_payload_kg:,.0f} kg</b>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="color:{text_muted};">Waste Segregation Audit:</span>
+                    <b style="color:{blue_accent};">98.4% Segregated Wet Organic</b>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="color:{text_muted};">Weighbridge Inspector:</span>
+                    <b>Er. C. Venkatesh (BBMP Health Dept)</b>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="color:{text_muted};">Timestamp:</span>
+                    <b>Today, 07:42 IST</b>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        st.info("💡 **Digital Compliance:** Once the driver unloads, the net payload is permanently logged in the municipal environmental ledger and offsets the daily ward quota.")
