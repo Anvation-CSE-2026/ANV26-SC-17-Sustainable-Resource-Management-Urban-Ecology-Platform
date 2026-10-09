@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 import streamlit as st
 
 from wastegrid import db
+from wastegrid.components import render_html
 
 # Official 5 Tenant Authority Roles
 TENANT_ROLES_5 = [
@@ -560,7 +561,7 @@ def show_auth_dialog(palette):
         from wastegrid import theme as theme_module
 
         logo_uri = theme_module.get_logo_data_uri()
-        st.markdown(
+        render_html(
             f"""
             <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px; padding-bottom:8px; border-bottom:1px solid {p["border"]};">
                 <img src="{logo_uri}" alt="WasteGrid Logo" style="width:36px; height:36px; object-fit:contain;" />
@@ -569,8 +570,7 @@ def show_auth_dialog(palette):
                     <div style="font-size:0.68rem; color:{p["muted"]}; font-weight:600; text-transform:uppercase; letter-spacing:0.08em;">Predict. Detect. Allocate.</div>
                 </div>
             </div>
-            """,
-            unsafe_allow_html=True,
+            """
         )
 
         # User is NOT signed in: Sign In, Sign Up, or 1-Click Fast Presets across 5 Tenants
@@ -585,9 +585,8 @@ def show_auth_dialog(palette):
         with tab_login:
             col_form, col_quick = st.columns([1.1, 1], gap="large")
             with col_form:
-                st.markdown(
-                    f'<div style="font-weight:700; color:{p["text"]}; margin-bottom:8px;">Authority Sign-In</div>',
-                    unsafe_allow_html=True,
+                render_html(
+                    f'<div style="font-weight:700; color:{p["text"]}; margin-bottom:8px;">Authority Sign-In</div>'
                 )
                 with st.form("dlg_login_form"):
                     selected_role = st.selectbox(
@@ -633,7 +632,7 @@ def show_auth_dialog(palette):
                             st.warning("Please enter both Username and Password.")
 
             with col_quick:
-                st.markdown(
+                render_html(
                     f"""
                     <div style="font-weight:800; color:{p["blue"]}; margin-bottom:4px; display:flex; align-items:center; gap:8px;">
                         <span>⚡ 1-Click Fast Tenant Logins</span>
@@ -642,8 +641,7 @@ def show_auth_dialog(palette):
                     <div style="font-size:0.75rem; color:{p["muted"]}; margin-bottom:12px;">
                         Provided exclusively for hackathon judging convenience: Click any authority below to instantly review their dedicated dashboard and features without manual entry:
                     </div>
-                    """,
-                    unsafe_allow_html=True,
+                    """
                 )
                 if st.button(
                     "🏛️ State Authority", use_container_width=True, key="btn_quick_t1"

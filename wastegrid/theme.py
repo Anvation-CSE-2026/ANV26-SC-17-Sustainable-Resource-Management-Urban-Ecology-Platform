@@ -90,24 +90,94 @@ def inject_css(p):
             border-radius: 6px !important;
         }}
 
-        /* Dialog / Modal Styling matching active palette */
-        div[data-testid="stDialog"] div[role="dialog"] {{
+        /* Universal Dialog & BaseWeb Modal Styling matching active theme palette */
+        div[data-baseweb="modal"] div[role="dialog"],
+        div[data-baseweb="modal"] [data-baseweb="modal-body"],
+        div[role="dialog"],
+        div[data-testid="stDialog"],
+        div[data-testid="stModal"],
+        [data-testid="stDialog"] > div {{
             background-color: {p["card_bg"]} !important;
+            background: {p["card_bg"]} !important;
             color: {p["text"]} !important;
             border: 1.5px solid {p["border"]} !important;
             border-radius: 16px !important;
             box-shadow: {p["shadow"]} !important;
         }}
-        div[data-testid="stDialog"] div[role="dialog"] * {{
+
+        div[data-baseweb="modal"] div[role="dialog"] *,
+        div[data-testid="stDialog"] * {{
             color: {p["text"]};
         }}
-        div[data-testid="stDialog"] div[role="dialog"] [data-baseweb="tab-list"] button {{
+
+        /* Modal Input Fields */
+        div[data-baseweb="modal"] input,
+        div[data-baseweb="modal"] textarea,
+        div[data-testid="stDialog"] input,
+        div[data-testid="stDialog"] textarea,
+        div[data-testid="stDialog"] [data-baseweb="select"] > div,
+        div[data-baseweb="modal"] [data-baseweb="select"] > div {{
+            background-color: {p["bg_soft"]} !important;
+            color: {p["text"]} !important;
+            border: 1px solid {p["border"]} !important;
+            border-radius: 8px !important;
+        }}
+
+        /* Modal Tabs */
+        div[data-baseweb="modal"] [data-baseweb="tab-list"],
+        div[data-testid="stDialog"] [data-baseweb="tab-list"] {{
+            border-bottom: 1.5px solid {p["border"]} !important;
+        }}
+
+        div[data-baseweb="modal"] button[data-baseweb="tab"],
+        div[data-testid="stDialog"] button[data-baseweb="tab"] {{
             color: {p["muted"]} !important;
             font-weight: 700 !important;
+            background: transparent !important;
         }}
-        div[data-testid="stDialog"] div[role="dialog"] [data-baseweb="tab-list"] button[aria-selected="true"] {{
+
+        div[data-baseweb="modal"] button[data-baseweb="tab"][aria-selected="true"],
+        div[data-testid="stDialog"] button[data-baseweb="tab"][aria-selected="true"] {{
             color: {p["accent"]} !important;
-            border-bottom-color: {p["accent"]} !important;
+            border-bottom: 2.5px solid {p["accent"]} !important;
+        }}
+
+        div[data-baseweb="modal"] button[data-baseweb="tab"] p,
+        div[data-testid="stDialog"] button[data-baseweb="tab"] p {{
+            color: inherit !important;
+        }}
+
+        /* Modal Buttons */
+        div[data-baseweb="modal"] .stButton > button,
+        div[data-testid="stDialog"] .stButton > button {{
+            background-color: {p["card_bg"]} !important;
+            color: {p["text"]} !important;
+            border: 1.5px solid {p["border"]} !important;
+            border-radius: 8px !important;
+            font-weight: 700 !important;
+        }}
+
+        div[data-baseweb="modal"] .stButton > button:hover,
+        div[data-testid="stDialog"] .stButton > button:hover {{
+            border-color: {p["blue"]} !important;
+            background-color: {p["card_hover"]} !important;
+            color: {p["blue"]} !important;
+        }}
+
+        div[data-baseweb="modal"] button[kind="primary"],
+        div[data-testid="stDialog"] button[kind="primary"],
+        div[data-baseweb="modal"] button[data-testid="stBaseButton-primary"],
+        div[data-testid="stDialog"] button[data-testid="stBaseButton-primary"],
+        div[data-baseweb="modal"] form button,
+        div[data-testid="stDialog"] form button {{
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+            color: #ffffff !important;
+            border: none !important;
+            font-weight: 800 !important;
+        }}
+        div[data-baseweb="modal"] form button *,
+        div[data-testid="stDialog"] form button * {{
+            color: #ffffff !important;
         }}
 
         [data-testid="stHeader"] {{
