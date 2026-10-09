@@ -299,18 +299,14 @@ with st.sidebar:
             st.session_state.nav_selection = nav_key
             st.rerun()
 
-    # Bottom of Sidebar: Logout Icon with Logout under it, and NOTHING ELSE AFTER IT!
-    st.markdown(
-        f"<div style='margin-top:42px; padding-top:16px; border-top:1px solid {palette['border']}; text-align:center;'></div>",
-        unsafe_allow_html=True,
-    )
+    # Bottom of Sidebar: When logged in, show Logout Icon with Logout under it, and NOTHING ELSE AFTER IT!
     if current_user:
+        st.markdown(
+            f"<div style='margin-top:42px; padding-top:16px; border-top:1px solid {palette['border']}; text-align:center;'></div>",
+            unsafe_allow_html=True,
+        )
         if st.button("🚪\n\nLogout", key="btn_sb_logout_bottom", use_container_width=True, help="Sign out of WasteGrid"):
             auth.logout()
-    else:
-        if st.button("🔑\n\nSign In", key="btn_sb_signin_bottom", use_container_width=True, help="Open Authority Sign In / Sign Up"):
-            st.session_state["show_auth_modal"] = True
-            st.rerun()
 
 # 8. Modals & Overlay Drawers
 if st.session_state.get("show_auth_modal"):

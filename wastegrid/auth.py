@@ -68,8 +68,14 @@ ROLE_PERMISSIONS = {
 
 
 def get_current_user():
-    """Retrieve the current authenticated user record from session state."""
-    return st.session_state.get("authenticated_user")
+    """Retrieve the current authenticated user record from session state, synced with SQLite."""
+    user = st.session_state.get("authenticated_user")
+    if user and isinstance(user, dict) and "username" in user:
+        db_user = db.get_user_by_username(user["username"])
+        if db_user:
+            st.session_state["authenticated_user"] = db_user
+            return db_user
+    return user
 
 
 def is_authenticated():
@@ -79,7 +85,7 @@ def is_authenticated():
 
 
 def login(username, password, selected_role=None):
-    """Authenticate against SQLite database with hashed password verification and role validation."""
+    """Authenticate against SQLite database with hashed password verification and role assignment."""
     clean_user = username.strip().lower()
     user = db.get_user_by_username(clean_user)
     if not user:
@@ -92,16 +98,16 @@ def login(username, password, selected_role=None):
         db.add_audit_log(username, "LOGIN_FAILED", "Incorrect password attempt")
         return False, "Invalid Authority ID / Username or Password."
 
-    # Validate role if specified
-    if selected_role and user.get("role") != "admin":
+    # Validate role if specified (and not auto-detect)
+    if selected_role and not selected_role.startswith("--") and user.get("role") != "admin":
         allowed_keys = ROLE_CANONICAL.get(selected_role, [selected_role])
         u_role = user.get("role", "")
         u_title = user.get("authority_title", "")
         if u_role not in allowed_keys and u_title != selected_role:
-            return False, f"Role Mismatch: Account '{username}' is registered as '{u_title}', not '{selected_role}'. Please select the assigned authority role."
+            return False, f"Role Mismatch: Account '{username}' is registered as '{u_title}', not '{selected_role}'. Please select your assigned authority role."
 
     st.session_state["authenticated_user"] = user
-    if selected_role:
+    if selected_role and not selected_role.startswith("--"):
         st.session_state["active_role_title"] = selected_role
     else:
         st.session_state["active_role_title"] = user.get("authority_title", "Authorized Officer")
@@ -113,7 +119,7 @@ def login(username, password, selected_role=None):
     c.execute("UPDATE users SET last_login = ? WHERE id = ?", (now_str, user["id"]))
     conn.commit()
     conn.close()
-    db.add_audit_log(user["username"], "LOGIN_SUCCESS", f"User logged in with role {user['role']}")
+    db.add_audit_log(user["username"], "LOGIN_SUCCESS", f"User logged in with role {user['role']} ({user.get('authority_title')})")
     return True, "Login successful."
 
 
@@ -284,16 +290,31 @@ def register_account(username, password, full_name, email, role="municipality", 
     }
     title = authority_title or role_titles.get(role, "Municipal Waste Officer")
 
-    success, msg = db.create_user(username, password, role, title, jurisdiction, full_name, email)
-    if not success:
-        return False, msg
+    clean_un = username.strip().lower()
+    existing = db.get_user_by_username(clean_un)
+    if existing:
+        h, s = db.hash_password(password)
+        conn = db.get_connection()
+        c = conn.cursor()
+        c.execute("""
+            UPDATE users 
+            SET password_hash = ?, salt = ?, role = ?, authority_title = ?, jurisdiction = ?, full_name = ?, email = ?
+            WHERE username = ?
+        """, (h, s, role, title, jurisdiction, full_name, email, clean_un))
+        conn.commit()
+        conn.close()
+    else:
+        success, msg = db.create_user(clean_un, password, role, title, jurisdiction, full_name, email)
+        if not success:
+            return False, msg
 
-    # Auto-login after creation
-    user = db.get_user_by_username(username)
+    # Auto-login after creation or update
+    user = db.get_user_by_username(clean_un)
     if user:
         st.session_state["authenticated_user"] = user
-        db.add_audit_log(username, "USER_REGISTERED", f"New user created and logged in with role {role} ({title})")
-        return True, "Account created successfully! You are now logged in."
+        st.session_state["active_role_title"] = title
+        db.add_audit_log(clean_un, "USER_REGISTERED", f"User registered/updated and logged in with role {role} ({title})")
+        return True, f"Account configured successfully! Logged in as {title}."
     return True, "Account created successfully."
 
 
@@ -350,6 +371,37 @@ def show_auth_dialog(palette):
             unsafe_allow_html=True,
         )
 
+        with st.expander("🔄 Switch / Update Authority Role", expanded=True):
+            current_title = user.get("authority_title") or "Municipal Waste Officer"
+            idx = TENANT_ROLES_5.index(current_title) if current_title in TENANT_ROLES_5 else 0
+            with st.form("dlg_switch_role_form"):
+                new_title = st.selectbox("Designated Authority Role", TENANT_ROLES_5, index=idx, key="dlg_switch_role_sel")
+                btn_sw = st.form_submit_button("⚡ Update My Role & Switch View", type="primary", use_container_width=True)
+                if btn_sw:
+                    role_key_map = {
+                        "State Waste Management Authority": "state_authority",
+                        "Municipal Commissioner": "commissioner",
+                        "Municipal Waste Officer": "waste_officer",
+                        "Zonal Officer": "zonal_officer",
+                        "Waste Processing & Recycling Facility": "processing_facility",
+                        "Municipal Truck Driver (In-Cab Logistics)": "truck_driver",
+                    }
+                    new_internal = role_key_map.get(new_title, "waste_officer")
+                    conn = db.get_connection()
+                    c = conn.cursor()
+                    c.execute("UPDATE users SET role = ?, authority_title = ? WHERE id = ?", (new_internal, new_title, user["id"]))
+                    conn.commit()
+                    conn.close()
+                    st.session_state["authenticated_user"] = db.get_user_by_username(user["username"])
+                    st.session_state["active_role_title"] = new_title
+                    st.session_state["show_auth_modal"] = False
+                    if new_internal == "truck_driver":
+                        st.session_state["nav_selection"] = "driver_in_cab"
+                    else:
+                        st.session_state["nav_selection"] = "home"
+                    st.toast(f"✅ Switched role to: {new_title}")
+                    st.rerun()
+
         with st.expander("🔑 Change Account Password", expanded=False):
             with st.form("dlg_change_pwd_form"):
                 cur_p = st.text_input("Current Password", type="password")
@@ -403,7 +455,7 @@ def show_auth_dialog(palette):
                 with st.form("dlg_login_form"):
                     selected_role = st.selectbox(
                         "Authority Tenant Role",
-                        TENANT_ROLES_5,
+                        ["-- Auto-Detect From Account --"] + TENANT_ROLES_5,
                         key="dlg_role_sel",
                     )
                     u_in = st.text_input("Authority ID / Username", placeholder="e.g. commissioner, state_authority", key="dlg_u_in")
@@ -413,13 +465,13 @@ def show_auth_dialog(palette):
                     btn_login = st.form_submit_button("🔐 Sign In to Tenant Dashboard", type="primary", use_container_width=True)
                     if btn_login:
                         if u_in and p_in:
-                            role_lookup = selected_role
-                            if selected_role == "Waste Processing & Recycling Facility":
+                            role_lookup = None if selected_role.startswith("--") else selected_role
+                            if role_lookup == "Waste Processing & Recycling Facility":
                                 role_lookup = "Waste Processing Facility"
                             ok, msg = login(u_in, p_in, selected_role=role_lookup)
                             if ok:
                                 st.session_state["show_auth_modal"] = False
-                                st.toast(f"✅ Signed in as {selected_role}!")
+                                st.toast(f"✅ Signed in successfully!")
                                 st.rerun()
                             else:
                                 st.error(msg)
