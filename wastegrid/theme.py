@@ -90,6 +90,26 @@ def inject_css(p):
             border-radius: 6px !important;
         }}
 
+        /* Dialog / Modal Styling matching active palette */
+        div[data-testid="stDialog"] div[role="dialog"] {{
+            background-color: {p["card_bg"]} !important;
+            color: {p["text"]} !important;
+            border: 1.5px solid {p["border"]} !important;
+            border-radius: 16px !important;
+            box-shadow: {p["shadow"]} !important;
+        }}
+        div[data-testid="stDialog"] div[role="dialog"] * {{
+            color: {p["text"]};
+        }}
+        div[data-testid="stDialog"] div[role="dialog"] [data-baseweb="tab-list"] button {{
+            color: {p["muted"]} !important;
+            font-weight: 700 !important;
+        }}
+        div[data-testid="stDialog"] div[role="dialog"] [data-baseweb="tab-list"] button[aria-selected="true"] {{
+            color: {p["accent"]} !important;
+            border-bottom-color: {p["accent"]} !important;
+        }}
+
         [data-testid="stHeader"] {{
             height: 3rem !important;
             background: transparent !important;

@@ -552,3 +552,12 @@ def test_vehicle_commissioning_and_on_demand_dispatch():
     assert v["status"] == "in_transit"
     assert v["current_payload_kg"] == 3800.0
     assert v["target_facility_id"] == "A"
+
+
+def test_factory_authority_view_and_analytics_db_integration():
+    """Verify analytics_module imports db and can query facility machines without NameError."""
+    from wastegrid import analytics_module
+
+    machs = analytics_module.db.get_facility_machines()
+    assert isinstance(machs, list)
+    assert len(machs) >= 4

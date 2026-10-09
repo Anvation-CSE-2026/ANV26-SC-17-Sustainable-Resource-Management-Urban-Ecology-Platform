@@ -1,6 +1,6 @@
 # ♻️ WasteGrid 2.0 — Smart Municipal Operations Dashboard
 
-[![Tests](https://img.shields.io/badge/Tests-21%20Passed-brightgreen.svg)](tests/test_wastegrid.py)
+[![Tests](https://img.shields.io/badge/Tests-22%20Passed-brightgreen.svg)](tests/test_wastegrid.py)
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-wastegrid--v09cd65.streamlit.app-FF4B4B.svg)](https://wastegrid-v09cd65.streamlit.app)
 [![Streamlit](https://img.shields.io/badge/Framework-Streamlit-FF4B4B.svg)](https://streamlit.io/)
 [![Optimization](https://img.shields.io/badge/Engine-HiGHS%20Linear%20Programming-0284C7.svg)](https://scipy.org/)

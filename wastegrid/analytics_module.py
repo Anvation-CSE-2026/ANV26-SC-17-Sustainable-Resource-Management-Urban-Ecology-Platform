@@ -10,6 +10,8 @@ Outsmarts traditional waste management systems by providing:
 
 import streamlit as st
 
+from wastegrid import db
+
 
 def calculate_green_metrics(
     wet_allocated_kg, dry_allocated_kg, total_overflow_kg, baseline_waste_kg
