@@ -1,30 +1,27 @@
 # ♻️ WasteGrid 2.0 — Smart Municipal Operations Dashboard
 
-[![Tests](https://img.shields.io/badge/Tests-22%20Passed-brightgreen.svg)](tests/test_wastegrid.py)
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-wastegrid--v09cd65.streamlit.app-FF4B4B.svg)](https://wastegrid-v09cd65.streamlit.app)
-[![Streamlit](https://img.shields.io/badge/Framework-Streamlit-FF4B4B.svg)](https://streamlit.io/)
-[![Optimization](https://img.shields.io/badge/Engine-HiGHS%20Linear%20Programming-0284C7.svg)](https://scipy.org/)
-[![License](https://img.shields.io/badge/Compliance-Urban%20Local%20Bodies%20(ULB)-10B981.svg)](#license)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-wastegrid--v09cd65.streamlit.app-FF4B4B.svg?style=for-the-badge&logo=streamlit)](https://wastegrid-v09cd65.streamlit.app)
+[![Tests](https://img.shields.io/badge/Tests-22%20Passed-brightgreen.svg?style=for-the-badge)](tests/test_wastegrid.py)
+[![Optimization](https://img.shields.io/badge/Engine-HiGHS%20Linear%20Programming-0284C7.svg?style=for-the-badge)](https://scipy.org/)
+
+> ### 🌐 **Live Cloud Deployment:**
+> ### 👉 **[https://wastegrid-v09cd65.streamlit.app](https://wastegrid-v09cd65.streamlit.app)**  
+> *Click the link above to test and evaluate the live application on Streamlit Community Cloud.*
+
+---
 
 **Predict. Detect. Reallocate. Dispatch.**  
 *Next-Generation Smart Municipal Waste Management & Predictive Resource Reallocation Platform.*
 
 ---
 
-## 🌐 Live Web Deployment
+## 🌐 Live Web Deployment Details
 
-WasteGrid 2.0 is deployed and continuously synchronized on **Streamlit Community Cloud**:
+WasteGrid 2.0 is live and continuously synchronized via **Streamlit Community Cloud**:
 
-- **Official Live Application Link:**  
-  👉 **[Launch WasteGrid 2.0 Live Cloud Dashboard](https://wastegrid-v09cd65.streamlit.app)**  
-  *(Direct URL: `https://wastegrid-v09cd65.streamlit.app`)*
-
-### 🚀 1-Click Cloud Deployment Steps:
-1. Log in to [Streamlit Community Cloud](https://share.streamlit.io/) with your GitHub account.
-2. Click **New app**.
-3. Select this repository: `Anvation-CSE-2026/ANV26-SC-17-Sustainable-Resource-Management-Urban-Ecology-Platform`.
-4. Set the branch to `main` and main file path to `app.py`.
-5. Click **Deploy!** — The app will automatically read `requirements.txt` and launch with full SSL encryption and real-time auto-reload on git push.
+- **Production Cloud URL:** [https://wastegrid-v09cd65.streamlit.app](https://wastegrid-v09cd65.streamlit.app)
+- **Primary GitHub Repository:** [Anvation-CSE-2026/ANV26-SC-17-Sustainable-Resource-Management-Urban-Ecology-Platform](https://github.com/Anvation-CSE-2026/ANV26-SC-17-Sustainable-Resource-Management-Urban-Ecology-Platform)
+- **Backup Mirror:** [Mokshitha9512/WasteGrid](https://github.com/Mokshitha9512/WasteGrid)
 
 ---
 
@@ -91,13 +88,21 @@ WasteGrid 2.0 eliminates all plaintext credentials and bypass buttons. Authentic
 - **Visual Analytics:** Plotly Interactive Charts (`plotly.express`, `plotly.graph_objects`) and Altair.
 - **Database Engine:** SQLite (PostgreSQL-compatible architecture with parameterized queries and transaction management).
 - **Export Formats:** Excel (`openpyxl`) and CSV.
-- **Code Quality & Testing:** `pytest` (21 automated unit/integration tests) and `ruff` (clean PEP 8 formatting).
+- **Code Quality & Testing:** `pytest` (22 automated unit/integration tests) and `ruff` (clean PEP 8 formatting).
 
 ---
 
 ## 💻 Installation & Quickstart
 
-### 1. Clone the repository
+### ⚡ Option A: Instant Access (No Installation Required)
+Access the live cloud deployment directly at:  
+👉 **[https://wastegrid-v09cd65.streamlit.app](https://wastegrid-v09cd65.streamlit.app)**
+
+---
+
+### 💻 Option B: Run Locally
+
+#### 1. Clone the repository
 ```bash
 git clone https://github.com/Anvation-CSE-2026/ANV26-SC-17-Sustainable-Resource-Management-Urban-Ecology-Platform.git
 cd ANV26-SC-17-Sustainable-Resource-Management-Urban-Ecology-Platform
@@ -105,17 +110,17 @@ cd ANV26-SC-17-Sustainable-Resource-Management-Urban-Ecology-Platform
 
 *(Personal mirror backup: `git clone https://github.com/Mokshitha9512/WasteGrid.git`)*
 
-### 2. Install dependencies
+#### 2. Install dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Run automated tests
+#### 3. Run automated tests
 ```bash
 python -m pytest tests/test_wastegrid.py -v
 ```
 
-### 4. Launch the dashboard
+#### 4. Launch the dashboard
 ```bash
 streamlit run app.py
 ```
