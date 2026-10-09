@@ -368,16 +368,17 @@ if current_nav_key in ["home", "overview"]:
                 <div style="display:flex; align-items:center; gap:10px;">
                     <span style="font-size:1.3rem;">🏛️</span>
                     <div>
-                        <div style="font-size:0.85rem; font-weight:800; color:{palette['text']};">
-                            WasteGrid — Smart Municipal Solid-Waste Management Platform
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="font-size:0.85rem; font-weight:800; color:{palette['text']};">WasteGrid — Smart Municipal Solid-Waste Platform</span>
+                            <span style="background:rgba(239, 68, 68, 0.12); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.3); font-size:0.65rem; padding:1px 7px; border-radius:999px; font-weight:800; text-transform:uppercase;">🏆 Hackathon Pilot</span>
                         </div>
                         <div style="font-size:0.74rem; color:{palette['muted']}; margin-top:2px;">
-                            Predict. Detect. Allocate. · Official 5-Tenant Authority System
+                            Predict. Detect. Allocate. · Official 5-Tenant Decision Support Architecture (Hackathon Demo)
                         </div>
                     </div>
                 </div>
                 <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="font-size:0.72rem; color:{palette['muted']};">Click the Profile icon <b>(P)</b> at the top-right to sign into your authority tenant dashboard.</span>
+                    <span style="font-size:0.72rem; color:{palette['muted']};">Click the Profile icon <b>(P)</b> at top-right to sign in or view authority roles.</span>
                 </div>
             </div>
             """

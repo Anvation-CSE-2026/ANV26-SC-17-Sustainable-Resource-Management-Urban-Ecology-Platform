@@ -481,11 +481,12 @@ def show_auth_dialog(palette):
             with col_quick:
                 st.markdown(
                     f"""
-                    <div style="font-weight:800; color:{p['blue']}; margin-bottom:6px;">
-                        ⚡ 1-Click Fast Tenant Logins (Evaluator Presets)
+                    <div style="font-weight:800; color:{p['blue']}; margin-bottom:4px; display:flex; align-items:center; gap:8px;">
+                        <span>⚡ 1-Click Fast Tenant Logins</span>
+                        <span style="background:rgba(239, 68, 68, 0.12); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.3); font-size:0.65rem; padding:1px 7px; border-radius:999px; font-weight:800;">HACKATHON DEMO ONLY</span>
                     </div>
                     <div style="font-size:0.75rem; color:{p['muted']}; margin-bottom:12px;">
-                        Click any tenant to instantly log in and load their respective dashboard:
+                        Provided exclusively for hackathon judging convenience: Click any authority below to instantly review their dedicated dashboard and features without manual entry:
                     </div>
                     """,
                     unsafe_allow_html=True,

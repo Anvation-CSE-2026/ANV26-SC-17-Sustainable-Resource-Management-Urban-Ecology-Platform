@@ -660,11 +660,19 @@ Allocated: <b>{processed_kg/1000:.1f} T</b> / {total_capacity/1000:.1f} T
         pct = optimizer.reduction_pct(fixed_overflow, total_overflow)
         success_banner(f"WasteGrid prevented {fixed_overflow - total_overflow:,.0f} kg ({pct:.1f}%) of municipal overflow vs static fixed routing!")
 
-    # 5. Weekly Demand & Generation Trend Dynamics (Monday to Sunday)
-    section_title("WEEKLY GENERATION & PROCESSING TREND DYNAMICS (MON - SUN)")
-    forecast_rows = forecast.forecast_week(sources, total_capacity)
-    forecast_df = pd.DataFrame(forecast_rows)
-    forecast_section(forecast_df, palette)
+    # 5. Weekly Demand & Generation Trend Dynamics (Monday to Sunday) - Collapsible to keep 3-Minute Demo View Crisp & Clean
+    with st.expander("📈 7-DAY WEEKLY GENERATION & PROCESSING DYNAMICS (MON - SUN) — Click to View", expanded=False):
+        st.markdown(
+            f"""
+            <div style="font-size:0.75rem; color:{palette['muted']}; margin-bottom:10px;">
+                Predictive weekly waste influx forecast factoring in weekend commercial surges and monsoon precipitation moisture adjustments.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        forecast_rows = forecast.forecast_week(sources, total_capacity)
+        forecast_df = pd.DataFrame(forecast_rows)
+        forecast_section(forecast_df, palette)
 
     # 6. Facility Processing Nodes Status Grid
     section_title("FACILITY PROCESSING NODES & REAL-TIME LOAD BALANCING")
